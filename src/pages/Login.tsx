@@ -8,11 +8,15 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     try {
+      console.log("[v0] Login button clicked");
       await loginWithGoogle();
+      console.log("[v0] Login completed, navigating to home");
       navigate('/');
-    } catch (error) {
-      console.error("Failed to log in", error);
-      alert("ログインに失敗しました。");
+    } catch (error: any) {
+      console.error("[v0] Failed to log in:", error);
+      console.error("[v0] Error code:", error.code);
+      console.error("[v0] Error message:", error.message);
+      alert(`ログインに失敗しました: ${error.code || error.message}`);
     }
   };
 
