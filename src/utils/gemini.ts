@@ -29,7 +29,7 @@ export async function analyzeItemImage(dataUrl: string): Promise<GeminiAnalysisR
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   console.log("[v0] VITE_GEMINI_API_KEY exists:", !!apiKey);
   console.log("[v0] API Key length:", apiKey?.length || 0);
-  
+
   if (!apiKey) {
     console.warn('[v0] VITE_GEMINI_API_KEY is not defined. Falling back to mock data.');
     return {
@@ -37,13 +37,13 @@ export async function analyzeItemImage(dataUrl: string): Promise<GeminiAnalysisR
       initialName: 'モックアイテム1'
     };
   }
-  
+
   // Re-initialize with the API key to ensure it's fresh
   const genAIInstance = new GoogleGenerativeAI(apiKey);
 
   try {
     // Choose the model that handles both text and images
-    const model = genAIInstance.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAIInstance.getGenerativeModel({ model: 'gemini-2.5-flash' });
     console.log("[v0] Model initialized successfully");
 
     // Assuming JPEG from our canvas capture
@@ -63,11 +63,11 @@ export async function analyzeItemImage(dataUrl: string): Promise<GeminiAnalysisR
     const result = await model.generateContent([prompt, imagePart]);
     const responseText = result.response.text();
     console.log("[v0] Gemini API response:", responseText);
-    
+
     // Clean up potential markdown formatting from the response
     const jsonString = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
     console.log("[v0] Parsed JSON string:", jsonString);
-    
+
     const parsedData = JSON.parse(jsonString) as GeminiAnalysisResult;
     console.log("[v0] Parsed data:", parsedData);
     return parsedData;
