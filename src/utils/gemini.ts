@@ -1,8 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Initialize the Gemini API with the key from environment variables
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
-
 export interface GeminiAnalysisResult {
   suggestedNames: string[];
   initialName: string;
@@ -26,17 +23,25 @@ function fileToGenerativePart(dataUrl: string, mimeType: string) {
  * Annotates an image using Gemini 1.5 Flash model and returns suggested item names
  */
 export async function analyzeItemImage(dataUrl: string): Promise<GeminiAnalysisResult> {
-  if (!import.meta.env.VITE_GEMINI_API_KEY) {
-    console.warn('VITE_GEMINI_API_KEY is not defined. Falling back to mock data.');
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  console.log("[v0] VITE_GEMINI_API_KEY exists:", !!apiKey);
+  console.log("[v0] API Key length:", apiKey?.length || 0);
+
+  if (!apiKey) {
+    console.warn('[v0] VITE_GEMINI_API_KEY is not defined. Falling back to mock data.');
     return {
       suggestedNames: ['モックアイテム1', 'モックアイテム2', 'モックアイテム3'],
       initialName: 'モックアイテム1'
     };
   }
 
+  // Re-initialize with the API key to ensure it's fresh
+  const genAIInstance = new GoogleGenerativeAI(apiKey);
+
   try {
     // Choose the model that handles both text and images
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAIInstance.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    console.log("[v0] Model initialized successfully");
 
     // Assuming JPEG from our canvas capture
     const imagePart = fileToGenerativePart(dataUrl, 'image/jpeg');
@@ -51,16 +56,22 @@ export async function analyzeItemImage(dataUrl: string): Promise<GeminiAnalysisR
       }
     `;
 
+    console.log("[v0] Sending request to Gemini API...");
     const result = await model.generateContent([prompt, imagePart]);
     const responseText = result.response.text();
-    
+    console.log("[v0] Gemini API response:", responseText);
+
     // Clean up potential markdown formatting from the response
     const jsonString = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-    
+    console.log("[v0] Parsed JSON string:", jsonString);
+
     const parsedData = JSON.parse(jsonString) as GeminiAnalysisResult;
+    console.log("[v0] Parsed data:", parsedData);
     return parsedData;
-  } catch (error) {
-    console.error('Error analyzing image with Gemini:', error);
+  } catch (error: any) {
+    console.error('[v0] Error analyzing image with Gemini:', error);
+    console.error('[v0] Error message:', error?.message);
+    console.error('[v0] Error status:', error?.status);
     // Return graceful fallback 
     return {
       suggestedNames: ['アイテム名（解析失敗）', '不明なアイテム'],
