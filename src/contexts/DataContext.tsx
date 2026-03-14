@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { collection, onSnapshot, doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, updateDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from './AuthContext';
+import { useChannel } from './ChannelContext';
 
 export interface Location {
   id: string;
@@ -10,6 +11,7 @@ export interface Location {
   landscapePhoto: string;
   markerText: string;
   userId: string;
+  channelId?: string;
   createdAt: any;
 }
 
@@ -21,6 +23,7 @@ export interface Item {
   itemPhotoUrl: string;
   status: 'stored' | 'taken_out';
   userId: string;
+  channelId?: string;
   createdAt: any;
   updatedAt: any;
 }
@@ -29,10 +32,12 @@ interface DataContextType {
   locations: Location[];
   items: Item[];
   loading: boolean;
-  addLocation: (location: Omit<Location, 'id' | 'userId' | 'createdAt'>) => Promise<string>;
-  addItem: (item: Omit<Item, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => Promise<string>;
+  addLocation: (location: Omit<Location, 'id' | 'userId' | 'channelId' | 'createdAt'>) => Promise<string>;
+  addItem: (item: Omit<Item, 'id' | 'userId' | 'channelId' | 'createdAt' | 'updatedAt'>) => Promise<string>;
   updateItemStatus: (itemId: string, status: 'stored' | 'taken_out') => Promise<void>;
   updateItemName: (itemId: string, name: string) => Promise<void>;
+  deleteLocation: (locationId: string) => Promise<void>;
+  deleteItem: (itemId: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | null>(null);
@@ -47,23 +52,36 @@ export function useData() {
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const { currentUser } = useAuth();
+  const { currentChannel, loading: channelLoading, needsOnboarding } = useChannel();
   const [locations, setLocations] = useState<Location[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Subscribe to user's data
+  // Subscribe to channel's data
   useEffect(() => {
-    if (!currentUser) {
+    // Wait for channel context to finish loading
+    if (channelLoading) {
+      return;
+    }
+
+    if (!currentUser || !currentChannel) {
       setLocations([]);
       setItems([]);
       setLoading(false);
       return;
     }
 
+    // Skip data loading during onboarding
+    if (needsOnboarding) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
-    const locationsRef = collection(db, `users/${currentUser.uid}/locations`);
-    const itemsRef = collection(db, `users/${currentUser.uid}/items`);
+    // Use channel-based paths
+    const locationsRef = collection(db, `channels/${currentChannel.id}/locations`);
+    const itemsRef = collection(db, `channels/${currentChannel.id}/items`);
 
     const unsubLocations = onSnapshot(locationsRef, (snapshot) => {
       const locData: Location[] = [];
@@ -79,32 +97,38 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         itemData.push({ id: doc.id, ...doc.data() } as Item);
       });
       setItems(itemData);
-      setLoading(false); // only set loading false once items also loaded (naive implementation)
+      setLoading(false);
     });
 
     return () => {
       unsubLocations();
       unsubItems();
     };
-  }, [currentUser]);
+  }, [currentUser, currentChannel, channelLoading, needsOnboarding]);
 
-  const addLocation = async (locData: Omit<Location, 'id' | 'userId' | 'createdAt'>) => {
+  const addLocation = async (locData: Omit<Location, 'id' | 'userId' | 'channelId' | 'createdAt'>) => {
     if (!currentUser) throw new Error("Not logged in");
-    const newDocRef = doc(collection(db, `users/${currentUser.uid}/locations`));
+    if (!currentChannel) throw new Error("No channel selected");
+    
+    const newDocRef = doc(collection(db, `channels/${currentChannel.id}/locations`));
     await setDoc(newDocRef, {
       ...locData,
       userId: currentUser.uid,
+      channelId: currentChannel.id,
       createdAt: serverTimestamp()
     });
     return newDocRef.id;
   };
 
-  const addItem = async (itemData: Omit<Item, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
+  const addItem = async (itemData: Omit<Item, 'id' | 'userId' | 'channelId' | 'createdAt' | 'updatedAt'>) => {
     if (!currentUser) throw new Error("Not logged in");
-    const newDocRef = doc(collection(db, `users/${currentUser.uid}/items`));
+    if (!currentChannel) throw new Error("No channel selected");
+    
+    const newDocRef = doc(collection(db, `channels/${currentChannel.id}/items`));
     await setDoc(newDocRef, {
       ...itemData,
       userId: currentUser.uid,
+      channelId: currentChannel.id,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
@@ -113,7 +137,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const updateItemStatus = async (itemId: string, status: 'stored' | 'taken_out') => {
     if (!currentUser) throw new Error("Not logged in");
-    const itemRef = doc(db, `users/${currentUser.uid}/items`, itemId);
+    if (!currentChannel) throw new Error("No channel selected");
+    
+    const itemRef = doc(db, `channels/${currentChannel.id}/items`, itemId);
     await updateDoc(itemRef, {
       status,
       updatedAt: serverTimestamp()
@@ -121,13 +147,31 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateItemName = async (itemId: string, name: string) => {
-     if (!currentUser) throw new Error("Not logged in");
-    const itemRef = doc(db, `users/${currentUser.uid}/items`, itemId);
+    if (!currentUser) throw new Error("Not logged in");
+    if (!currentChannel) throw new Error("No channel selected");
+    
+    const itemRef = doc(db, `channels/${currentChannel.id}/items`, itemId);
     await updateDoc(itemRef, {
       name,
       updatedAt: serverTimestamp()
     });
-  }
+  };
+
+  const deleteLocation = async (locationId: string) => {
+    if (!currentUser) throw new Error("Not logged in");
+    if (!currentChannel) throw new Error("No channel selected");
+    
+    const locationRef = doc(db, `channels/${currentChannel.id}/locations`, locationId);
+    await deleteDoc(locationRef);
+  };
+
+  const deleteItem = async (itemId: string) => {
+    if (!currentUser) throw new Error("Not logged in");
+    if (!currentChannel) throw new Error("No channel selected");
+    
+    const itemRef = doc(db, `channels/${currentChannel.id}/items`, itemId);
+    await deleteDoc(itemRef);
+  };
 
   const value = {
     locations,
@@ -136,7 +180,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     addLocation,
     addItem,
     updateItemStatus,
-    updateItemName
+    updateItemName,
+    deleteLocation,
+    deleteItem
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
