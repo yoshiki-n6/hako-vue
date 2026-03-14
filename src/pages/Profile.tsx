@@ -8,7 +8,7 @@ import type { Channel } from '../contexts/ChannelContext';
 export default function ProfileScreen() {
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
-  const { channels, currentChannel, userProfile, switchChannel, setDefaultChannel, getInviteCode } = useChannel();
+  const { channels, currentChannel, userProfile, switchChannel, setDefaultChannel } = useChannel();
   
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [settingDefault, setSettingDefault] = useState<string | null>(null);

@@ -303,7 +303,7 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
   }, [currentUser]);
 
   // Complete onboarding
-  const completeOnboarding = useCallback(async (mode: 'solo' | 'shared', channelId: string) => {
+  const completeOnboarding = useCallback(async (_mode: 'solo' | 'shared', channelId: string) => {
     if (!currentUser) throw new Error('Not logged in');
 
     const profileRef = doc(db, 'userProfiles', currentUser.uid);
