@@ -45,7 +45,7 @@ interface ChannelContextType {
   setDefaultChannel: (channelId: string) => Promise<void>;
   getInviteCode: (channelId: string) => string | null;
   migrateExistingData: () => Promise<void>;
-  completeOnboarding: (mode: 'solo' | 'shared', channelId: string) => Promise<void>;
+  completeOnboarding: (_mode: 'solo' | 'shared', channelId: string) => Promise<void>;
 }
 
 const ChannelContext = createContext<ChannelContextType | null>(null);
