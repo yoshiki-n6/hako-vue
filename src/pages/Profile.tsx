@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings, LogOut, Code, ChevronRight, User as UserIcon, Plus, KeyRound, Star, Copy, Check, RefreshCw } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useChannel, Channel } from '../contexts/ChannelContext';
+import { useChannel } from '../contexts/ChannelContext';
+import type { Channel } from '../contexts/ChannelContext';
 
 export default function ProfileScreen() {
   const navigate = useNavigate();
