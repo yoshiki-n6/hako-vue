@@ -30,6 +30,14 @@ export interface UserProfile {
   channelIds: string[];
   migrated: boolean;
   createdAt: any;
+  nickname?: string;
+  photoURL?: string;
+}
+
+export interface ChannelMember {
+  userId: string;
+  nickname: string;
+  photoURL: string;
 }
 
 interface ChannelContextType {
@@ -45,6 +53,8 @@ interface ChannelContextType {
   getInviteCode: (channelId: string) => string | null;
   migrateExistingData: () => Promise<void>;
   completeOnboarding: (_mode: 'solo' | 'shared', channelId: string) => Promise<void>;
+  updateProfile: (nickname: string, photoURL?: string) => Promise<void>;
+  getChannelMembers: (channelId: string) => Promise<ChannelMember[]>;
 }
 
 const ChannelContext = createContext<ChannelContextType | null>(null);
@@ -317,24 +327,30 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
     // Step 3: Migrate data in batch
     const batch = writeBatch(db);
 
-    // Migrate locations
+    // Migrate locations and track old -> new ID mapping
     const locationsSnap = await getDocs(collection(db, `users/${currentUser.uid}/locations`));
     console.log('[v0] migrateExistingData: locations to migrate:', locationsSnap.size);
+    const locationIdMap: Record<string, string> = {};
+    
     locationsSnap.forEach((locDoc) => {
       const newLocRef = doc(collection(db, `channels/${channelRef.id}/locations`));
+      locationIdMap[locDoc.id] = newLocRef.id; // Map old ID to new ID
       batch.set(newLocRef, {
         ...locDoc.data(),
         channelId: channelRef.id
       });
     });
 
-    // Migrate items
+    // Migrate items with updated locationId
     const itemsSnap = await getDocs(collection(db, `users/${currentUser.uid}/items`));
     console.log('[v0] migrateExistingData: items to migrate:', itemsSnap.size);
     itemsSnap.forEach((itemDoc) => {
+      const itemData = itemDoc.data();
       const newItemRef = doc(collection(db, `channels/${channelRef.id}/items`));
+      const newLocationId = locationIdMap[itemData.locationId] || itemData.locationId;
       batch.set(newItemRef, {
-        ...itemDoc.data(),
+        ...itemData,
+        locationId: newLocationId, // Use the new location ID
         channelId: channelRef.id
       });
     });
@@ -369,6 +385,55 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
     setNeedsOnboarding(false);
     console.log('[v0] migrateExistingData: local state updated');
   }, [currentUser]);
+
+  // Update user profile (nickname and photo)
+  const updateProfile = useCallback(async (nickname: string, photoURL?: string) => {
+    if (!currentUser) throw new Error('Not logged in');
+    
+    const profileRef = doc(db, 'userProfiles', currentUser.uid);
+    const updateData: { nickname: string; photoURL?: string } = { nickname };
+    if (photoURL !== undefined) {
+      updateData.photoURL = photoURL;
+    }
+    
+    await updateDoc(profileRef, updateData);
+    
+    // Update local state
+    setUserProfile(prev => prev ? {
+      ...prev,
+      nickname,
+      ...(photoURL !== undefined ? { photoURL } : {})
+    } : null);
+  }, [currentUser]);
+
+  // Get channel members
+  const getChannelMembers = useCallback(async (channelId: string): Promise<ChannelMember[]> => {
+    const channel = channels.find(c => c.id === channelId);
+    if (!channel) return [];
+    
+    const memberPromises = channel.memberIds.map(async (memberId) => {
+      try {
+        const profileDoc = await getDoc(doc(db, 'userProfiles', memberId));
+        if (profileDoc.exists()) {
+          const data = profileDoc.data();
+          return {
+            userId: memberId,
+            nickname: data.nickname || 'ユーザー',
+            photoURL: data.photoURL || ''
+          } as ChannelMember;
+        }
+      } catch (err) {
+        console.error('Error loading member profile:', memberId, err);
+      }
+      return {
+        userId: memberId,
+        nickname: 'ユーザー',
+        photoURL: ''
+      } as ChannelMember;
+    });
+    
+    return Promise.all(memberPromises);
+  }, [channels]);
 
   // Complete onboarding
   const completeOnboarding = useCallback(async (_mode: 'solo' | 'shared', channelId: string) => {
@@ -414,7 +479,9 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
     setDefaultChannel,
     getInviteCode,
     migrateExistingData,
-    completeOnboarding
+    completeOnboarding,
+    updateProfile,
+    getChannelMembers
   };
 
   return (

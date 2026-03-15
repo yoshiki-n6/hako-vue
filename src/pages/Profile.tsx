@@ -1,17 +1,34 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, LogOut, Code, ChevronRight, User as UserIcon, Plus, KeyRound, Star, Copy, Check, RefreshCw } from 'lucide-react';
+import { Settings, LogOut, Code, ChevronRight, User as UserIcon, Plus, KeyRound, Star, Copy, Check, RefreshCw, Edit2, Users, X, Camera } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useChannel } from '../contexts/ChannelContext';
-import type { Channel } from '../contexts/ChannelContext';
+import type { Channel, ChannelMember } from '../contexts/ChannelContext';
 
 export default function ProfileScreen() {
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
-  const { channels, currentChannel, userProfile, switchChannel, setDefaultChannel } = useChannel();
+  const { channels, currentChannel, userProfile, switchChannel, setDefaultChannel, updateProfile, getChannelMembers } = useChannel();
   
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [settingDefault, setSettingDefault] = useState<string | null>(null);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [nickname, setNickname] = useState('');
+  const [photoURL, setPhotoURL] = useState('');
+  const [saving, setSaving] = useState(false);
+  
+  // Member modal state
+  const [showMembersModal, setShowMembersModal] = useState(false);
+  const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
+  const [members, setMembers] = useState<ChannelMember[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+
+  useEffect(() => {
+    if (userProfile) {
+      setNickname(userProfile.nickname || currentUser?.displayName || '');
+      setPhotoURL(userProfile.photoURL || currentUser?.photoURL || '');
+    }
+  }, [userProfile, currentUser]);
 
   const handleLogout = async () => {
     try {
@@ -43,11 +60,40 @@ export default function ProfileScreen() {
     await switchChannel(channel.id);
   };
 
-  // Get user initials
-  const getInitials = () => {
-    if (!currentUser?.displayName) return 'U';
-    return currentUser.displayName.charAt(0).toUpperCase();
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    try {
+      await updateProfile(nickname, photoURL);
+      setIsEditingProfile(false);
+    } catch (error) {
+      console.error('Failed to save profile:', error);
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const handleShowMembers = async (channel: Channel) => {
+    setSelectedChannel(channel);
+    setShowMembersModal(true);
+    setLoadingMembers(true);
+    try {
+      const memberList = await getChannelMembers(channel.id);
+      setMembers(memberList);
+    } catch (error) {
+      console.error('Failed to load members:', error);
+    } finally {
+      setLoadingMembers(false);
+    }
+  };
+
+  // Get user initials
+  const getInitials = (name?: string) => {
+    if (!name) return 'U';
+    return name.charAt(0).toUpperCase();
+  };
+
+  const displayName = userProfile?.nickname || currentUser?.displayName || 'User';
+  const displayPhoto = userProfile?.photoURL || currentUser?.photoURL || '';
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 max-w-md mx-auto pb-24">
@@ -57,24 +103,137 @@ export default function ProfileScreen() {
 
       <main className="px-5 space-y-6">
         {/* User Card */}
-        <section className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex items-center gap-5">
-           <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-400 flex items-center justify-center text-white text-2xl font-bold shadow-md shrink-0 overflow-hidden">
-             {currentUser?.photoURL ? (
-               <img src={currentUser.photoURL} alt="" className="w-full h-full object-cover" />
-             ) : (
-               getInitials()
-             )}
-           </div>
-           <div className="min-w-0 flex-1">
-             <h2 className="text-xl font-extrabold text-gray-900 mb-1 truncate">
-               {currentUser?.displayName || 'User'}
-             </h2>
-             <p className="text-sm font-medium text-gray-500 flex items-center gap-1.5 truncate">
-               <UserIcon size={14} className="shrink-0" /> 
-               {currentUser?.email || 'user@example.com'}
-             </p>
-           </div>
+        <section className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center gap-5">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-400 flex items-center justify-center text-white text-2xl font-bold shadow-md shrink-0 overflow-hidden relative">
+              {displayPhoto ? (
+                <img src={displayPhoto} alt="" className="w-full h-full object-cover" />
+              ) : (
+                getInitials(displayName)
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-xl font-extrabold text-gray-900 mb-1 truncate">
+                {displayName}
+              </h2>
+              <p className="text-sm font-medium text-gray-500 flex items-center gap-1.5 truncate">
+                <UserIcon size={14} className="shrink-0" /> 
+                {currentUser?.email || 'user@example.com'}
+              </p>
+            </div>
+            <button
+              onClick={() => setIsEditingProfile(true)}
+              className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+            >
+              <Edit2 size={18} className="text-gray-600" />
+            </button>
+          </div>
         </section>
+
+        {/* Edit Profile Modal */}
+        {isEditingProfile && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl p-6 w-full max-w-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-gray-900">プロフィール編集</h3>
+                <button onClick={() => setIsEditingProfile(false)} className="p-1">
+                  <X size={20} className="text-gray-500" />
+                </button>
+              </div>
+              
+              {/* Avatar */}
+              <div className="flex justify-center mb-6">
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-400 flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
+                    {photoURL ? (
+                      <img src={photoURL} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      getInitials(nickname)
+                    )}
+                  </div>
+                  <label className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:bg-blue-700 transition-colors">
+                    <Camera size={16} className="text-white" />
+                  </label>
+                </div>
+              </div>
+              
+              {/* Photo URL Input */}
+              <div className="mb-4">
+                <label className="block text-sm font-bold text-gray-700 mb-2">アイコンURL</label>
+                <input
+                  type="url"
+                  value={photoURL}
+                  onChange={(e) => setPhotoURL(e.target.value)}
+                  placeholder="https://example.com/photo.jpg"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="mt-1 text-xs text-gray-500">画像URLを入力してください</p>
+              </div>
+              
+              {/* Nickname Input */}
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-gray-700 mb-2">ニックネーム</label>
+                <input
+                  type="text"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  placeholder="ニックネームを入力"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              
+              <button
+                onClick={handleSaveProfile}
+                disabled={saving || !nickname.trim()}
+                className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {saving ? (
+                  <>
+                    <RefreshCw size={16} className="animate-spin" />
+                    保存中...
+                  </>
+                ) : (
+                  '保存する'
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Members Modal */}
+        {showMembersModal && selectedChannel && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl p-6 w-full max-w-sm max-h-[80vh] overflow-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-gray-900">{selectedChannel.name} のメンバー</h3>
+                <button onClick={() => setShowMembersModal(false)} className="p-1">
+                  <X size={20} className="text-gray-500" />
+                </button>
+              </div>
+              
+              {loadingMembers ? (
+                <div className="flex justify-center py-8">
+                  <RefreshCw size={24} className="animate-spin text-gray-400" />
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {members.map((member) => (
+                    <div key={member.userId} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-400 flex items-center justify-center text-white font-bold overflow-hidden shrink-0">
+                        {member.photoURL ? (
+                          <img src={member.photoURL} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          getInitials(member.nickname)
+                        )}
+                      </div>
+                      <span className="font-bold text-gray-900">{member.nickname}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Current Channel */}
         {currentChannel && (
@@ -88,20 +247,29 @@ export default function ProfileScreen() {
               )}
             </div>
             <p className="text-lg font-bold text-gray-900 mb-2">{currentChannel.name}</p>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-gray-500">招待コード:</span>
-              <code className="bg-white px-2 py-1 rounded font-mono font-bold text-blue-600">
-                {currentChannel.inviteCode}
-              </code>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-gray-500">招待コード:</span>
+                <code className="bg-white px-2 py-1 rounded font-mono font-bold text-blue-600">
+                  {currentChannel.inviteCode}
+                </code>
+                <button
+                  onClick={() => handleCopyCode(currentChannel.inviteCode)}
+                  className="text-blue-600 hover:text-blue-700"
+                >
+                  {copiedCode === currentChannel.inviteCode ? (
+                    <Check size={16} />
+                  ) : (
+                    <Copy size={16} />
+                  )}
+                </button>
+              </div>
               <button
-                onClick={() => handleCopyCode(currentChannel.inviteCode)}
-                className="text-blue-600 hover:text-blue-700"
+                onClick={() => handleShowMembers(currentChannel)}
+                className="flex items-center gap-1 text-sm font-bold text-blue-600 bg-white px-3 py-1 rounded-full hover:bg-blue-50 transition-colors"
               >
-                {copiedCode === currentChannel.inviteCode ? (
-                  <Check size={16} />
-                ) : (
-                  <Copy size={16} />
-                )}
+                <Users size={14} />
+                {currentChannel.memberIds.length}人
               </button>
             </div>
           </section>
@@ -131,26 +299,39 @@ export default function ProfileScreen() {
                       </span>
                     )}
                   </button>
-                  {userProfile?.defaultChannelId === channel.id ? (
-                    <span className="text-amber-500 shrink-0">
-                      <Star size={16} fill="currentColor" />
-                    </span>
-                  ) : (
+                  <div className="flex items-center gap-2">
+                    {/* Member count */}
                     <button
-                      onClick={() => handleSetDefault(channel.id)}
-                      disabled={settingDefault === channel.id}
-                      className="text-xs font-medium text-gray-400 hover:text-blue-600 shrink-0 flex items-center gap-1"
+                      onClick={() => handleShowMembers(channel)}
+                      className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full transition-colors ${
+                        channel.memberIds.length >= 2 
+                          ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' 
+                          : 'text-gray-500 bg-gray-100'
+                      }`}
                     >
-                      {settingDefault === channel.id ? (
-                        <RefreshCw size={14} className="animate-spin" />
-                      ) : (
-                        <>
-                          <Star size={14} />
-                          デフォルトに設定
-                        </>
-                      )}
+                      <Users size={12} />
+                      {channel.memberIds.length}
                     </button>
-                  )}
+                    {userProfile?.defaultChannelId === channel.id ? (
+                      <span className="text-amber-500 shrink-0">
+                        <Star size={16} fill="currentColor" />
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => handleSetDefault(channel.id)}
+                        disabled={settingDefault === channel.id}
+                        className="text-xs font-medium text-gray-400 hover:text-blue-600 shrink-0 flex items-center gap-1"
+                      >
+                        {settingDefault === channel.id ? (
+                          <RefreshCw size={14} className="animate-spin" />
+                        ) : (
+                          <>
+                            <Star size={14} />
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <span>招待コード:</span>
@@ -231,7 +412,7 @@ export default function ProfileScreen() {
         </section>
 
         <div className="text-center pt-8 pb-4">
-          <p className="text-[10px] font-bold text-gray-400 tracking-wider">HAKO-VUE PROTOTYPE v1.1</p>
+          <p className="text-[10px] font-bold text-gray-400 tracking-wider">HAKO-VUE PROTOTYPE v1.2</p>
         </div>
       </main>
     </div>
