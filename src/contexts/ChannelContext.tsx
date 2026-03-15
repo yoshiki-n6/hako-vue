@@ -259,22 +259,37 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
   const migrateExistingData = useCallback(async () => {
     if (!currentUser) throw new Error('Not logged in');
 
-    const batch = writeBatch(db);
+    console.log('[v0] migrateExistingData: starting...');
     
-    // Create "マイチャンネル" for the user
+    // Step 1: Create channel first (separate from batch to ensure it exists)
     const inviteCode = generateUniqueInviteCode();
     const channelRef = doc(collection(db, 'channels'));
     
-    batch.set(channelRef, {
+    await setDoc(channelRef, {
       name: 'マイチャンネル',
       ownerId: currentUser.uid,
       inviteCode,
       memberIds: [currentUser.uid],
       createdAt: serverTimestamp()
     });
+    console.log('[v0] migrateExistingData: channel created:', channelRef.id);
+
+    // Step 2: Create user profile (so user has access to channel)
+    const profileRef = doc(db, 'userProfiles', currentUser.uid);
+    await setDoc(profileRef, {
+      defaultChannelId: channelRef.id,
+      channelIds: [channelRef.id],
+      migrated: true,
+      createdAt: serverTimestamp()
+    });
+    console.log('[v0] migrateExistingData: profile created');
+
+    // Step 3: Migrate data in batch
+    const batch = writeBatch(db);
 
     // Migrate locations
     const locationsSnap = await getDocs(collection(db, `users/${currentUser.uid}/locations`));
+    console.log('[v0] migrateExistingData: locations to migrate:', locationsSnap.size);
     locationsSnap.forEach((locDoc) => {
       const newLocRef = doc(collection(db, `channels/${channelRef.id}/locations`));
       batch.set(newLocRef, {
@@ -285,6 +300,7 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
 
     // Migrate items
     const itemsSnap = await getDocs(collection(db, `users/${currentUser.uid}/items`));
+    console.log('[v0] migrateExistingData: items to migrate:', itemsSnap.size);
     itemsSnap.forEach((itemDoc) => {
       const newItemRef = doc(collection(db, `channels/${channelRef.id}/items`));
       batch.set(newItemRef, {
@@ -293,16 +309,12 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
       });
     });
 
-    // Create user profile
-    const profileRef = doc(db, 'userProfiles', currentUser.uid);
-    batch.set(profileRef, {
-      defaultChannelId: channelRef.id,
-      channelIds: [channelRef.id],
-      migrated: true,
-      createdAt: serverTimestamp()
-    });
-
-    await batch.commit();
+    if (locationsSnap.size > 0 || itemsSnap.size > 0) {
+      await batch.commit();
+      console.log('[v0] migrateExistingData: data migration completed');
+    } else {
+      console.log('[v0] migrateExistingData: no data to migrate');
+    }
   }, [currentUser]);
 
   // Complete onboarding
