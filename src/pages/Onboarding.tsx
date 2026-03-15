@@ -29,20 +29,28 @@ export default function OnboardingScreen() {
   };
 
   const handleSoloMode = async () => {
+    console.log('[v0] handleSoloMode started');
     setLoading(true);
     setError('');
     try {
       const hasExistingData = await checkExistingData();
+      console.log('[v0] hasExistingData:', hasExistingData);
       
       if (hasExistingData) {
         setStep('migrating');
+        console.log('[v0] Starting data migration...');
         await migrateExistingData();
+        console.log('[v0] Data migration completed');
       } else {
+        console.log('[v0] Creating new channel...');
         const channel = await createChannel('マイチャンネル', true);
+        console.log('[v0] Channel created:', channel.id);
         await completeOnboarding('solo', channel.id);
+        console.log('[v0] Onboarding completed');
       }
       navigate('/');
     } catch (err: any) {
+      console.error('[v0] handleSoloMode error:', err);
       setError(err.message || 'エラーが発生しました');
     } finally {
       setLoading(false);
