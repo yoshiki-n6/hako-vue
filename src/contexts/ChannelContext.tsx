@@ -182,10 +182,20 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
     if (userProfile) {
       console.log('[v0] createChannel: updating existing profile');
       const profileRef = doc(db, 'userProfiles', currentUser.uid);
+      const newChannelIds = [...userProfile.channelIds, channelRef.id];
       await updateDoc(profileRef, {
-        channelIds: [...userProfile.channelIds, channelRef.id],
+        channelIds: newChannelIds,
         ...(isDefault ? { defaultChannelId: channelRef.id } : {})
       });
+      
+      // Update local state
+      setChannels(prev => [...prev, newChannel]);
+      setUserProfile(prev => prev ? {
+        ...prev,
+        channelIds: newChannelIds,
+        ...(isDefault ? { defaultChannelId: channelRef.id } : {})
+      } : null);
+      console.log('[v0] createChannel: local state updated');
     }
 
     console.log('[v0] createChannel: completed successfully');
@@ -221,14 +231,28 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
     const profileRef = doc(db, 'userProfiles', currentUser.uid);
     const profileSnap = await getDoc(profileRef);
     
+    const joinedChannel: Channel = { 
+      id: channelDoc.id, 
+      ...channelData, 
+      memberIds: [...channelData.memberIds, currentUser.uid] 
+    };
+    
     if (profileSnap.exists()) {
       const profile = profileSnap.data() as UserProfile;
+      const newChannelIds = [...profile.channelIds, channelDoc.id];
       await updateDoc(profileRef, {
-        channelIds: [...profile.channelIds, channelDoc.id]
+        channelIds: newChannelIds
       });
+      
+      // Update local state
+      setChannels(prev => [...prev, joinedChannel]);
+      setUserProfile(prev => prev ? {
+        ...prev,
+        channelIds: newChannelIds
+      } : null);
     }
 
-    return { id: channelDoc.id, ...channelData, memberIds: [...channelData.memberIds, currentUser.uid] };
+    return joinedChannel;
   }, [currentUser]);
 
   // Switch current channel
@@ -247,6 +271,12 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
     await updateDoc(profileRef, {
       defaultChannelId: channelId
     });
+    
+    // Update local state
+    setUserProfile(prev => prev ? {
+      ...prev,
+      defaultChannelId: channelId
+    } : null);
   }, [currentUser]);
 
   // Get invite code for a channel
