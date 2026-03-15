@@ -315,6 +315,29 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
     } else {
       console.log('[v0] migrateExistingData: no data to migrate');
     }
+
+    // Update local state to prevent loop
+    const newChannel: Channel = {
+      id: channelRef.id,
+      name: 'マイチャンネル',
+      ownerId: currentUser.uid,
+      inviteCode,
+      memberIds: [currentUser.uid],
+      createdAt: new Date()
+    };
+    const newProfile: UserProfile = {
+      userId: currentUser.uid,
+      defaultChannelId: channelRef.id,
+      channelIds: [channelRef.id],
+      migrated: true,
+      createdAt: new Date()
+    };
+    
+    setChannels([newChannel]);
+    setCurrentChannel(newChannel);
+    setUserProfile(newProfile);
+    setNeedsOnboarding(false);
+    console.log('[v0] migrateExistingData: local state updated');
   }, [currentUser]);
 
   // Complete onboarding
@@ -328,6 +351,25 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
       migrated: false,
       createdAt: serverTimestamp()
     });
+
+    // Load the channel and update local state
+    const channelDoc = await getDoc(doc(db, 'channels', channelId));
+    if (channelDoc.exists()) {
+      const channel = { id: channelDoc.id, ...channelDoc.data() } as Channel;
+      setChannels([channel]);
+      setCurrentChannel(channel);
+    }
+    
+    const newProfile: UserProfile = {
+      userId: currentUser.uid,
+      defaultChannelId: channelId,
+      channelIds: [channelId],
+      migrated: false,
+      createdAt: new Date()
+    };
+    setUserProfile(newProfile);
+    setNeedsOnboarding(false);
+    console.log('[v0] completeOnboarding: local state updated');
   }, [currentUser]);
 
   const value = {
