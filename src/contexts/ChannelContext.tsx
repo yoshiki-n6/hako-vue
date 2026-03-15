@@ -9,8 +9,7 @@ import {
   where, 
   getDocs,
   serverTimestamp,
-  writeBatch,
-  onSnapshot
+  writeBatch
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from './AuthContext';
@@ -105,54 +104,64 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    console.log('[v0] Loading user profile for:', currentUser.uid);
     setLoading(true);
     
-    // Listen to user profile changes
-    const profileRef = doc(db, 'userProfiles', currentUser.uid);
-    const unsubProfile = onSnapshot(profileRef, async (profileSnap) => {
-      if (profileSnap.exists()) {
-        const profile = { userId: currentUser.uid, ...profileSnap.data() } as UserProfile;
-        setUserProfile(profile);
-        setNeedsOnboarding(false);
+    const loadProfile = async () => {
+      try {
+        const profileRef = doc(db, 'userProfiles', currentUser.uid);
+        const profileSnap = await getDoc(profileRef);
         
-        // Load all channels the user belongs to
-        if (profile.channelIds && profile.channelIds.length > 0) {
-          const channelPromises = profile.channelIds.map(async (channelId) => {
-            const channelDoc = await getDoc(doc(db, 'channels', channelId));
-            if (channelDoc.exists()) {
-              return { id: channelDoc.id, ...channelDoc.data() } as Channel;
+        console.log('[v0] Profile exists:', profileSnap.exists());
+        
+        if (profileSnap.exists()) {
+          const profile = { userId: currentUser.uid, ...profileSnap.data() } as UserProfile;
+          setUserProfile(profile);
+          setNeedsOnboarding(false);
+          
+          // Load all channels the user belongs to
+          if (profile.channelIds && profile.channelIds.length > 0) {
+            console.log('[v0] Loading channels:', profile.channelIds);
+            const channelPromises = profile.channelIds.map(async (channelId) => {
+              try {
+                const channelDoc = await getDoc(doc(db, 'channels', channelId));
+                if (channelDoc.exists()) {
+                  return { id: channelDoc.id, ...channelDoc.data() } as Channel;
+                }
+              } catch (err) {
+                console.error('[v0] Error loading channel:', channelId, err);
+              }
+              return null;
+            });
+            
+            const loadedChannels = (await Promise.all(channelPromises)).filter(Boolean) as Channel[];
+            console.log('[v0] Loaded channels:', loadedChannels.length);
+            setChannels(loadedChannels);
+            
+            // Set current channel to default or first
+            const defaultChannel = loadedChannels.find(c => c.id === profile.defaultChannelId) || loadedChannels[0];
+            if (defaultChannel) {
+              setCurrentChannel(defaultChannel);
+              console.log('[v0] Set current channel:', defaultChannel.name);
             }
-            return null;
-          });
-          
-          const loadedChannels = (await Promise.all(channelPromises)).filter(Boolean) as Channel[];
-          setChannels(loadedChannels);
-          
-          // Set current channel to default or first
-          const defaultChannel = loadedChannels.find(c => c.id === profile.defaultChannelId) || loadedChannels[0];
-          if (defaultChannel) {
-            setCurrentChannel(defaultChannel);
           }
-        }
-        setLoading(false);
-      } else {
-        // No profile exists - check if user has existing data to migrate
-        const existingLocations = await getDocs(collection(db, `users/${currentUser.uid}/locations`));
-        const existingItems = await getDocs(collection(db, `users/${currentUser.uid}/items`));
-        
-        if (!existingLocations.empty || !existingItems.empty) {
-          // Has existing data - needs migration
-          setNeedsOnboarding(true);
+          setLoading(false);
         } else {
-          // New user - needs onboarding
+          // No profile exists - new user needs onboarding
+          console.log('[v0] No profile found, needs onboarding');
           setNeedsOnboarding(true);
+          setUserProfile(null);
+          setLoading(false);
         }
-        setUserProfile(null);
+      } catch (error) {
+        console.error('[v0] Error loading profile:', error);
+        // On permission error, show onboarding
+        setNeedsOnboarding(true);
         setLoading(false);
       }
-    });
-
-    return () => unsubProfile();
+    };
+    
+    loadProfile();
   }, [currentUser]);
 
   // Create a new channel
