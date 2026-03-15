@@ -1,5 +1,6 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { ChannelProvider, useChannel } from './contexts/ChannelContext';
 import { DataProvider } from './contexts/DataContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
@@ -15,32 +16,134 @@ import ItemDetailScreen from './pages/ItemDetail';
 import ProfileScreen from './pages/Profile';
 import LoginScreen from './pages/Login';
 import QRScannerScreen from './pages/QRScanner';
+import OnboardingScreen from './pages/Onboarding';
+import ChannelCreateScreen from './pages/ChannelCreate';
+import ChannelJoinScreen from './pages/ChannelJoin';
+
+// Wrapper component to check onboarding status
+function OnboardingCheck({ children }: { children: React.ReactNode }) {
+  const { needsOnboarding, loading } = useChannel();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (needsOnboarding) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+// Wrapper to prevent onboarding access if already completed
+function OnboardingRoute() {
+  const { needsOnboarding, loading } = useChannel();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!needsOnboarding) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <OnboardingScreen />;
+}
 
 function App() {
   return (
     <AuthProvider>
-      <DataProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<LoginScreen />} />
-            
-            <Route path="/camera" element={<ProtectedRoute><CameraScreen /></ProtectedRoute>} />
-            <Route path="/confirm" element={<ProtectedRoute><ConfirmScreen /></ProtectedRoute>} />
-            <Route path="/location-select" element={<ProtectedRoute><LocationSelectScreen /></ProtectedRoute>} />
-            <Route path="/location-new" element={<ProtectedRoute><LocationNewScreen /></ProtectedRoute>} />
-            <Route path="/items/:id" element={<ProtectedRoute><ItemDetailScreen /></ProtectedRoute>} />
-            <Route path="/scan" element={<ProtectedRoute><QRScannerScreen /></ProtectedRoute>} />
-            
-            <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-              <Route index element={<Home />} />
-              <Route path="search" element={<SearchScreen />} />
-              <Route path="locations" element={<LocationsScreen />} />
-              <Route path="locations/:id" element={<LocationDetailScreen />} />
-              <Route path="profile" element={<ProfileScreen />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </DataProvider>
+      <ChannelProvider>
+        <DataProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<LoginScreen />} />
+              <Route path="/onboarding" element={<ProtectedRoute><OnboardingRoute /></ProtectedRoute>} />
+              
+              <Route path="/camera" element={
+                <ProtectedRoute>
+                  <OnboardingCheck>
+                    <CameraScreen />
+                  </OnboardingCheck>
+                </ProtectedRoute>
+              } />
+              <Route path="/confirm" element={
+                <ProtectedRoute>
+                  <OnboardingCheck>
+                    <ConfirmScreen />
+                  </OnboardingCheck>
+                </ProtectedRoute>
+              } />
+              <Route path="/location-select" element={
+                <ProtectedRoute>
+                  <OnboardingCheck>
+                    <LocationSelectScreen />
+                  </OnboardingCheck>
+                </ProtectedRoute>
+              } />
+              <Route path="/location-new" element={
+                <ProtectedRoute>
+                  <OnboardingCheck>
+                    <LocationNewScreen />
+                  </OnboardingCheck>
+                </ProtectedRoute>
+              } />
+              <Route path="/items/:id" element={
+                <ProtectedRoute>
+                  <OnboardingCheck>
+                    <ItemDetailScreen />
+                  </OnboardingCheck>
+                </ProtectedRoute>
+              } />
+              <Route path="/scan" element={
+                <ProtectedRoute>
+                  <OnboardingCheck>
+                    <QRScannerScreen />
+                  </OnboardingCheck>
+                </ProtectedRoute>
+              } />
+              
+              {/* Channel Management Routes */}
+              <Route path="/channel/create" element={
+                <ProtectedRoute>
+                  <OnboardingCheck>
+                    <ChannelCreateScreen />
+                  </OnboardingCheck>
+                </ProtectedRoute>
+              } />
+              <Route path="/channel/join" element={
+                <ProtectedRoute>
+                  <OnboardingCheck>
+                    <ChannelJoinScreen />
+                  </OnboardingCheck>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <OnboardingCheck>
+                    <Layout />
+                  </OnboardingCheck>
+                </ProtectedRoute>
+              }>
+                <Route index element={<Home />} />
+                <Route path="search" element={<SearchScreen />} />
+                <Route path="locations" element={<LocationsScreen />} />
+                <Route path="locations/:id" element={<LocationDetailScreen />} />
+                <Route path="profile" element={<ProfileScreen />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </DataProvider>
+      </ChannelProvider>
     </AuthProvider>
   );
 }
