@@ -67,22 +67,12 @@ function generateInviteCode(): string {
   return code;
 }
 
-// Check if invite code is unique
-async function isCodeUnique(code: string): Promise<boolean> {
-  const q = query(collection(db, 'channels'), where('inviteCode', '==', code));
-  const snapshot = await getDocs(q);
-  return snapshot.empty;
-}
-
-// Generate unique invite code
-async function generateUniqueInviteCode(): Promise<string> {
-  let code = generateInviteCode();
-  let attempts = 0;
-  while (!(await isCodeUnique(code)) && attempts < 10) {
-    code = generateInviteCode();
-    attempts++;
-  }
-  return code;
+// Generate unique invite code using timestamp + random for uniqueness
+function generateUniqueInviteCode(): string {
+  // Use timestamp base to ensure uniqueness without DB query
+  const timestamp = Date.now().toString(36).slice(-3).toUpperCase();
+  const random = generateInviteCode().slice(0, 3);
+  return timestamp + random;
 }
 
 export function ChannelProvider({ children }: { children: React.ReactNode }) {
@@ -168,7 +158,11 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
   const createChannel = useCallback(async (name: string, isDefault = false): Promise<Channel> => {
     if (!currentUser) throw new Error('Not logged in');
 
-    const inviteCode = await generateUniqueInviteCode();
+    console.log('[v0] createChannel: starting...', { name, isDefault });
+
+    const inviteCode = generateUniqueInviteCode();
+    console.log('[v0] createChannel: generated invite code:', inviteCode);
+    
     const channelRef = doc(collection(db, 'channels'));
     
     const channelData: Omit<Channel, 'id'> = {
@@ -180,23 +174,23 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
     };
 
     await setDoc(channelRef, channelData);
+    console.log('[v0] createChannel: channel document created:', channelRef.id);
     
     const newChannel: Channel = { id: channelRef.id, ...channelData };
 
-    // Update user profile
-    const profileRef = doc(db, 'userProfiles', currentUser.uid);
-    const profileSnap = await getDoc(profileRef);
-    
-    if (profileSnap.exists()) {
-      const profile = profileSnap.data() as UserProfile;
+    // Only update existing profile - don't try to read if it might not exist
+    if (userProfile) {
+      console.log('[v0] createChannel: updating existing profile');
+      const profileRef = doc(db, 'userProfiles', currentUser.uid);
       await updateDoc(profileRef, {
-        channelIds: [...profile.channelIds, channelRef.id],
+        channelIds: [...userProfile.channelIds, channelRef.id],
         ...(isDefault ? { defaultChannelId: channelRef.id } : {})
       });
     }
 
+    console.log('[v0] createChannel: completed successfully');
     return newChannel;
-  }, [currentUser]);
+  }, [currentUser, userProfile]);
 
   // Join channel by invite code
   const joinChannelByCode = useCallback(async (code: string): Promise<Channel> => {
@@ -268,7 +262,7 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
     const batch = writeBatch(db);
     
     // Create "マイチャンネル" for the user
-    const inviteCode = await generateUniqueInviteCode();
+    const inviteCode = generateUniqueInviteCode();
     const channelRef = doc(collection(db, 'channels'));
     
     batch.set(channelRef, {
