@@ -1,11 +1,20 @@
-import { ArrowLeft, Box, CheckCircle2, Clock, MapPin, Tag, User } from 'lucide-react';
+import { ArrowLeft, Box, CheckCircle2, Clock, MapPin, Tag, User, MoreVertical, Edit2, Trash2, X, ChevronDown } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
+import { useState } from 'react';
 
 export default function ItemDetailScreen() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { items, locations, updateItemStatus } = useData();
+  const { items, locations, updateItemStatus, updateItem, deleteItem } = useData();
+  
+  const [showMenu, setShowMenu] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editTags, setEditTags] = useState('');
+  const [editLocationId, setEditLocationId] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const itemData = items.find(i => i.id === id);
   const locationData = itemData ? locations.find(l => l.id === itemData.locationId) : null;
@@ -19,7 +28,7 @@ export default function ItemDetailScreen() {
     locationName: locationData.name,
     markerText: locationData.markerText || '未設定',
     landscapePhoto: locationData.landscapePhoto,
-    registeredBy: 'あなた', // Mock user for now
+    registeredBy: 'あなた',
     registeredAt: itemData.createdAt?.toDate ? itemData.createdAt.toDate().toLocaleDateString('ja-JP') : '最近'
   };
 
@@ -28,12 +37,79 @@ export default function ItemDetailScreen() {
     await updateItemStatus(item.id, newStatus);
   };
 
+  const handleOpenEdit = () => {
+    setEditName(item.name);
+    setEditTags(item.tags.join(', '));
+    setEditLocationId(item.locationId);
+    setShowMenu(false);
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editName.trim()) return;
+    setSaving(true);
+    try {
+      const tags = editTags.split(',').map(t => t.trim()).filter(Boolean);
+      await updateItem(item.id, {
+        name: editName.trim(),
+        tags,
+        locationId: editLocationId
+      });
+      setShowEditModal(false);
+    } catch (err) {
+      console.error('Error updating item:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setSaving(true);
+    try {
+      await deleteItem(item.id);
+      navigate(-1);
+    } catch (err) {
+      console.error('Error deleting item:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 max-w-md mx-auto pb-24 relative">
-      {/* Dynamic Header based on Scroll could go here, for now absolute back button */}
+      {/* Back button */}
       <button onClick={() => navigate(-1)} className="absolute top-4 left-4 z-20 p-2.5 bg-black/40 backdrop-blur-md text-white rounded-full hover:bg-black/60 transition-colors">
         <ArrowLeft size={20} strokeWidth={3} />
       </button>
+
+      {/* Menu button */}
+      <div className="absolute top-4 right-4 z-20">
+        <button 
+          onClick={() => setShowMenu(!showMenu)}
+          className="p-2.5 bg-black/40 backdrop-blur-md text-white rounded-full hover:bg-black/60 transition-colors"
+        >
+          <MoreVertical size={20} strokeWidth={3} />
+        </button>
+        {showMenu && (
+          <>
+            <div className="fixed inset-0 z-20" onClick={() => setShowMenu(false)} />
+            <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-30 min-w-[140px]">
+              <button 
+                onClick={handleOpenEdit}
+                className="w-full px-4 py-2.5 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+              >
+                <Edit2 size={16} /> 編集
+              </button>
+              <button 
+                onClick={() => { setShowMenu(false); setShowDeleteConfirm(true); }}
+                className="w-full px-4 py-2.5 text-left text-sm font-medium text-red-600 hover:bg-red-50 flex items-center gap-2"
+              >
+                <Trash2 size={16} /> 削除
+              </button>
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Hero Item Image */}
       <div className="relative w-full aspect-square bg-gray-200">
@@ -41,7 +117,7 @@ export default function ItemDetailScreen() {
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent"></div>
         
         {/* Status Badge Over Image */}
-        <div className="absolute top-4 right-4 z-10">
+        <div className="absolute top-4 left-4 z-10">
           {item.status === 'stored' ? (
             <span className="bg-emerald-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm border border-emerald-400">
               <CheckCircle2 size={14} /> 保管中
@@ -66,12 +142,15 @@ export default function ItemDetailScreen() {
       </div>
 
       <main className="flex-1 p-5 -mt-4 relative z-10 bg-gray-50 rounded-t-3xl border-t border-gray-100">
-        {/* Context Location Card (CRITICAL FUNCTION) */}
+        {/* Context Location Card */}
         <section className="mb-6">
            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
              <MapPin size={14} /> 収納場所の風景
            </h2>
-           <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 group cursor-pointer active:scale-[0.98] transition-transform">
+           <div 
+             onClick={() => navigate(`/locations/${item.locationId}`)}
+             className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 group cursor-pointer active:scale-[0.98] transition-transform"
+           >
               <div className="relative h-40 w-full bg-gray-200">
                  <img src={item.landscapePhoto} alt="場所の風景" className="w-full h-full object-cover" />
                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"></div>
@@ -125,6 +204,111 @@ export default function ItemDetailScreen() {
           )}
         </button>
       </div>
+
+      {/* Edit Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setShowEditModal(false)}></div>
+          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-extrabold text-gray-900">アイテムを編集</h2>
+                <button onClick={() => setShowEditModal(false)} className="p-2 hover:bg-gray-100 rounded-full">
+                  <X size={20} className="text-gray-500" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">名前</label>
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="例: ドライバーセット"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">タグ（カンマ区切り）</label>
+                  <input
+                    type="text"
+                    value={editTags}
+                    onChange={(e) => setEditTags(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="例: 工具, DIY, 修理"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">保管場所</label>
+                  <div className="relative">
+                    <select
+                      value={editLocationId}
+                      onChange={(e) => setEditLocationId(e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                    >
+                      {locations.map(loc => (
+                        <option key={loc.id} value={loc.id}>{loc.name}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 py-3 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={saving || !editName.trim()}
+                  className="flex-1 py-3 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {saving ? '保存中...' : '保存'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)}></div>
+          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative z-10">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 size={32} className="text-red-600" />
+              </div>
+              <h2 className="text-lg font-extrabold text-gray-900 mb-2">このアイテムを削除しますか？</h2>
+              <p className="text-sm text-gray-500 mb-6">
+                この操作は取り消せません。
+              </p>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 py-3 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={saving}
+                  className="flex-1 py-3 rounded-xl font-bold text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50"
+                >
+                  {saving ? '削除中...' : '削除'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

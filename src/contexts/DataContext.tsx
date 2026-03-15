@@ -36,6 +36,8 @@ interface DataContextType {
   addItem: (item: Omit<Item, 'id' | 'userId' | 'channelId' | 'createdAt' | 'updatedAt'>) => Promise<string>;
   updateItemStatus: (itemId: string, status: 'stored' | 'taken_out') => Promise<void>;
   updateItemName: (itemId: string, name: string) => Promise<void>;
+  updateItem: (itemId: string, data: Partial<Pick<Item, 'name' | 'tags' | 'locationId'>>) => Promise<void>;
+  updateLocation: (locationId: string, data: Partial<Pick<Location, 'name' | 'description' | 'markerText'>>) => Promise<void>;
   deleteLocation: (locationId: string) => Promise<void>;
   deleteItem: (itemId: string) => Promise<void>;
 }
@@ -157,6 +159,25 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const updateItem = async (itemId: string, data: Partial<Pick<Item, 'name' | 'tags' | 'locationId'>>) => {
+    if (!currentUser) throw new Error("Not logged in");
+    if (!currentChannel) throw new Error("No channel selected");
+    
+    const itemRef = doc(db, `channels/${currentChannel.id}/items`, itemId);
+    await updateDoc(itemRef, {
+      ...data,
+      updatedAt: serverTimestamp()
+    });
+  };
+
+  const updateLocation = async (locationId: string, data: Partial<Pick<Location, 'name' | 'description' | 'markerText'>>) => {
+    if (!currentUser) throw new Error("Not logged in");
+    if (!currentChannel) throw new Error("No channel selected");
+    
+    const locationRef = doc(db, `channels/${currentChannel.id}/locations`, locationId);
+    await updateDoc(locationRef, data);
+  };
+
   const deleteLocation = async (locationId: string) => {
     if (!currentUser) throw new Error("Not logged in");
     if (!currentChannel) throw new Error("No channel selected");
@@ -181,6 +202,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     addItem,
     updateItemStatus,
     updateItemName,
+    updateItem,
+    updateLocation,
     deleteLocation,
     deleteItem
   };
