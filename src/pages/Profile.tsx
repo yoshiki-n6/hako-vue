@@ -1,9 +1,33 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, LogOut, Code, ChevronRight, User as UserIcon, Plus, KeyRound, Star, Copy, Check, RefreshCw, Edit2, Users, X, Camera } from 'lucide-react';
+import { Settings, LogOut, Code, ChevronRight, User as UserIcon, Plus, KeyRound, Star, Copy, Check, RefreshCw, Edit2, Users, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useChannel } from '../contexts/ChannelContext';
 import type { Channel, ChannelMember } from '../contexts/ChannelContext';
+
+// Pre-defined avatar icons using DiceBear API
+const AVATAR_OPTIONS = [
+  { id: 'adventurer-1', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix' },
+  { id: 'adventurer-2', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Aneka' },
+  { id: 'adventurer-3', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Leo' },
+  { id: 'adventurer-4', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Mia' },
+  { id: 'avataaars-1', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sasha' },
+  { id: 'avataaars-2', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Nala' },
+  { id: 'avataaars-3', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Toby' },
+  { id: 'avataaars-4', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lily' },
+  { id: 'bottts-1', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Robot1' },
+  { id: 'bottts-2', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Robot2' },
+  { id: 'bottts-3', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Robot3' },
+  { id: 'bottts-4', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Robot4' },
+  { id: 'lorelei-1', url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Sophie' },
+  { id: 'lorelei-2', url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Max' },
+  { id: 'lorelei-3', url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Emma' },
+  { id: 'lorelei-4', url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Jack' },
+  { id: 'fun-emoji-1', url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Happy' },
+  { id: 'fun-emoji-2', url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Cool' },
+  { id: 'fun-emoji-3', url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Star' },
+  { id: 'fun-emoji-4', url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Heart' },
+];
 
 export default function ProfileScreen() {
   const navigate = useNavigate();
@@ -141,33 +165,47 @@ export default function ProfileScreen() {
                 </button>
               </div>
               
-              {/* Avatar */}
-              <div className="flex justify-center mb-6">
-                <div className="relative">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-400 flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
-                    {photoURL ? (
-                      <img src={photoURL} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      getInitials(nickname)
-                    )}
-                  </div>
-                  <label className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:bg-blue-700 transition-colors">
-                    <Camera size={16} className="text-white" />
-                  </label>
+              {/* Current Avatar Preview */}
+              <div className="flex justify-center mb-4">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-400 flex items-center justify-center text-white text-2xl font-bold overflow-hidden ring-4 ring-blue-100">
+                  {photoURL ? (
+                    <img src={photoURL} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    getInitials(nickname)
+                  )}
                 </div>
               </div>
               
-              {/* Photo URL Input */}
-              <div className="mb-4">
-                <label className="block text-sm font-bold text-gray-700 mb-2">アイコンURL</label>
-                <input
-                  type="url"
-                  value={photoURL}
-                  onChange={(e) => setPhotoURL(e.target.value)}
-                  placeholder="https://example.com/photo.jpg"
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <p className="mt-1 text-xs text-gray-500">画像URLを入力してください</p>
+              {/* Avatar Selection Grid */}
+              <div className="mb-5">
+                <label className="block text-sm font-bold text-gray-700 mb-3">アイコンを選択</label>
+                <div className="grid grid-cols-5 gap-2 max-h-48 overflow-y-auto p-1">
+                  {AVATAR_OPTIONS.map((avatar) => (
+                    <button
+                      key={avatar.id}
+                      type="button"
+                      onClick={() => setPhotoURL(avatar.url)}
+                      className={`w-12 h-12 rounded-full overflow-hidden border-2 transition-all hover:scale-110 ${
+                        photoURL === avatar.url
+                          ? 'border-blue-500 ring-2 ring-blue-200'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <img src={avatar.url} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPhotoURL('')}
+                  className={`mt-2 text-xs font-medium px-3 py-1 rounded-full transition-colors ${
+                    !photoURL
+                      ? 'bg-blue-100 text-blue-600'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                  }`}
+                >
+                  アイコンなし（イニシャル表示）
+                </button>
               </div>
               
               {/* Nickname Input */}
