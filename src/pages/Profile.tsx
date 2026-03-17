@@ -327,8 +327,13 @@ export default function ProfileScreen() {
                 「{showLeaveConfirm.name}」から脱退しますか？
               </p>
               {showLeaveConfirm.memberIds.length === 1 && (
-                <p className="text-xs text-red-500 bg-red-50 p-3 rounded-xl text-center mb-4">
+                <p className="text-xs text-red-500 bg-red-50 p-3 rounded-xl text-center mb-2">
                   あなたが最後のメンバーです。脱退するとチャンネルは削除されます。
+                </p>
+              )}
+              {channels.length === 1 && (
+                <p className="text-xs text-amber-600 bg-amber-50 p-3 rounded-xl text-center mb-4">
+                  これが最後のチャンネルです。脱退後は新しいチャンネルを作成または参加する必要があります。
                 </p>
               )}
               <div className="flex gap-3 mt-6">
@@ -550,18 +555,16 @@ export default function ProfileScreen() {
                             <Pencil size={14} />
                             名前を編集
                           </button>
-                          {channels.length > 1 && (
-                            <button
-                              onClick={() => {
-                                setShowLeaveConfirm(channel);
-                                setShowChannelMenu(null);
-                              }}
-                              className="w-full px-4 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50 flex items-center gap-2"
-                            >
-                              <Trash2 size={14} />
-                              脱退する
-                            </button>
-                          )}
+                          <button
+                            onClick={() => {
+                              setShowLeaveConfirm(channel);
+                              setShowChannelMenu(null);
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50 flex items-center gap-2"
+                          >
+                            <Trash2 size={14} />
+                            脱退する
+                          </button>
                         </div>
                       )}
                     </div>

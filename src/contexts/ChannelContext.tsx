@@ -568,6 +568,11 @@ setUserProfile(newProfile);
       setCurrentChannel(updatedChannels[0] || null);
     }
 
+    // If no channels left, set onboarding needed
+    if (updatedChannels.length === 0) {
+      setNeedsOnboarding(true);
+    }
+
     console.log('[v0] leaveChannel: completed');
   }, [currentUser, userProfile, channels, currentChannel]);
 
