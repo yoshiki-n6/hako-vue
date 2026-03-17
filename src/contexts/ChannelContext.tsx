@@ -537,7 +537,20 @@ setUserProfile(newProfile);
 
     // Remove user from channel members
     const channelRef = doc(db, 'channels', channelId);
-    const newMemberIds = channel.memberIds.filter(id => id !== currentUser.uid);
+    
+    // Get fresh channel data from Firestore to avoid stale memberIds
+    const freshChannelDoc = await getDoc(channelRef);
+    if (!freshChannelDoc.exists()) {
+      throw new Error('Channel no longer exists');
+    }
+    const freshChannelData = freshChannelDoc.data();
+    const currentMemberIds: string[] = freshChannelData.memberIds || [];
+    
+    console.log('[v0] leaveChannel: currentMemberIds from Firestore', currentMemberIds);
+    console.log('[v0] leaveChannel: removing userId', currentUser.uid);
+    
+    const newMemberIds = currentMemberIds.filter(id => id !== currentUser.uid);
+    console.log('[v0] leaveChannel: newMemberIds after removal', newMemberIds);
 
     if (newMemberIds.length === 0) {
       // Delete channel if no members left
@@ -548,6 +561,7 @@ setUserProfile(newProfile);
       await updateDoc(channelRef, {
         memberIds: newMemberIds
       });
+      console.log('[v0] leaveChannel: updated memberIds in Firestore');
     }
 
     // Remove channel from user profile
