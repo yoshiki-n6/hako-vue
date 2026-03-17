@@ -1,9 +1,10 @@
-import { MapPin, Search } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { MapPin, Search, Plus } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 
 export default function LocationsScreen() {
   const { locations, items } = useData();
+  const navigate = useNavigate();
   
   // Create an array with item counts
   const locationsWithCounts = locations.map(loc => ({
@@ -67,11 +68,11 @@ export default function LocationsScreen() {
       </main>
       
       {/* Floating Action Button for adding a new location */}
-      <button className="fixed bottom-20 right-4 w-14 h-14 bg-blue-600 text-white rounded-full shadow-[0_4px_14px_rgba(37,99,235,0.4)] flex items-center justify-center hover:bg-blue-700 active:scale-90 transition-all z-20">
-        <MapPin size={24} className="mb-0.5" />
-        <span className="absolute top-3 right-3 w-3 h-3 bg-white border-2 border-blue-600 rounded-full flex items-center justify-center">
-           <span className="text-[8px] font-black text-blue-600 leading-none">+</span>
-        </span>
+      <button
+        onClick={() => navigate('/location-new')}
+        className="fixed bottom-20 right-4 w-14 h-14 bg-blue-600 text-white rounded-full shadow-[0_4px_14px_rgba(37,99,235,0.4)] flex items-center justify-center hover:bg-blue-700 active:scale-90 transition-all z-20"
+      >
+        <Plus size={26} strokeWidth={2.5} />
       </button>
     </div>
   );

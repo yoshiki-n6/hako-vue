@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Box, CheckCircle2, UserPlus, UserMinus, Package, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Box, CheckCircle2, UserPlus, UserMinus, Package, RefreshCw, Search, X } from 'lucide-react';
 import { useChannel } from '../contexts/ChannelContext';
 
 // Define ActivityLog type locally to avoid export issues
@@ -23,8 +23,19 @@ export default function ChannelActivityScreen() {
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const channel = channels.find(c => c.id === channelId);
+
+  const filteredLogs = searchQuery.trim()
+    ? logs.filter(log => {
+        const q = searchQuery.toLowerCase();
+        return (
+          (log.itemName?.toLowerCase().includes(q)) ||
+          (log.userNickname?.toLowerCase().includes(q))
+        );
+      })
+    : logs;
 
   useEffect(() => {
     const loadLogs = async () => {
@@ -102,7 +113,7 @@ export default function ChannelActivityScreen() {
             <span className="font-bold text-gray-900">{log.userNickname}</span>
             <span className="text-gray-600">が</span>
             <span className="font-bold text-emerald-600">{log.itemName || 'アイテム'}</span>
-            <span className="text-gray-600">をしまいました</span>
+            <span className="text-gray-600">を返却しました</span>
           </>
         );
       case 'member_joined':
@@ -175,9 +186,27 @@ export default function ChannelActivityScreen() {
             戻る
           </button>
         </div>
-        <div className="mt-3">
+        <div className="mt-3 mb-3">
           <h1 className="text-xl font-black text-gray-900">{channel.name}</h1>
           <p className="text-sm text-gray-500">アクティビティログ</p>
+        </div>
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="アイテム名・ユーザー名で検索"
+            className="w-full bg-gray-100 rounded-xl pl-9 pr-9 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
       </header>
 
@@ -204,9 +233,16 @@ export default function ChannelActivityScreen() {
             <p className="text-gray-500 font-medium">まだアクティビティがありません</p>
             <p className="text-sm text-gray-400 mt-1">アイテムの持ち出しや登録がここに表示されます</p>
           </div>
+        ) : filteredLogs.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Search size={32} className="text-gray-400" />
+            </div>
+            <p className="text-gray-500 font-medium">「{searchQuery}」の検索結果はありません</p>
+          </div>
         ) : (
           <div className="space-y-3">
-            {logs.map((log) => (
+            {filteredLogs.map((log) => (
               <div
                 key={log.id}
                 className={`p-4 rounded-2xl border ${getLogBgColor(log.type)}`}

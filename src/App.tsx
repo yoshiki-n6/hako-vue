@@ -16,6 +16,7 @@ import ItemDetailScreen from './pages/ItemDetail';
 import ProfileScreen from './pages/Profile';
 import LoginScreen from './pages/Login';
 import QRScannerScreen from './pages/QRScanner';
+import QRLocationSelectScreen from './pages/QRLocationSelect';
 import OnboardingScreen from './pages/Onboarding';
 import ChannelCreateScreen from './pages/ChannelCreate';
 import ChannelJoinScreen from './pages/ChannelJoin';
@@ -108,6 +109,13 @@ function App() {
                 <ProtectedRoute>
                   <OnboardingCheck>
                     <QRScannerScreen />
+                  </OnboardingCheck>
+                </ProtectedRoute>
+              } />
+              <Route path="/qr-location-select" element={
+                <ProtectedRoute>
+                  <OnboardingCheck>
+                    <QRLocationSelectScreen />
                   </OnboardingCheck>
                 </ProtectedRoute>
               } />
