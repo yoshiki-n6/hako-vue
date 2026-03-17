@@ -2,12 +2,12 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { useChannel } from '../contexts/ChannelContext';
-import { MapPin, QrCode, Box, ChevronRight } from 'lucide-react';
+import { MapPin, QrCode, Box, ChevronRight, Home as HomeIcon, Users, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Home() {
   const { currentUser } = useAuth();
-  const { items, locations } = useData();
+  const { items, locations, updateItemStatus } = useData();
   const { currentChannel } = useChannel();
   
   // 一人暮らし用チャンネルかどうか
@@ -16,6 +16,20 @@ export default function Home() {
   // 持ち出し中のアイテム
   const takenOutItems = items.filter(item => item.status === 'taken_out');
   const [showTakenOut, setShowTakenOut] = useState(false);
+  const [returningId, setReturningId] = useState<string | null>(null);
+
+  const handleReturn = async (e: React.MouseEvent, itemId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setReturningId(itemId);
+    try {
+      await updateItemStatus(itemId, 'stored');
+    } catch (error) {
+      console.error('Failed to return item:', error);
+    } finally {
+      setReturningId(null);
+    }
+  };
 
   // Get up to 4 most recently updated items
   const recentItems = [...items]
@@ -28,9 +42,22 @@ export default function Home() {
         <div>
           <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500 tracking-tight">Hako-Vue</h1>
           {currentChannel && (
-            <p className="text-xs font-medium text-gray-500 mt-1">
-              {currentChannel.name}
-            </p>
+            <div className="flex items-center gap-1.5 mt-1.5">
+              {currentChannel.type === 'solo' ? (
+                <span className="flex items-center gap-1 bg-purple-100 text-purple-700 text-[11px] font-bold px-2 py-0.5 rounded-full">
+                  <HomeIcon size={10} />
+                  一人暮らし
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 bg-blue-100 text-blue-700 text-[11px] font-bold px-2 py-0.5 rounded-full">
+                  <Users size={10} />
+                  共有
+                </span>
+              )}
+              <p className="text-sm font-bold text-gray-700">
+                {currentChannel.name}
+              </p>
+            </div>
           )}
         </div>
         <div className="flex items-center gap-3">
@@ -74,6 +101,7 @@ export default function Home() {
           <div className="divide-y divide-gray-50">
             {takenOutItems.map(item => {
               const location = locations.find(loc => loc.id === item.locationId);
+              const isReturning = returningId === item.id;
               return (
                 <Link 
                   to={`/items/${item.id}`} 
@@ -90,9 +118,14 @@ export default function Home() {
                       {location?.name || '不明な場所'}
                     </p>
                   </div>
-                  <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shrink-0">
-                    持ち出し中
-                  </span>
+                  <button
+                    onClick={(e) => handleReturn(e, item.id)}
+                    disabled={isReturning}
+                    className="flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-full shrink-0 hover:bg-emerald-100 transition-colors disabled:opacity-50 active:scale-95"
+                  >
+                    <RotateCcw size={11} className={isReturning ? 'animate-spin' : ''} />
+                    返却
+                  </button>
                 </Link>
               );
             })}
