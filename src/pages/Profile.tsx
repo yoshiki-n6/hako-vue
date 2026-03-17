@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, LogOut, Code, ChevronRight, User as UserIcon, Plus, KeyRound, Star, Copy, Check, RefreshCw, Edit2, Users, X } from 'lucide-react';
+import { Settings, LogOut, Code, ChevronRight, User as UserIcon, Plus, KeyRound, Star, Copy, Check, RefreshCw, Edit2, Users, X, Home } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useChannel } from '../contexts/ChannelContext';
 import type { Channel, ChannelMember } from '../contexts/ChannelContext';
@@ -275,9 +275,22 @@ export default function ProfileScreen() {
 
         {/* Current Channel */}
         {currentChannel && (
-          <section className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-5 border border-blue-100 shadow-sm">
+          <section className={`rounded-3xl p-5 border shadow-sm ${
+            currentChannel.type === 'solo'
+              ? 'bg-gradient-to-br from-purple-50 to-violet-50 border-purple-100'
+              : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100'
+          }`}>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-blue-900">現在のチャンネル</h3>
+              <div className="flex items-center gap-2">
+                <h3 className={`text-sm font-bold ${currentChannel.type === 'solo' ? 'text-purple-900' : 'text-blue-900'}`}>
+                  現在のチャンネル
+                </h3>
+                {currentChannel.type === 'solo' && (
+                  <span className="text-[10px] font-bold text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <Home size={10} /> 一人暮らし用
+                  </span>
+                )}
+              </div>
               {userProfile?.defaultChannelId === currentChannel.id && (
                 <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full flex items-center gap-1">
                   <Star size={10} fill="currentColor" /> デフォルト
@@ -286,29 +299,37 @@ export default function ProfileScreen() {
             </div>
             <p className="text-lg font-bold text-gray-900 mb-2">{currentChannel.name}</p>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-gray-500">招待コード:</span>
-                <code className="bg-white px-2 py-1 rounded font-mono font-bold text-blue-600">
-                  {currentChannel.inviteCode}
-                </code>
+              {/* 共有用チャンネルのみ招待コードを表示 */}
+              {currentChannel.type === 'shared' ? (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-gray-500">招待コード:</span>
+                  <code className="bg-white px-2 py-1 rounded font-mono font-bold text-blue-600">
+                    {currentChannel.inviteCode}
+                  </code>
+                  <button
+                    onClick={() => handleCopyCode(currentChannel.inviteCode)}
+                    className="text-blue-600 hover:text-blue-700"
+                  >
+                    {copiedCode === currentChannel.inviteCode ? (
+                      <Check size={16} />
+                    ) : (
+                      <Copy size={16} />
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <span className="text-sm text-purple-600">自分専用チャンネル</span>
+              )}
+              {/* 共有用チャンネルのみメンバー表示 */}
+              {currentChannel.type === 'shared' && (
                 <button
-                  onClick={() => handleCopyCode(currentChannel.inviteCode)}
-                  className="text-blue-600 hover:text-blue-700"
+                  onClick={() => handleShowMembers(currentChannel)}
+                  className="flex items-center gap-1 text-sm font-bold text-blue-600 bg-white px-3 py-1 rounded-full hover:bg-blue-50 transition-colors"
                 >
-                  {copiedCode === currentChannel.inviteCode ? (
-                    <Check size={16} />
-                  ) : (
-                    <Copy size={16} />
-                  )}
+                  <Users size={14} />
+                  {currentChannel.memberIds.length}人
                 </button>
-              </div>
-              <button
-                onClick={() => handleShowMembers(currentChannel)}
-                className="flex items-center gap-1 text-sm font-bold text-blue-600 bg-white px-3 py-1 rounded-full hover:bg-blue-50 transition-colors"
-              >
-                <Users size={14} />
-                {currentChannel.memberIds.length}人
-              </button>
+              )}
             </div>
           </section>
         )}
@@ -321,35 +342,44 @@ export default function ProfileScreen() {
             {channels.map((channel) => (
               <div 
                 key={channel.id}
-                className={`p-4 ${currentChannel?.id === channel.id ? 'bg-blue-50/50' : ''}`}
+                className={`p-4 ${currentChannel?.id === channel.id ? (channel.type === 'solo' ? 'bg-purple-50/50' : 'bg-blue-50/50') : ''}`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <button
                     onClick={() => handleSwitchChannel(channel)}
                     className="flex items-center gap-2 text-left flex-1 min-w-0"
                   >
-                    <span className={`font-bold truncate ${currentChannel?.id === channel.id ? 'text-blue-600' : 'text-gray-900'}`}>
+                    <span className={`font-bold truncate ${currentChannel?.id === channel.id ? (channel.type === 'solo' ? 'text-purple-600' : 'text-blue-600') : 'text-gray-900'}`}>
                       {channel.name}
                     </span>
+                    {channel.type === 'solo' && (
+                      <span className="text-[10px] font-bold text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full shrink-0 flex items-center gap-0.5">
+                        <Home size={10} />
+                      </span>
+                    )}
                     {currentChannel?.id === channel.id && (
-                      <span className="text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full shrink-0">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                        channel.type === 'solo' ? 'text-purple-600 bg-purple-100' : 'text-blue-600 bg-blue-100'
+                      }`}>
                         使用中
                       </span>
                     )}
                   </button>
                   <div className="flex items-center gap-2">
-                    {/* Member count */}
-                    <button
-                      onClick={() => handleShowMembers(channel)}
-                      className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full transition-colors ${
-                        channel.memberIds.length >= 2 
-                          ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' 
-                          : 'text-gray-500 bg-gray-100'
-                      }`}
-                    >
-                      <Users size={12} />
-                      {channel.memberIds.length}
-                    </button>
+                    {/* Member count - 共有用のみ表示 */}
+                    {channel.type === 'shared' && (
+                      <button
+                        onClick={() => handleShowMembers(channel)}
+                        className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full transition-colors ${
+                          channel.memberIds.length >= 2 
+                            ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' 
+                            : 'text-gray-500 bg-gray-100'
+                        }`}
+                      >
+                        <Users size={12} />
+                        {channel.memberIds.length}
+                      </button>
+                    )}
                     {userProfile?.defaultChannelId === channel.id ? (
                       <span className="text-amber-500 shrink-0">
                         <Star size={16} fill="currentColor" />
@@ -371,22 +401,29 @@ export default function ProfileScreen() {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span>招待コード:</span>
-                  <code className="bg-gray-50 px-1.5 py-0.5 rounded font-mono font-bold">
-                    {channel.inviteCode}
-                  </code>
-                  <button
-                    onClick={() => handleCopyCode(channel.inviteCode)}
-                    className="text-gray-400 hover:text-blue-600"
-                  >
-                    {copiedCode === channel.inviteCode ? (
-                      <Check size={14} />
-                    ) : (
-                      <Copy size={14} />
-                    )}
-                  </button>
-                </div>
+                {/* 共有用チャンネルのみ招待コードを表示 */}
+                {channel.type === 'shared' ? (
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <span>招待コード:</span>
+                    <code className="bg-gray-50 px-1.5 py-0.5 rounded font-mono font-bold">
+                      {channel.inviteCode}
+                    </code>
+                    <button
+                      onClick={() => handleCopyCode(channel.inviteCode)}
+                      className="text-gray-400 hover:text-blue-600"
+                    >
+                      {copiedCode === channel.inviteCode ? (
+                        <Check size={14} />
+                      ) : (
+                        <Copy size={14} />
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-xs text-purple-500">
+                    一人暮らし用チャンネル
+                  </div>
+                )}
               </div>
             ))}
           </div>

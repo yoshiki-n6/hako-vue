@@ -22,6 +22,7 @@ export interface Channel {
   inviteCode: string;
   memberIds: string[];
   createdAt: any;
+  type: 'solo' | 'shared'; // solo: 一人暮らし用, shared: 共有用
 }
 
 export interface UserProfile {
@@ -46,7 +47,7 @@ interface ChannelContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   needsOnboarding: boolean;
-  createChannel: (name: string, isDefault?: boolean) => Promise<Channel>;
+  createChannel: (name: string, isDefault?: boolean, type?: 'solo' | 'shared') => Promise<Channel>;
   joinChannelByCode: (code: string) => Promise<Channel>;
   switchChannel: (channelId: string) => Promise<void>;
   setDefaultChannel: (channelId: string) => Promise<void>;
@@ -165,10 +166,10 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
   }, [currentUser]);
 
   // Create a new channel
-  const createChannel = useCallback(async (name: string, isDefault = false): Promise<Channel> => {
+  const createChannel = useCallback(async (name: string, isDefault = false, type: 'solo' | 'shared' = 'shared'): Promise<Channel> => {
     if (!currentUser) throw new Error('Not logged in');
 
-    console.log('[v0] createChannel: starting...', { name, isDefault });
+    console.log('[v0] createChannel: starting...', { name, isDefault, type });
 
     const inviteCode = generateUniqueInviteCode();
     console.log('[v0] createChannel: generated invite code:', inviteCode);
@@ -180,7 +181,8 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
       ownerId: currentUser.uid,
       inviteCode,
       memberIds: [currentUser.uid],
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
+      type
     };
 
     await setDoc(channelRef, channelData);
@@ -310,7 +312,8 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
       ownerId: currentUser.uid,
       inviteCode,
       memberIds: [currentUser.uid],
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
+      type: 'solo' // デフォルトは一人暮らし用
     });
     console.log('[v0] migrateExistingData: channel created:', channelRef.id);
 
@@ -369,7 +372,8 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
       ownerId: currentUser.uid,
       inviteCode,
       memberIds: [currentUser.uid],
-      createdAt: new Date()
+      createdAt: new Date(),
+      type: 'solo'
     };
     const newProfile: UserProfile = {
       userId: currentUser.uid,
