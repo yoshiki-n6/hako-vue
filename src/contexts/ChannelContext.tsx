@@ -260,7 +260,11 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
     // Add join log for shared channels
     if (channelData.type === 'shared') {
       const profileSnap = await getDoc(doc(db, 'userProfiles', currentUser.uid));
-      const userNickname = profileSnap.exists() ? (profileSnap.data().nickname || 'ユーザー') : 'ユーザー';
+      const data = profileSnap.exists() ? profileSnap.data() : null;
+      const userNickname = data?.nickname
+        || currentUser.displayName
+        || (currentUser.email ? currentUser.email.split('@')[0] : null)
+        || '名称未設定';
       
       const logRef = doc(collection(db, `channels/${channelDoc.id}/activityLogs`));
       await setDoc(logRef, {
@@ -453,9 +457,11 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
         const profileDoc = await getDoc(doc(db, 'userProfiles', memberId));
         if (profileDoc.exists()) {
           const data = profileDoc.data();
+          // nickname優先、なければdisplayName、なければメールアドレスの@前
+          const nickname = data.nickname || data.displayName || (data.email ? data.email.split('@')[0] : null) || '名称未設定';
           return {
             userId: memberId,
-            nickname: data.nickname || 'ユーザー',
+            nickname,
             photoURL: data.photoURL || ''
           } as ChannelMember;
         }
@@ -464,7 +470,7 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
       }
       return {
         userId: memberId,
-        nickname: 'ユーザー',
+        nickname: '名称未設定',
         photoURL: ''
       } as ChannelMember;
     });
@@ -506,38 +512,45 @@ setUserProfile(newProfile);
 
   // Leave channel
   const leaveChannel = useCallback(async (channelId: string) => {
-    console.log('[v0] leaveChannel: starting', { channelId, channelsCount: channels.length });
-    if (!currentUser) {
-      console.log('[v0] leaveChannel: Not logged in');
-      throw new Error('Not logged in');
-    }
-    if (!userProfile) {
-      console.log('[v0] leaveChannel: No profile');
-      throw new Error('No profile');
-    }
+    if (!currentUser) throw new Error('Not logged in');
+    if (!userProfile) throw new Error('No profile');
 
     const channel = channels.find(c => c.id === channelId);
-    console.log('[v0] leaveChannel: found channel', { channel, allChannelIds: channels.map(c => c.id) });
-    if (!channel) {
-      console.log('[v0] leaveChannel: Channel not found');
-      throw new Error('Channel not found');
-    }
+    if (!channel) throw new Error('Channel not found');
 
     // Add leave log before leaving (for shared channels)
     if (channel.type === 'shared') {
+      const userNickname = userProfile.nickname
+        || currentUser.displayName
+        || (currentUser.email ? currentUser.email.split('@')[0] : null)
+        || '名称未設定';
+
       const logRef = doc(collection(db, `channels/${channelId}/activityLogs`));
       await setDoc(logRef, {
         channelId,
         type: 'member_left',
         userId: currentUser.uid,
-        userNickname: userProfile.nickname || 'ユーザー',
+        userNickname,
         createdAt: serverTimestamp()
       });
     }
 
     // Remove user from channel members
     const channelRef = doc(db, 'channels', channelId);
-    const newMemberIds = channel.memberIds.filter(id => id !== currentUser.uid);
+    
+    // Get fresh channel data from Firestore to avoid stale memberIds
+    const freshChannelDoc = await getDoc(channelRef);
+    if (!freshChannelDoc.exists()) {
+      throw new Error('Channel no longer exists');
+    }
+    const freshChannelData = freshChannelDoc.data();
+    const currentMemberIds: string[] = freshChannelData.memberIds || [];
+    
+    console.log('[v0] leaveChannel: currentMemberIds from Firestore', currentMemberIds);
+    console.log('[v0] leaveChannel: removing userId', currentUser.uid);
+    
+    const newMemberIds = currentMemberIds.filter(id => id !== currentUser.uid);
+    console.log('[v0] leaveChannel: newMemberIds after removal', newMemberIds);
 
     if (newMemberIds.length === 0) {
       // Delete channel if no members left
@@ -548,6 +561,7 @@ setUserProfile(newProfile);
       await updateDoc(channelRef, {
         memberIds: newMemberIds
       });
+      console.log('[v0] leaveChannel: updated memberIds in Firestore');
     }
 
     // Remove channel from user profile
@@ -617,12 +631,18 @@ setUserProfile(newProfile);
     // Only add logs for shared channels
     if (currentChannel.type !== 'shared') return;
 
+    // nickname優先、なければAuth displayName、なければメールの@前
+    const userNickname = userProfile.nickname
+      || currentUser.displayName
+      || (currentUser.email ? currentUser.email.split('@')[0] : null)
+      || '名称未設定';
+
     const logRef = doc(collection(db, `channels/${currentChannel.id}/activityLogs`));
     await setDoc(logRef, {
       channelId: currentChannel.id,
       type,
       userId: currentUser.uid,
-      userNickname: userProfile.nickname || 'ユーザー',
+      userNickname,
       itemId,
       itemName,
       createdAt: serverTimestamp()

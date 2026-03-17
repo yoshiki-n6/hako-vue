@@ -2,16 +2,30 @@ import { ArrowLeft, Box, CheckCircle2, Clock, MapPin, Tag, User, MoreVertical, E
 import { useNavigate, useParams } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import { useChannel } from '../contexts/ChannelContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function ItemDetailScreen() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { items, locations, updateItemStatus, updateItem, deleteItem } = useData();
-  const { currentChannel } = useChannel();
+  const { currentChannel, getChannelMembers } = useChannel();
+  const { currentUser } = useAuth();
   
   // 一人暮らし用チャンネルかどうか
   const isSoloChannel = currentChannel?.type === 'solo';
+
+  // 登録者ニックネームのマップ (userId -> nickname)
+  const [memberNicknameMap, setMemberNicknameMap] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!currentChannel) return;
+    getChannelMembers(currentChannel.id).then(members => {
+      const map: Record<string, string> = {};
+      members.forEach(m => { map[m.userId] = m.nickname; });
+      setMemberNicknameMap(map);
+    });
+  }, [currentChannel, getChannelMembers]);
   
   const [showMenu, setShowMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -33,7 +47,7 @@ export default function ItemDetailScreen() {
     locationName: locationData.name,
     markerText: locationData.markerText || '未設定',
     landscapePhoto: locationData.landscapePhoto,
-    registeredBy: 'あなた',
+    registeredBy: memberNicknameMap[itemData.userId] || (itemData.userId === currentUser?.uid ? 'あなた' : '名称未設定'),
     registeredAt: itemData.createdAt?.toDate ? itemData.createdAt.toDate().toLocaleDateString('ja-JP') : '最近'
   };
 
