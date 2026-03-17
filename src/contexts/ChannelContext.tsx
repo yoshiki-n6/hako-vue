@@ -219,10 +219,10 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
     
     const newChannel: Channel = { id: channelRef.id, ...channelData };
 
-    // Only update existing profile - don't try to read if it might not exist
+    // Update or create profile
+    const profileRef = doc(db, 'userProfiles', currentUser.uid);
     if (userProfile) {
       console.log('[v0] createChannel: updating existing profile');
-      const profileRef = doc(db, 'userProfiles', currentUser.uid);
       const newChannelIds = [...userProfile.channelIds, channelRef.id];
       await updateDoc(profileRef, {
         channelIds: newChannelIds,
@@ -237,6 +237,30 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
         ...(isDefault ? { defaultChannelId: channelRef.id } : {})
       } : null);
       console.log('[v0] createChannel: local state updated');
+    } else {
+      // Create new profile with Google account info
+      console.log('[v0] createChannel: creating new profile');
+      const newProfile = {
+        defaultChannelId: channelRef.id,
+        channelIds: [channelRef.id],
+        migrated: false,
+        createdAt: serverTimestamp(),
+        ...(currentUser.displayName ? { nickname: currentUser.displayName } : {}),
+        ...(currentUser.photoURL ? { photoURL: currentUser.photoURL } : {}),
+      };
+      await setDoc(profileRef, newProfile);
+      
+      // Update local state
+      setChannels([newChannel]);
+      setUserProfile({
+        userId: currentUser.uid,
+        defaultChannelId: channelRef.id,
+        channelIds: [channelRef.id],
+        nickname: currentUser.displayName || undefined,
+        photoURL: currentUser.photoURL || undefined,
+      } as UserProfile);
+      setNeedsOnboarding(false);
+      console.log('[v0] createChannel: new profile created');
     }
 
     console.log('[v0] createChannel: completed successfully');
@@ -310,6 +334,28 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
         ...prev,
         channelIds: newChannelIds
       } : null);
+    } else {
+      // Create new profile with Google account info
+      const newProfile = {
+        defaultChannelId: channelDoc.id,
+        channelIds: [channelDoc.id],
+        migrated: false,
+        createdAt: serverTimestamp(),
+        ...(currentUser.displayName ? { nickname: currentUser.displayName } : {}),
+        ...(currentUser.photoURL ? { photoURL: currentUser.photoURL } : {}),
+      };
+      await setDoc(profileRef, newProfile);
+      
+      // Update local state
+      setChannels([joinedChannel]);
+      setUserProfile({
+        userId: currentUser.uid,
+        defaultChannelId: channelDoc.id,
+        channelIds: [channelDoc.id],
+        nickname: currentUser.displayName || undefined,
+        photoURL: currentUser.photoURL || undefined,
+      } as UserProfile);
+      setNeedsOnboarding(false);
     }
 
     return joinedChannel;
