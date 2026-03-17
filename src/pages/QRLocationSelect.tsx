@@ -104,13 +104,7 @@ export default function QRLocationSelectScreen() {
 
         {/* Overlay Guide */}
         <div className="absolute inset-0 pointer-events-none z-10 flex flex-col items-center justify-center">
-          <div className="w-64 h-64 relative border-2 border-white/50 rounded-3xl overflow-hidden shadow-[0_0_0_9999px_rgba(0,0,0,0.6)]">
-            {/* Viewfinder corners */}
-            <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-blue-500 rounded-tl-3xl"></div>
-            <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-blue-500 rounded-tr-3xl"></div>
-            <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-blue-500 rounded-bl-3xl"></div>
-            <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-blue-500 rounded-br-3xl"></div>
-            
+          <div className="w-64 h-64 relative rounded-3xl overflow-hidden shadow-[0_0_0_9999px_rgba(0,0,0,0.6)]">
             <div className="absolute inset-0 flex items-center justify-center text-white/30 animate-pulse">
               <ScanLine size={64} strokeWidth={1} />
             </div>

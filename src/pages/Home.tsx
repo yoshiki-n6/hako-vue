@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { useChannel } from '../contexts/ChannelContext';
-import { MapPin, QrCode } from 'lucide-react';
+import { MapPin, QrCode, Box, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
 
 export default function Home() {
   const { currentUser } = useAuth();
@@ -12,6 +13,10 @@ export default function Home() {
   // 一人暮らし用チャンネルかどうか
   const isSoloChannel = currentChannel?.type === 'solo';
 
+  // 持ち出し中のアイテム
+  const takenOutItems = items.filter(item => item.status === 'taken_out');
+  const [showTakenOut, setShowTakenOut] = useState(false);
+
   // Get up to 4 most recently updated items
   const recentItems = [...items]
     .sort((a, b) => b.updatedAt?.toMillis?.() - a.updatedAt?.toMillis?.() || 0)
@@ -19,9 +24,14 @@ export default function Home() {
 
   return (
     <div className="max-w-md mx-auto p-5 pb-20">
-      <header className="mb-8 pt-6 flex justify-between items-center">
+      <header className="mb-6 pt-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500 tracking-tight">Hako-Vue</h1>
+          {currentChannel && (
+            <p className="text-xs font-medium text-gray-500 mt-1">
+              {currentChannel.name}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <Link to="/scan" className="w-10 h-10 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-200 transition-colors">
@@ -39,23 +49,62 @@ export default function Home() {
         </div>
       </header>
       
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 gap-3 mb-8">
-        <Link to="/search" className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col hover:border-blue-200 hover:shadow-md transition-all group active:scale-[0.98]">
-          <span className="text-gray-500 text-xs font-semibold mb-1 group-hover:text-blue-600 transition-colors">登録アイテム数</span>
-          <div className="flex items-end gap-1">
-            <span className="text-2xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors">{items.length}</span>
-            <span className="text-xs text-gray-400 font-medium mb-1">個</span>
+      {/* 持ち出し中のアイテムボタン（共有チャンネルのみ） */}
+      {!isSoloChannel && (
+        <button
+          onClick={() => setShowTakenOut(!showTakenOut)}
+          className="w-full bg-amber-50 border border-amber-200 p-4 rounded-2xl mb-6 flex items-center justify-between hover:bg-amber-100 transition-colors active:scale-[0.98]"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
+              <Box size={20} className="text-white" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-bold text-amber-800">持ち出し中のアイテム</p>
+              <p className="text-xs text-amber-600">{takenOutItems.length}個のアイテム</p>
+            </div>
           </div>
-        </Link>
-        <Link to="/locations" className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col hover:border-blue-200 hover:shadow-md transition-all group active:scale-[0.98]">
-          <span className="text-gray-500 text-xs font-semibold mb-1 group-hover:text-blue-600 transition-colors">収納場所</span>
-          <div className="flex items-end gap-1">
-            <span className="text-2xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors">{locations.length}</span>
-            <span className="text-xs text-gray-400 font-medium mb-1">箇所</span>
+          <ChevronRight size={20} className={`text-amber-500 transition-transform ${showTakenOut ? 'rotate-90' : ''}`} />
+        </button>
+      )}
+
+      {/* 持ち出し中アイテム一覧 */}
+      {!isSoloChannel && showTakenOut && takenOutItems.length > 0 && (
+        <div className="mb-6 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="divide-y divide-gray-50">
+            {takenOutItems.map(item => {
+              const location = locations.find(loc => loc.id === item.locationId);
+              return (
+                <Link 
+                  to={`/items/${item.id}`} 
+                  key={item.id} 
+                  className="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="w-12 h-12 bg-gray-100 rounded-xl overflow-hidden shrink-0">
+                    <img src={item.itemPhotoUrl} alt={item.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-gray-800 text-sm truncate">{item.name}</p>
+                    <p className="text-xs text-gray-500 truncate flex items-center gap-1">
+                      <MapPin size={10} className="text-gray-400 shrink-0" />
+                      {location?.name || '不明な場所'}
+                    </p>
+                  </div>
+                  <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shrink-0">
+                    持ち出し中
+                  </span>
+                </Link>
+              );
+            })}
           </div>
-        </Link>
-      </div>
+        </div>
+      )}
+
+      {!isSoloChannel && showTakenOut && takenOutItems.length === 0 && (
+        <div className="mb-6 bg-gray-50 border border-gray-100 rounded-2xl p-6 text-center">
+          <p className="text-sm font-bold text-gray-500">持ち出し中のアイテムはありません</p>
+        </div>
+      )}
 
       <section className="mb-8">
         <div className="flex justify-between items-end mb-4">
