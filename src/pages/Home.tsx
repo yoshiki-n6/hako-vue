@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { useChannel } from '../contexts/ChannelContext';
-import { MapPin, QrCode, Box, ChevronRight, Home as HomeIcon, Users, RotateCcw } from 'lucide-react';
+import { MapPin, QrCode, Box, ChevronRight, Home as HomeIcon, Users } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Home() {
@@ -42,21 +42,21 @@ export default function Home() {
         <div>
           <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500 tracking-tight">Hako-Vue</h1>
           {currentChannel && (
-            <div className="flex items-center gap-1.5 mt-1.5">
+            <div className="flex items-center gap-2 mt-3">
               {currentChannel.type === 'solo' ? (
-                <span className="flex items-center gap-1 bg-purple-100 text-purple-700 text-[11px] font-bold px-2 py-0.5 rounded-full">
-                  <HomeIcon size={10} />
-                  一人暮らし
+                <span className="flex items-center gap-1.5 bg-purple-100 text-purple-700 text-xs font-bold px-2.5 py-1 rounded-full shrink-0">
+                  <HomeIcon size={12} />
+                  一人暮らし用
                 </span>
               ) : (
-                <span className="flex items-center gap-1 bg-blue-100 text-blue-700 text-[11px] font-bold px-2 py-0.5 rounded-full">
-                  <Users size={10} />
-                  共有
+                <span className="flex items-center gap-1.5 bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-full shrink-0">
+                  <Users size={12} />
+                  共有用
                 </span>
               )}
-              <p className="text-sm font-bold text-gray-700">
+              <h2 className="text-lg font-extrabold text-gray-900 truncate">
                 {currentChannel.name}
-              </p>
+              </h2>
             </div>
           )}
         </div>
