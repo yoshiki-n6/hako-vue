@@ -1,7 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Box, CheckCircle2, UserPlus, UserMinus, Package, RefreshCw } from 'lucide-react';
-import { useChannel, ActivityLog } from '../contexts/ChannelContext';
+import { useChannel } from '../contexts/ChannelContext';
+
+// Define ActivityLog type locally to avoid export issues
+interface ActivityLog {
+  id: string;
+  channelId: string;
+  type: 'item_taken_out' | 'item_stored' | 'member_joined' | 'member_left' | 'item_added';
+  userId: string;
+  userNickname: string;
+  itemId?: string;
+  itemName?: string;
+  createdAt: any;
+}
 
 export default function ChannelActivityScreen() {
   const navigate = useNavigate();
