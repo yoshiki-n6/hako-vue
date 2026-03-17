@@ -315,6 +315,57 @@ export default function ProfileScreen() {
           </div>
         )}
 
+        {/* Channel Menu Modal */}
+        {showChannelMenu && (
+          <div 
+            className="fixed inset-0 z-50"
+            onClick={() => setShowChannelMenu(null)}
+          >
+            <div className="absolute inset-0 bg-black/20" />
+            <div className="absolute bottom-0 left-0 right-0 max-w-md mx-auto p-4">
+              <div 
+                className="bg-white rounded-2xl shadow-xl overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {(() => {
+                  const channel = channels.find(c => c.id === showChannelMenu);
+                  if (!channel) return null;
+                  return (
+                    <>
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <p className="text-sm font-bold text-gray-900">{channel.name}</p>
+                      </div>
+                      <button
+                        onClick={() => handleOpenEditChannel(channel)}
+                        className="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-3 border-b border-gray-50"
+                      >
+                        <Pencil size={18} className="text-gray-400" />
+                        名前を編集
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowLeaveConfirm(channel);
+                          setShowChannelMenu(null);
+                        }}
+                        className="w-full px-4 py-3 text-left text-sm font-medium text-red-600 hover:bg-red-50 flex items-center gap-3"
+                      >
+                        <Trash2 size={18} className="text-red-400" />
+                        脱退する
+                      </button>
+                    </>
+                  );
+                })()}
+                <button
+                  onClick={() => setShowChannelMenu(null)}
+                  className="w-full px-4 py-3 text-center text-sm font-bold text-gray-500 hover:bg-gray-50 border-t border-gray-100"
+                >
+                  キャンセル
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Leave Channel Confirmation Modal */}
         {showLeaveConfirm && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -335,7 +386,7 @@ export default function ProfileScreen() {
               )}
               {channels.length === 1 && (
                 <p className="text-xs text-amber-600 bg-amber-50 p-3 rounded-xl text-center mb-4">
-                  これが最後のチャンネルです。脱退後は新しいチャンネルを作成または参加する必要があります。
+                  これが最後���チャンネルです。脱退後は新しいチャンネルを作成または参加する必要があります。
                 </p>
               )}
               <div className="flex gap-3 mt-6">
@@ -541,35 +592,12 @@ export default function ProfileScreen() {
                       </button>
                     )}
                     {/* Channel Menu */}
-                    <div className="relative">
-                      <button
-                        onClick={() => setShowChannelMenu(showChannelMenu === channel.id ? null : channel.id)}
-                        className="p-1 rounded-full hover:bg-gray-200 transition-colors"
-                      >
-                        <MoreVertical size={16} className="text-gray-400" />
-                      </button>
-                      {showChannelMenu === channel.id && (
-                        <div className="absolute right-0 bottom-full mb-2 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 min-w-[140px]">
-                          <button
-                            onClick={() => handleOpenEditChannel(channel)}
-                            className="w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                          >
-                            <Pencil size={14} />
-                            名前を編集
-                          </button>
-                          <button
-                            onClick={() => {
-                              setShowLeaveConfirm(channel);
-                              setShowChannelMenu(null);
-                            }}
-                            className="w-full px-4 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50 flex items-center gap-2"
-                          >
-                            <Trash2 size={14} />
-                            脱退する
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <button
+                      onClick={() => setShowChannelMenu(showChannelMenu === channel.id ? null : channel.id)}
+                      className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+                    >
+                      <MoreVertical size={16} className="text-gray-400" />
+                    </button>
                   </div>
                 </div>
                 {/* 共有用チャンネルのみ招待コードを表示 */}
