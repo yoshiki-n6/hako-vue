@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Loader2, Users, Copy, Check, User, Home } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, Users, Copy, Check, Home } from 'lucide-react';
 import { useChannel } from '../contexts/ChannelContext';
 
 export default function ChannelCreateScreen() {
