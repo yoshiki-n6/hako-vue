@@ -549,7 +549,7 @@ export default function ProfileScreen() {
                         <MoreVertical size={16} className="text-gray-400" />
                       </button>
                       {showChannelMenu === channel.id && (
-                        <div className="absolute right-0 top-8 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-20 min-w-[140px]">
+                        <div className="absolute right-0 bottom-full mb-2 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 min-w-[140px]">
                           <button
                             onClick={() => handleOpenEditChannel(channel)}
                             className="w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
