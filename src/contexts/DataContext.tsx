@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { collection, onSnapshot, doc, setDoc, updateDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from './AuthContext';
-import { useChannel, ActivityLog } from './ChannelContext';
+import { useChannel } from './ChannelContext';
 
 export interface Location {
   id: string;
@@ -158,8 +158,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     // Add activity log for shared channels
     try {
       const item = items.find(i => i.id === itemId);
-      const logType: ActivityLog['type'] = status === 'taken_out' ? 'item_taken_out' : 'item_stored';
-      await addActivityLog(logType, itemId, item?.name);
+      const logType = status === 'taken_out' ? 'item_taken_out' : 'item_stored';
+      await addActivityLog(logType as 'item_taken_out' | 'item_stored', itemId, item?.name);
     } catch (err) {
       console.error('Failed to add activity log:', err);
     }
