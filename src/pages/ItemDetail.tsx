@@ -222,7 +222,7 @@ export default function ItemDetailScreen() {
             {item.status === 'stored' ? (
               <><Box size={18} /> 持ち出し中にする</>
             ) : (
-              <><CheckCircle2 size={18} /> しまった (保管中にする)</>
+              <><CheckCircle2 size={18} /> 返却する</>
             )}
           </button>
         </div>

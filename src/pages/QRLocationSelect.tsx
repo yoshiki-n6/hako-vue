@@ -94,11 +94,12 @@ export default function QRLocationSelectScreen() {
       </div>
 
       <main className="flex-1 flex flex-col relative overflow-hidden">
-        {/* Full screen scanner */}
-        <div className="absolute inset-0 z-0">
+        {/* Full screen scanner - ライブラリデフォルトUIを非表示 */}
+        <div className="absolute inset-0 z-0 [&_svg]:hidden [&_.qr-scanner-region]:hidden">
           <Scanner 
             onScan={handleScan}
             onError={(err) => console.log(err)}
+            components={{ finder: false }}
           />
         </div>
 
