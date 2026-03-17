@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { useChannel } from '../contexts/ChannelContext';
-import { MapPin, QrCode, Box, ChevronRight, Home as HomeIcon, Users } from 'lucide-react';
+import { MapPin, QrCode, Box, ChevronRight, Home as HomeIcon, Users, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Home() {
