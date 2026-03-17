@@ -386,7 +386,7 @@ export default function ProfileScreen() {
               )}
               {channels.length === 1 && (
                 <p className="text-xs text-amber-600 bg-amber-50 p-3 rounded-xl text-center mb-4">
-                  これが最後���チャンネルです。脱退後は新しいチャンネルを作成または参加する必要があります。
+                  これが最後のチャンネルです。脱退後は新しいチャンネルを作成または参加してください。
                 </p>
               )}
               <div className="flex gap-3 mt-6">
