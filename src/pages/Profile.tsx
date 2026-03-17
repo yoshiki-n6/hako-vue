@@ -120,14 +120,12 @@ export default function ProfileScreen() {
 
   const handleLeaveChannel = async () => {
     if (!showLeaveConfirm) return;
-    console.log('[v0] handleLeaveChannel: starting', { channelId: showLeaveConfirm.id, channelName: showLeaveConfirm.name });
     setLeavingChannel(true);
     try {
       await leaveChannel(showLeaveConfirm.id);
-      console.log('[v0] handleLeaveChannel: success');
       setShowLeaveConfirm(null);
     } catch (error) {
-      console.error('[v0] handleLeaveChannel: Failed to leave channel:', error);
+      console.error('Failed to leave channel:', error);
     } finally {
       setLeavingChannel(false);
     }
