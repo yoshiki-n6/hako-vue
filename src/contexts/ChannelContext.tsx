@@ -507,11 +507,22 @@ setUserProfile(newProfile);
 
   // Leave channel
   const leaveChannel = useCallback(async (channelId: string) => {
-    if (!currentUser) throw new Error('Not logged in');
-    if (!userProfile) throw new Error('No profile');
+    console.log('[v0] leaveChannel: starting', { channelId, channelsCount: channels.length });
+    if (!currentUser) {
+      console.log('[v0] leaveChannel: Not logged in');
+      throw new Error('Not logged in');
+    }
+    if (!userProfile) {
+      console.log('[v0] leaveChannel: No profile');
+      throw new Error('No profile');
+    }
 
     const channel = channels.find(c => c.id === channelId);
-    if (!channel) throw new Error('Channel not found');
+    console.log('[v0] leaveChannel: found channel', { channel, allChannelIds: channels.map(c => c.id) });
+    if (!channel) {
+      console.log('[v0] leaveChannel: Channel not found');
+      throw new Error('Channel not found');
+    }
 
     // Add leave log before leaving (for shared channels)
     if (channel.type === 'shared') {
