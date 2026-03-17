@@ -137,7 +137,7 @@ export default function ItemDetailScreen() {
         
         {/* Status Badge Over Image - 共有用チャンネルのみ表示 */}
         {!isSoloChannel && (
-          <div className="absolute top-4 left-4 z-10">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
             {item.status === 'stored' ? (
               <span className="bg-emerald-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm border border-emerald-400">
                 <CheckCircle2 size={14} /> 保管中
