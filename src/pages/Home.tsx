@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { useChannel } from '../contexts/ChannelContext';
-import { MapPin, QrCode, Box, ChevronRight, Home as HomeIcon, Users, RotateCcw } from 'lucide-react';
+import { MapPin, QrCode, Box, ChevronRight, Home as HomeIcon, Users, RotateCcw, History } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Home() {
@@ -137,6 +137,25 @@ export default function Home() {
         <div className="mb-6 bg-gray-50 border border-gray-100 rounded-2xl p-6 text-center">
           <p className="text-sm font-bold text-gray-500">持ち出し中のアイテムはありません</p>
         </div>
+      )}
+
+      {/* アクティビティログボタン（共有チャンネルのみ） */}
+      {!isSoloChannel && currentChannel && (
+        <Link
+          to={`/channel/${currentChannel.id}/activity`}
+          className="w-full bg-white border border-gray-200 p-4 rounded-2xl mb-6 flex items-center justify-between hover:bg-gray-50 transition-colors active:scale-[0.98]"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+              <History size={20} className="text-gray-600" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-bold text-gray-800">アクティビティログ</p>
+              <p className="text-xs text-gray-500">アイテムとメンバーの履歴</p>
+            </div>
+          </div>
+          <ChevronRight size={20} className="text-gray-400" />
+        </Link>
       )}
 
       <section className="mb-8">
