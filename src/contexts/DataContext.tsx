@@ -54,7 +54,7 @@ export function useData() {
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const { currentUser } = useAuth();
-  const { currentChannel, loading: channelLoading, needsOnboarding } = useChannel();
+  const { currentChannel, loading: channelLoading, needsOnboarding, addActivityLog } = useChannel();
   const [locations, setLocations] = useState<Location[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
@@ -134,6 +134,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
+    
+    // Add activity log for shared channels
+    try {
+      await addActivityLog('item_added', newDocRef.id, itemData.name);
+    } catch (err) {
+      console.error('Failed to add activity log:', err);
+    }
+    
     return newDocRef.id;
   };
 
@@ -146,6 +154,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       status,
       updatedAt: serverTimestamp()
     });
+    
+    // Add activity log for shared channels
+    try {
+      const item = items.find(i => i.id === itemId);
+      const logType = status === 'taken_out' ? 'item_taken_out' : 'item_stored';
+      await addActivityLog(logType as 'item_taken_out' | 'item_stored', itemId, item?.name);
+    } catch (err) {
+      console.error('Failed to add activity log:', err);
+    }
   };
 
   const updateItemName = async (itemId: string, name: string) => {

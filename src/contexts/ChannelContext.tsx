@@ -9,7 +9,10 @@ import {
   where, 
   getDocs,
   serverTimestamp,
-  writeBatch
+  writeBatch,
+  deleteDoc,
+  orderBy,
+  limit
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from './AuthContext';
@@ -22,6 +25,7 @@ export interface Channel {
   inviteCode: string;
   memberIds: string[];
   createdAt: any;
+  type: 'solo' | 'shared'; // solo: 一人暮らし用, shared: 共有用
 }
 
 export interface UserProfile {
@@ -40,13 +44,24 @@ export interface ChannelMember {
   photoURL: string;
 }
 
+export interface ActivityLog {
+  id: string;
+  channelId: string;
+  type: 'item_taken_out' | 'item_stored' | 'member_joined' | 'member_left' | 'item_added';
+  userId: string;
+  userNickname: string;
+  itemId?: string;
+  itemName?: string;
+  createdAt: any;
+}
+
 interface ChannelContextType {
   currentChannel: Channel | null;
   channels: Channel[];
   userProfile: UserProfile | null;
   loading: boolean;
   needsOnboarding: boolean;
-  createChannel: (name: string, isDefault?: boolean) => Promise<Channel>;
+  createChannel: (name: string, isDefault?: boolean, type?: 'solo' | 'shared') => Promise<Channel>;
   joinChannelByCode: (code: string) => Promise<Channel>;
   switchChannel: (channelId: string) => Promise<void>;
   setDefaultChannel: (channelId: string) => Promise<void>;
@@ -55,6 +70,10 @@ interface ChannelContextType {
   completeOnboarding: (_mode: 'solo' | 'shared', channelId: string) => Promise<void>;
   updateProfile: (nickname: string, photoURL?: string) => Promise<void>;
   getChannelMembers: (channelId: string) => Promise<ChannelMember[]>;
+  leaveChannel: (channelId: string) => Promise<void>;
+  updateChannelName: (channelId: string, name: string) => Promise<void>;
+  addActivityLog: (type: ActivityLog['type'], itemId?: string, itemName?: string) => Promise<void>;
+  getActivityLogs: (channelId: string) => Promise<ActivityLog[]>;
 }
 
 const ChannelContext = createContext<ChannelContextType | null>(null);
@@ -165,10 +184,10 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
   }, [currentUser]);
 
   // Create a new channel
-  const createChannel = useCallback(async (name: string, isDefault = false): Promise<Channel> => {
+  const createChannel = useCallback(async (name: string, isDefault = false, type: 'solo' | 'shared' = 'shared'): Promise<Channel> => {
     if (!currentUser) throw new Error('Not logged in');
 
-    console.log('[v0] createChannel: starting...', { name, isDefault });
+    console.log('[v0] createChannel: starting...', { name, isDefault, type });
 
     const inviteCode = generateUniqueInviteCode();
     console.log('[v0] createChannel: generated invite code:', inviteCode);
@@ -180,7 +199,8 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
       ownerId: currentUser.uid,
       inviteCode,
       memberIds: [currentUser.uid],
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
+      type
     };
 
     await setDoc(channelRef, channelData);
@@ -236,6 +256,21 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
     await updateDoc(doc(db, 'channels', channelDoc.id), {
       memberIds: [...channelData.memberIds, currentUser.uid]
     });
+
+    // Add join log for shared channels
+    if (channelData.type === 'shared') {
+      const profileSnap = await getDoc(doc(db, 'userProfiles', currentUser.uid));
+      const userNickname = profileSnap.exists() ? (profileSnap.data().nickname || 'ユーザー') : 'ユーザー';
+      
+      const logRef = doc(collection(db, `channels/${channelDoc.id}/activityLogs`));
+      await setDoc(logRef, {
+        channelId: channelDoc.id,
+        type: 'member_joined',
+        userId: currentUser.uid,
+        userNickname,
+        createdAt: serverTimestamp()
+      });
+    }
 
     // Update user profile
     const profileRef = doc(db, 'userProfiles', currentUser.uid);
@@ -310,7 +345,8 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
       ownerId: currentUser.uid,
       inviteCode,
       memberIds: [currentUser.uid],
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
+      type: 'solo' // デフォルトは一人暮らし用
     });
     console.log('[v0] migrateExistingData: channel created:', channelRef.id);
 
@@ -369,7 +405,8 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
       ownerId: currentUser.uid,
       inviteCode,
       memberIds: [currentUser.uid],
-      createdAt: new Date()
+      createdAt: new Date(),
+      type: 'solo'
     };
     const newProfile: UserProfile = {
       userId: currentUser.uid,
@@ -462,11 +499,152 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
       migrated: false,
       createdAt: new Date()
     };
-    setUserProfile(newProfile);
+setUserProfile(newProfile);
     setNeedsOnboarding(false);
     console.log('[v0] completeOnboarding: local state updated');
   }, [currentUser]);
 
+  // Leave channel
+  const leaveChannel = useCallback(async (channelId: string) => {
+    console.log('[v0] leaveChannel: starting', { channelId, channelsCount: channels.length });
+    if (!currentUser) {
+      console.log('[v0] leaveChannel: Not logged in');
+      throw new Error('Not logged in');
+    }
+    if (!userProfile) {
+      console.log('[v0] leaveChannel: No profile');
+      throw new Error('No profile');
+    }
+
+    const channel = channels.find(c => c.id === channelId);
+    console.log('[v0] leaveChannel: found channel', { channel, allChannelIds: channels.map(c => c.id) });
+    if (!channel) {
+      console.log('[v0] leaveChannel: Channel not found');
+      throw new Error('Channel not found');
+    }
+
+    // Add leave log before leaving (for shared channels)
+    if (channel.type === 'shared') {
+      const logRef = doc(collection(db, `channels/${channelId}/activityLogs`));
+      await setDoc(logRef, {
+        channelId,
+        type: 'member_left',
+        userId: currentUser.uid,
+        userNickname: userProfile.nickname || 'ユーザー',
+        createdAt: serverTimestamp()
+      });
+    }
+
+    // Remove user from channel members
+    const channelRef = doc(db, 'channels', channelId);
+    const newMemberIds = channel.memberIds.filter(id => id !== currentUser.uid);
+
+    if (newMemberIds.length === 0) {
+      // Delete channel if no members left
+      await deleteDoc(channelRef);
+      console.log('[v0] leaveChannel: channel deleted (no members)');
+    } else {
+      // Update channel members
+      await updateDoc(channelRef, {
+        memberIds: newMemberIds
+      });
+    }
+
+    // Remove channel from user profile
+    const profileRef = doc(db, 'userProfiles', currentUser.uid);
+    const newChannelIds = userProfile.channelIds.filter(id => id !== channelId);
+    
+    // If leaving default channel, set new default
+    const newDefaultChannelId = userProfile.defaultChannelId === channelId
+      ? (newChannelIds[0] || '')
+      : userProfile.defaultChannelId;
+
+    await updateDoc(profileRef, {
+      channelIds: newChannelIds,
+      defaultChannelId: newDefaultChannelId
+    });
+
+    // Update local state
+    const updatedChannels = channels.filter(c => c.id !== channelId);
+    setChannels(updatedChannels);
+    setUserProfile(prev => prev ? {
+      ...prev,
+      channelIds: newChannelIds,
+      defaultChannelId: newDefaultChannelId
+    } : null);
+
+    // Switch to another channel if leaving current
+    if (currentChannel?.id === channelId) {
+      setCurrentChannel(updatedChannels[0] || null);
+    }
+
+    // If no channels left, set onboarding needed
+    if (updatedChannels.length === 0) {
+      setNeedsOnboarding(true);
+    }
+
+    console.log('[v0] leaveChannel: completed');
+  }, [currentUser, userProfile, channels, currentChannel]);
+
+  // Update channel name
+  const updateChannelName = useCallback(async (channelId: string, name: string) => {
+    if (!currentUser) throw new Error('Not logged in');
+
+    const channelRef = doc(db, 'channels', channelId);
+    await updateDoc(channelRef, { name });
+
+    // Update local state
+    setChannels(prev => prev.map(c => 
+      c.id === channelId ? { ...c, name } : c
+    ));
+    if (currentChannel?.id === channelId) {
+      setCurrentChannel(prev => prev ? { ...prev, name } : null);
+    }
+
+    console.log('[v0] updateChannelName: completed');
+  }, [currentUser, currentChannel]);
+
+  // Add activity log
+  const addActivityLog = useCallback(async (
+    type: ActivityLog['type'],
+    itemId?: string,
+    itemName?: string
+  ) => {
+    if (!currentUser) throw new Error('Not logged in');
+    if (!currentChannel) throw new Error('No channel selected');
+    if (!userProfile) throw new Error('No profile');
+
+    // Only add logs for shared channels
+    if (currentChannel.type !== 'shared') return;
+
+    const logRef = doc(collection(db, `channels/${currentChannel.id}/activityLogs`));
+    await setDoc(logRef, {
+      channelId: currentChannel.id,
+      type,
+      userId: currentUser.uid,
+      userNickname: userProfile.nickname || 'ユーザー',
+      itemId,
+      itemName,
+      createdAt: serverTimestamp()
+    });
+
+    console.log('[v0] addActivityLog: added', type);
+  }, [currentUser, currentChannel, userProfile]);
+
+  // Get activity logs for a channel
+  const getActivityLogs = useCallback(async (channelId: string): Promise<ActivityLog[]> => {
+    const logsRef = collection(db, `channels/${channelId}/activityLogs`);
+    const q = query(logsRef, orderBy('createdAt', 'desc'), limit(100));
+    const snapshot = await getDocs(q);
+    
+    const logs: ActivityLog[] = [];
+    snapshot.forEach(docSnap => {
+      logs.push({ id: docSnap.id, ...docSnap.data() } as ActivityLog);
+    });
+    
+    return logs;
+  }, []);
+  
   const value = {
     currentChannel,
     channels,
@@ -481,7 +659,11 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
     migrateExistingData,
     completeOnboarding,
     updateProfile,
-    getChannelMembers
+    getChannelMembers,
+    leaveChannel,
+    updateChannelName,
+    addActivityLog,
+    getActivityLogs
   };
 
   return (

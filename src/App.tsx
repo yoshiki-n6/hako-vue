@@ -19,6 +19,7 @@ import QRScannerScreen from './pages/QRScanner';
 import OnboardingScreen from './pages/Onboarding';
 import ChannelCreateScreen from './pages/ChannelCreate';
 import ChannelJoinScreen from './pages/ChannelJoin';
+import ChannelActivityScreen from './pages/ChannelActivity';
 
 // Wrapper component to check onboarding status
 function OnboardingCheck({ children }: { children: React.ReactNode }) {
@@ -123,6 +124,13 @@ function App() {
                 <ProtectedRoute>
                   <OnboardingCheck>
                     <ChannelJoinScreen />
+                  </OnboardingCheck>
+                </ProtectedRoute>
+              } />
+              <Route path="/channel/:id/activity" element={
+                <ProtectedRoute>
+                  <OnboardingCheck>
+                    <ChannelActivityScreen />
                   </OnboardingCheck>
                 </ProtectedRoute>
               } />

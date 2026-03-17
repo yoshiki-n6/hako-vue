@@ -1,12 +1,17 @@
 import { ArrowLeft, Box, CheckCircle2, Clock, MapPin, Tag, User, MoreVertical, Edit2, Trash2, X, ChevronDown } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
+import { useChannel } from '../contexts/ChannelContext';
 import { useState } from 'react';
 
 export default function ItemDetailScreen() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { items, locations, updateItemStatus, updateItem, deleteItem } = useData();
+  const { currentChannel } = useChannel();
+  
+  // 一人暮らし用チャンネルかどうか
+  const isSoloChannel = currentChannel?.type === 'solo';
   
   const [showMenu, setShowMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -116,18 +121,20 @@ export default function ItemDetailScreen() {
         <img src={item.itemPhotoUrl} alt={item.name} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent"></div>
         
-        {/* Status Badge Over Image */}
-        <div className="absolute top-4 left-4 z-10">
-          {item.status === 'stored' ? (
-            <span className="bg-emerald-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm border border-emerald-400">
-              <CheckCircle2 size={14} /> 保管中
-            </span>
-          ) : (
-            <span className="bg-amber-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm border border-amber-400">
-              <Box size={14} /> 持ち出し中
-            </span>
-          )}
-        </div>
+        {/* Status Badge Over Image - 共有用チャンネルのみ表示 */}
+        {!isSoloChannel && (
+          <div className="absolute top-4 left-4 z-10">
+            {item.status === 'stored' ? (
+              <span className="bg-emerald-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm border border-emerald-400">
+                <CheckCircle2 size={14} /> 保管中
+              </span>
+            ) : (
+              <span className="bg-amber-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm border border-amber-400">
+                <Box size={14} /> 持ち出し中
+              </span>
+            )}
+          </div>
+        )}
 
         <div className="absolute bottom-5 left-5 right-5 text-white">
           <h1 className="text-3xl font-extrabold tracking-tight drop-shadow-md">{item.name}</h1>
@@ -187,23 +194,25 @@ export default function ItemDetailScreen() {
         </section>
       </main>
 
-      {/* Floating Action Bar */}
-      <div className="fixed bottom-0 inset-x-0 w-full max-w-md mx-auto p-4 bg-white/90 backdrop-blur-md border-t border-gray-100 z-20 pb-8 flex justify-center gap-3">
-        <button 
-          onClick={handleStatusToggle}
-          className={`flex-1 font-bold text-sm py-3.5 rounded-xl shadow-sm transition-all flex justify-center items-center gap-2 border-2 ${
-            item.status === 'stored' 
-              ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100 active:scale-95' 
-              : 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 active:scale-95'
-          }`}
-        >
-          {item.status === 'stored' ? (
-            <><Box size={18} /> 持ち出し中にする</>
-          ) : (
-            <><CheckCircle2 size={18} /> しまった (保管中にする)</>
-          )}
-        </button>
-      </div>
+      {/* Floating Action Bar - 共有用チャンネルのみ表示 */}
+      {!isSoloChannel && (
+        <div className="fixed bottom-0 inset-x-0 w-full max-w-md mx-auto p-4 bg-white/90 backdrop-blur-md border-t border-gray-100 z-20 pb-8 flex justify-center gap-3">
+          <button 
+            onClick={handleStatusToggle}
+            className={`flex-1 font-bold text-sm py-3.5 rounded-xl shadow-sm transition-all flex justify-center items-center gap-2 border-2 ${
+              item.status === 'stored' 
+                ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100 active:scale-95' 
+                : 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 active:scale-95'
+            }`}
+          >
+            {item.status === 'stored' ? (
+              <><Box size={18} /> 持ち出し中にする</>
+            ) : (
+              <><CheckCircle2 size={18} /> しまった (保管中にする)</>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Edit Modal */}
       {showEditModal && (

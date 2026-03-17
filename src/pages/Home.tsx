@@ -1,11 +1,16 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
+import { useChannel } from '../contexts/ChannelContext';
 import { MapPin, QrCode } from 'lucide-react';
 
 export default function Home() {
   const { currentUser } = useAuth();
   const { items, locations } = useData();
+  const { currentChannel } = useChannel();
+  
+  // 一人暮らし用チャンネルかどうか
+  const isSoloChannel = currentChannel?.type === 'solo';
 
   // Get up to 4 most recently updated items
   const recentItems = [...items]
@@ -71,7 +76,8 @@ export default function Home() {
                 <Link to={`/items/${item.id}`} key={item.id} className="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex flex-col group cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]">
                   <div className="w-full aspect-square bg-gray-100 rounded-xl mb-3 flex items-center justify-center text-gray-400 overflow-hidden relative">
                     <img src={item.itemPhotoUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                    {item.status === 'taken_out' && (
+                    {/* 共有用チャンネルのみ持ち出し中を表示 */}
+                    {!isSoloChannel && item.status === 'taken_out' && (
                        <div className="absolute inset-0 bg-amber-500/20 backdrop-blur-[1px]">
                           <span className="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm">持ち出し中</span>
                        </div>
