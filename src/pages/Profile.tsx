@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, LogOut, Code, ChevronRight, User as UserIcon, Plus, KeyRound, Star, Copy, Check, RefreshCw, Edit2, Users, X, Home } from 'lucide-react';
+import { Settings, LogOut, Code, ChevronRight, User as UserIcon, Plus, KeyRound, Star, Copy, Check, RefreshCw, Edit2, Users, X, Home, History, MoreVertical, Trash2, Pencil, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useChannel } from '../contexts/ChannelContext';
 import type { Channel, ChannelMember } from '../contexts/ChannelContext';
@@ -32,7 +32,7 @@ const AVATAR_OPTIONS = [
 export default function ProfileScreen() {
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
-  const { channels, currentChannel, userProfile, switchChannel, setDefaultChannel, updateProfile, getChannelMembers } = useChannel();
+  const { channels, currentChannel, userProfile, switchChannel, setDefaultChannel, updateProfile, getChannelMembers, leaveChannel, updateChannelName } = useChannel();
   
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [settingDefault, setSettingDefault] = useState<string | null>(null);
@@ -46,6 +46,14 @@ export default function ProfileScreen() {
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [members, setMembers] = useState<ChannelMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
+
+  // Channel action states
+  const [showChannelMenu, setShowChannelMenu] = useState<string | null>(null);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState<Channel | null>(null);
+  const [leavingChannel, setLeavingChannel] = useState(false);
+  const [showEditChannelModal, setShowEditChannelModal] = useState<Channel | null>(null);
+  const [editingChannelName, setEditingChannelName] = useState('');
+  const [savingChannelName, setSavingChannelName] = useState(false);
 
   useEffect(() => {
     if (userProfile) {
@@ -107,6 +115,38 @@ export default function ProfileScreen() {
       console.error('Failed to load members:', error);
     } finally {
       setLoadingMembers(false);
+    }
+  };
+
+  const handleLeaveChannel = async () => {
+    if (!showLeaveConfirm) return;
+    setLeavingChannel(true);
+    try {
+      await leaveChannel(showLeaveConfirm.id);
+      setShowLeaveConfirm(null);
+    } catch (error) {
+      console.error('Failed to leave channel:', error);
+    } finally {
+      setLeavingChannel(false);
+    }
+  };
+
+  const handleOpenEditChannel = (channel: Channel) => {
+    setEditingChannelName(channel.name);
+    setShowEditChannelModal(channel);
+    setShowChannelMenu(null);
+  };
+
+  const handleSaveChannelName = async () => {
+    if (!showEditChannelModal || !editingChannelName.trim()) return;
+    setSavingChannelName(true);
+    try {
+      await updateChannelName(showEditChannelModal.id, editingChannelName.trim());
+      setShowEditChannelModal(null);
+    } catch (error) {
+      console.error('Failed to update channel name:', error);
+    } finally {
+      setSavingChannelName(false);
     }
   };
 
@@ -273,6 +313,90 @@ export default function ProfileScreen() {
           </div>
         )}
 
+        {/* Leave Channel Confirmation Modal */}
+        {showLeaveConfirm && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl p-6 w-full max-w-sm">
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                  <AlertTriangle size={32} className="text-red-500" />
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 text-center mb-2">チャンネルを脱退</h3>
+              <p className="text-sm text-gray-500 text-center mb-2">
+                「{showLeaveConfirm.name}」から脱退しますか？
+              </p>
+              {showLeaveConfirm.memberIds.length === 1 && (
+                <p className="text-xs text-red-500 bg-red-50 p-3 rounded-xl text-center mb-4">
+                  あなたが最後のメンバーです。脱退するとチャンネルは削除されます。
+                </p>
+              )}
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setShowLeaveConfirm(null)}
+                  className="flex-1 bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200 transition-colors"
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick={handleLeaveChannel}
+                  disabled={leavingChannel}
+                  className="flex-1 bg-red-500 text-white font-bold py-3 rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {leavingChannel ? (
+                    <>
+                      <RefreshCw size={16} className="animate-spin" />
+                      処理中...
+                    </>
+                  ) : (
+                    '脱退する'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Channel Name Modal */}
+        {showEditChannelModal && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl p-6 w-full max-w-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-gray-900">チャンネル名を編集</h3>
+                <button onClick={() => setShowEditChannelModal(null)} className="p-1">
+                  <X size={20} className="text-gray-500" />
+                </button>
+              </div>
+              
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-gray-700 mb-2">チャンネル名</label>
+                <input
+                  type="text"
+                  value={editingChannelName}
+                  onChange={(e) => setEditingChannelName(e.target.value)}
+                  placeholder="チャンネル名を入力"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              
+              <button
+                onClick={handleSaveChannelName}
+                disabled={savingChannelName || !editingChannelName.trim()}
+                className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {savingChannelName ? (
+                  <>
+                    <RefreshCw size={16} className="animate-spin" />
+                    保存中...
+                  </>
+                ) : (
+                  '保存する'
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Current Channel */}
         {currentChannel && (
           <section className={`rounded-3xl p-5 border shadow-sm ${
@@ -366,6 +490,16 @@ export default function ProfileScreen() {
                     )}
                   </button>
                   <div className="flex items-center gap-2">
+                    {/* Activity Log - 共有用のみ表示 */}
+                    {channel.type === 'shared' && (
+                      <button
+                        onClick={() => navigate(`/channel/${channel.id}/activity`)}
+                        className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full transition-colors text-gray-500 bg-gray-100 hover:bg-gray-200"
+                        title="アクティビティログ"
+                      >
+                        <History size={12} />
+                      </button>
+                    )}
                     {/* Member count - 共有用のみ表示 */}
                     {channel.type === 'shared' && (
                       <button
@@ -399,6 +533,38 @@ export default function ProfileScreen() {
                         )}
                       </button>
                     )}
+                    {/* Channel Menu */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowChannelMenu(showChannelMenu === channel.id ? null : channel.id)}
+                        className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+                      >
+                        <MoreVertical size={16} className="text-gray-400" />
+                      </button>
+                      {showChannelMenu === channel.id && (
+                        <div className="absolute right-0 top-8 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-20 min-w-[140px]">
+                          <button
+                            onClick={() => handleOpenEditChannel(channel)}
+                            className="w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                          >
+                            <Pencil size={14} />
+                            名前を編集
+                          </button>
+                          {channels.length > 1 && (
+                            <button
+                              onClick={() => {
+                                setShowLeaveConfirm(channel);
+                                setShowChannelMenu(null);
+                              }}
+                              className="w-full px-4 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50 flex items-center gap-2"
+                            >
+                              <Trash2 size={14} />
+                              脱退する
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 {/* 共有用チャンネルのみ招待コードを表示 */}
