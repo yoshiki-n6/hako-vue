@@ -134,7 +134,18 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
         console.log('[v0] Profile exists:', profileSnap.exists());
         
         if (profileSnap.exists()) {
-          const profile = { userId: currentUser.uid, ...profileSnap.data() } as UserProfile;
+          const profileData = profileSnap.data();
+          // nicknameが未設定でGoogleのdisplayNameがある場合は自動保存
+          if (!profileData.nickname && currentUser.displayName) {
+            const updateData: Record<string, string> = { nickname: currentUser.displayName };
+            if (!profileData.photoURL && currentUser.photoURL) {
+              updateData.photoURL = currentUser.photoURL;
+            }
+            await updateDoc(profileRef, updateData);
+            profileData.nickname = currentUser.displayName;
+            if (updateData.photoURL) profileData.photoURL = currentUser.photoURL!;
+          }
+          const profile = { userId: currentUser.uid, ...profileData } as UserProfile;
           setUserProfile(profile);
           setNeedsOnboarding(false);
           
@@ -360,7 +371,10 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
       defaultChannelId: channelRef.id,
       channelIds: [channelRef.id],
       migrated: true,
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
+      // GoogleアカウントのdisplayNameとphotoURLを保存
+      ...(currentUser.displayName ? { nickname: currentUser.displayName } : {}),
+      ...(currentUser.photoURL ? { photoURL: currentUser.photoURL } : {}),
     });
     console.log('[v0] migrateExistingData: profile created');
 
@@ -487,7 +501,10 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
       defaultChannelId: channelId,
       channelIds: [channelId],
       migrated: false,
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
+      // GoogleアカウントのdisplayNameとphotoURLを保存
+      ...(currentUser.displayName ? { nickname: currentUser.displayName } : {}),
+      ...(currentUser.photoURL ? { photoURL: currentUser.photoURL } : {}),
     });
 
     // Load the channel and update local state
