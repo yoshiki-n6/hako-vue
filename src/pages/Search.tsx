@@ -83,11 +83,19 @@ export default function SearchScreen() {
                 </div>
                 <div className="flex-1 pt-1">
                   <h3 className="font-extrabold text-base text-gray-900 leading-tight mb-1 group-hover:text-blue-600 transition-colors">{item.name}</h3>
-                  <div className="flex gap-2">
+                  {item.tags && item.tags.length > 0 ? (
+                    <div className="flex gap-2 flex-wrap">
+                      {item.tags.map((tag, idx) => (
+                        <span key={idx} className="text-[10px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
                     <span className="flex items-center gap-1 text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
-                      <Tag size={10} /> 未設定
+                      <Tag size={10} /> タグなし
                     </span>
-                  </div>
+                  )}
                 </div>
               </div>
             </Link>

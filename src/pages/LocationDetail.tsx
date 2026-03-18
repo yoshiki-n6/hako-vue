@@ -210,14 +210,6 @@ export default function LocationDetailScreen() {
             ))}
           </div>
         )}
-                </div>
-                <div className="p-3">
-                  <h3 className="font-bold text-xs text-gray-900 line-clamp-2 leading-snug">{item.name}</h3>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
       </main>
 
       {/* QR Code Modal */}
