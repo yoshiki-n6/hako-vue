@@ -352,7 +352,7 @@ export default function LocationDetailScreen() {
                   <img src={item.itemPhotoUrl} alt={item.name} className="w-full h-full object-cover" />
                   {!isSoloChannel && item.status === 'taken_out' && (
                     <div className={`absolute inset-0 backdrop-blur-[2px] flex items-center justify-center ${item.takenOutBy === currentUser?.uid ? 'bg-amber-900/40' : 'bg-red-900/40'}`}>
-                      <span className={`text-white font-bold text-[10px] uppercase tracking-wider px-2 py-1 rounded-full shadow-sm ${item.takenOutBy === currentUser?.uid ? 'bg-amber-600' : 'bg-red-600'}`}>
+                      <span className={`text-white font-bold text-[10px] px-2 py-1 rounded-full shadow-sm ${item.takenOutBy === currentUser?.uid ? 'bg-amber-600' : 'bg-red-600'}`}>
                         {item.takenOutBy === currentUser?.uid ? '持ち出し中' : `${getUserNickname(item.takenOutBy)}が持ち出し中`}
                       </span>
                     </div>
