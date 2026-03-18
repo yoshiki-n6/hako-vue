@@ -97,7 +97,6 @@ export default function LocationNewScreen() {
         await addItem({
           locationId,
           name: itemName,
-          tags: [],
           itemPhotoUrl: itemImageUrl,
           status: 'stored'
         });

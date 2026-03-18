@@ -1,4 +1,4 @@
-import { ArrowLeft, Box, CheckCircle2, Clock, MapPin, Tag, User, MoreVertical, Edit2, Trash2, X, ChevronDown, Star } from 'lucide-react';
+import { ArrowLeft, Box, CheckCircle2, Clock, MapPin, User, MoreVertical, Edit2, Trash2, X, ChevronDown, Star } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import { useChannel } from '../contexts/ChannelContext';
@@ -8,7 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 export default function ItemDetailScreen() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { items, locations, updateItemStatus, updateItem, deleteItem, toggleItemFavorite } = useData();
+  const { items, locations, updateItemStatus, updateItem, deleteItem, toggleItemFavorite, isItemFavorite } = useData();
   const { currentChannel, getChannelMembers } = useChannel();
   const { currentUser } = useAuth();
   
@@ -31,7 +31,6 @@ export default function ItemDetailScreen() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editName, setEditName] = useState('');
-  const [editTags, setEditTags] = useState('');
   const [editLocationId, setEditLocationId] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -58,7 +57,6 @@ export default function ItemDetailScreen() {
 
   const handleOpenEdit = () => {
     setEditName(item.name);
-    setEditTags(item.tags.join(', '));
     setEditLocationId(item.locationId);
     setShowMenu(false);
     setShowEditModal(true);
@@ -68,10 +66,8 @@ export default function ItemDetailScreen() {
     if (!editName.trim()) return;
     setSaving(true);
     try {
-      const tags = editTags.split(',').map(t => t.trim()).filter(Boolean);
       await updateItem(item.id, {
         name: editName.trim(),
-        tags,
         locationId: editLocationId
       });
       setShowEditModal(false);
@@ -142,9 +138,13 @@ export default function ItemDetailScreen() {
               <span className="bg-emerald-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm border border-emerald-400">
                 <CheckCircle2 size={14} /> 保管中
               </span>
-            ) : (
+            ) : item.takenOutBy === currentUser?.uid ? (
               <span className="bg-amber-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm border border-amber-400">
                 <Box size={14} /> 持ち出し中
+              </span>
+            ) : (
+              <span className="bg-red-600/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm border border-red-500">
+                <Box size={14} /> {memberNicknameMap[item.takenOutBy || ''] || '不明なユーザー'}が持ち出し中
               </span>
             )}
           </div>
@@ -152,13 +152,6 @@ export default function ItemDetailScreen() {
 
         <div className="absolute bottom-5 left-5 right-5 text-white">
           <h1 className="text-3xl font-extrabold tracking-tight drop-shadow-md">{item.name}</h1>
-          <div className="flex flex-wrap gap-2 mt-3">
-            {item.tags.map(tag => (
-              <span key={tag} className="flex items-center gap-1 text-[10px] font-bold bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/30">
-                <Tag size={10} /> {tag}
-              </span>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -219,13 +212,13 @@ export default function ItemDetailScreen() {
             }
           }}
           className={`w-full font-bold text-sm py-3.5 rounded-xl shadow-sm transition-all flex justify-center items-center gap-2 border-2 ${
-            itemData.isFavorite
+            isItemFavorite(itemData.id)
               ? 'bg-yellow-50 text-yellow-600 border-yellow-200 hover:bg-yellow-100 active:scale-95'
               : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 active:scale-95'
           }`}
         >
-          <Star size={18} fill={itemData.isFavorite ? 'currentColor' : 'none'} />
-          {itemData.isFavorite ? 'よく使うアイテムから削除' : 'よく使うアイテムに登録'}
+          <Star size={18} fill={isItemFavorite(itemData.id) ? 'currentColor' : 'none'} />
+          {isItemFavorite(itemData.id) ? 'よく使うアイテムから削除' : 'よく使うアイテムに登録'}
         </button>
       </div>
 
@@ -240,7 +233,7 @@ export default function ItemDetailScreen() {
                 ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100 active:scale-95' 
                 : item.takenOutBy && item.takenOutBy === currentUser?.uid
                 ? 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 active:scale-95'
-                : 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
+                : 'bg-red-50 text-red-600 border-red-200 cursor-not-allowed'
             }`}
           >
             {item.status === 'stored' ? (
@@ -248,7 +241,7 @@ export default function ItemDetailScreen() {
             ) : item.takenOutBy && item.takenOutBy === currentUser?.uid ? (
               <><CheckCircle2 size={18} /> 返却する</>
             ) : (
-              <><Box size={18} /> 他のユーザーが持ち出し中</>
+              <><Box size={18} /> {memberNicknameMap[item.takenOutBy || ''] || '不明なユーザー'}が持ち出し中</>
             )}
           </button>
         </div>
@@ -276,16 +269,6 @@ export default function ItemDetailScreen() {
                     onChange={(e) => setEditName(e.target.value)}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="例: ドライバーセット"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">タグ（カンマ区切り）</label>
-                  <input
-                    type="text"
-                    value={editTags}
-                    onChange={(e) => setEditTags(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="例: 工具, DIY, 修理"
                   />
                 </div>
                 <div>

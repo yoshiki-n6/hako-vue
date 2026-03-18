@@ -50,7 +50,6 @@ export default function QRLocationSelectScreen() {
       await addItem({
         locationId: matchedLocation.id,
         name: itemName,
-        tags: [],
         itemPhotoUrl: imageUrl,
         status: 'stored'
       });

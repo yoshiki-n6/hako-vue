@@ -11,8 +11,7 @@ import {
   serverTimestamp,
   writeBatch,
   deleteDoc,
-  orderBy,
-  limit
+  orderBy
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from './AuthContext';
@@ -717,12 +716,22 @@ setUserProfile(newProfile);
   // Get activity logs for a channel
   const getActivityLogs = useCallback(async (channelId: string): Promise<ActivityLog[]> => {
     const logsRef = collection(db, `channels/${channelId}/activityLogs`);
-    const q = query(logsRef, orderBy('createdAt', 'desc'), limit(100));
+    // Get logs from the last 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const q = query(logsRef, orderBy('createdAt', 'desc'));
     const snapshot = await getDocs(q);
     
     const logs: ActivityLog[] = [];
     snapshot.forEach(docSnap => {
-      logs.push({ id: docSnap.id, ...docSnap.data() } as ActivityLog);
+      const data = docSnap.data() as Omit<ActivityLog, 'id'>;
+      const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+      
+      // Only include logs from the last 7 days
+      if (createdAt >= sevenDaysAgo) {
+        logs.push({ id: docSnap.id, ...data } as ActivityLog);
+      }
     });
     
     return logs;
