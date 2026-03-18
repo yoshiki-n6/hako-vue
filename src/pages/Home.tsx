@@ -189,7 +189,6 @@ export default function Home() {
             {favoriteItems.map(item => {
               const location = locations.find(loc => loc.id === item.locationId);
               const isMyTakeOut = item.status === 'taken_out' && item.takenOutBy === currentUser?.uid;
-              const isOtherTakeOut = item.status === 'taken_out' && item.takenOutBy !== currentUser?.uid;
               const showButton = !isSoloChannel && item.status === 'stored';
               const showReturnButton = !isSoloChannel && isMyTakeOut;
               

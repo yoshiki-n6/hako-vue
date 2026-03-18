@@ -42,6 +42,7 @@ interface DataContextType {
   updateLocation: (locationId: string, data: Partial<Pick<Location, 'name' | 'description' | 'markerText'>>) => Promise<void>;
   deleteLocation: (locationId: string) => Promise<void>;
   deleteItem: (itemId: string) => Promise<void>;
+  toggleItemFavorite: (itemId: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | null>(null);
