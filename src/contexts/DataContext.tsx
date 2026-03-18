@@ -19,7 +19,6 @@ export interface Item {
   id: string;
   locationId: string;
   name: string;
-  tags: string[];
   itemPhotoUrl: string;
   status: 'stored' | 'taken_out';
   isFavorite?: boolean;
@@ -189,7 +188,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const updateItem = async (itemId: string, data: Partial<Pick<Item, 'name' | 'tags' | 'locationId'>>) => {
+  const updateItem = async (itemId: string, data: Partial<Pick<Item, 'name' | 'locationId'>>) => {
     if (!currentUser) throw new Error("Not logged in");
     if (!currentChannel) throw new Error("No channel selected");
     

@@ -1,4 +1,4 @@
-import { ArrowLeft, Box, CheckCircle2, Clock, MapPin, Tag, User, MoreVertical, Edit2, Trash2, X, ChevronDown, Star } from 'lucide-react';
+import { ArrowLeft, Box, CheckCircle2, Clock, MapPin, User, MoreVertical, Edit2, Trash2, X, ChevronDown, Star } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import { useChannel } from '../contexts/ChannelContext';
@@ -31,7 +31,6 @@ export default function ItemDetailScreen() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editName, setEditName] = useState('');
-  const [editTags, setEditTags] = useState('');
   const [editLocationId, setEditLocationId] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -58,7 +57,6 @@ export default function ItemDetailScreen() {
 
   const handleOpenEdit = () => {
     setEditName(item.name);
-    setEditTags(item.tags.join(', '));
     setEditLocationId(item.locationId);
     setShowMenu(false);
     setShowEditModal(true);
@@ -68,10 +66,8 @@ export default function ItemDetailScreen() {
     if (!editName.trim()) return;
     setSaving(true);
     try {
-      const tags = editTags.split(',').map(t => t.trim()).filter(Boolean);
       await updateItem(item.id, {
         name: editName.trim(),
-        tags,
         locationId: editLocationId
       });
       setShowEditModal(false);
@@ -152,13 +148,6 @@ export default function ItemDetailScreen() {
 
         <div className="absolute bottom-5 left-5 right-5 text-white">
           <h1 className="text-3xl font-extrabold tracking-tight drop-shadow-md">{item.name}</h1>
-          <div className="flex flex-wrap gap-2 mt-3">
-            {item.tags.map(tag => (
-              <span key={tag} className="flex items-center gap-1 text-[10px] font-bold bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/30">
-                <Tag size={10} /> {tag}
-              </span>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -276,16 +265,6 @@ export default function ItemDetailScreen() {
                     onChange={(e) => setEditName(e.target.value)}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="例: ドライバーセット"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">タグ（カンマ区切り）</label>
-                  <input
-                    type="text"
-                    value={editTags}
-                    onChange={(e) => setEditTags(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="例: 工具, DIY, 修理"
                   />
                 </div>
                 <div>

@@ -48,8 +48,7 @@ export default function LocationDetailScreen() {
   const locationItems = items.filter(item => item.locationId === id);
   // Filter items by search query
   const filteredItems = locationItems.filter(item =>
-    item.name.toLowerCase().includes(itemSearchQuery.toLowerCase()) ||
-    item.tags.some(tag => tag.toLowerCase().includes(itemSearchQuery.toLowerCase()))
+    item.name.toLowerCase().includes(itemSearchQuery.toLowerCase())
   );
 
   if (!location) {

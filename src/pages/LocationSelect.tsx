@@ -130,7 +130,6 @@ export default function LocationSelectScreen() {
                         await addItem({
                           locationId: loc.id,
                           name: itemName,
-                          tags: [],
                           itemPhotoUrl: imageUrl,
                           status: 'stored'
                         });

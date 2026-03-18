@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search as SearchIcon, MapPin, Tag } from 'lucide-react';
+import { Search as SearchIcon, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import { useChannel } from '../contexts/ChannelContext';
@@ -42,7 +42,6 @@ export default function SearchScreen() {
     };
   }).filter(item => 
     item.name.toLowerCase().includes(query.toLowerCase()) || 
-    item.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase())) ||
     item.locationName.toLowerCase().includes(query.toLowerCase())
   );
 
@@ -52,7 +51,7 @@ export default function SearchScreen() {
         <div className="relative">
           <input 
             type="text" 
-            placeholder="アイテム名、場所、タグで検索..." 
+            placeholder="アイテム名、場所で検索..." 
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="w-full bg-gray-100 text-gray-900 rounded-2xl py-3.5 pl-11 pr-4 outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white transition-all font-medium text-base border border-transparent focus:border-blue-200"
@@ -100,23 +99,10 @@ export default function SearchScreen() {
                 </div>
                 <div className="flex-1 pt-1">
                   <h3 className="font-extrabold text-base text-gray-900 leading-tight mb-1 group-hover:text-blue-600 transition-colors">{item.name}</h3>
-                  <div className="flex items-center gap-1.5 mb-2">
+                  <div className="flex items-center gap-1.5">
                     <MapPin size={14} className="text-blue-600" strokeWidth={2.5} />
                     <span className="text-xs font-bold text-gray-600">{item.locationName}</span>
                   </div>
-                  {item.tags && item.tags.length > 0 ? (
-                    <div className="flex gap-2 flex-wrap">
-                      {item.tags.map((tag, idx) => (
-                        <span key={idx} className="text-[10px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
-                      <Tag size={10} /> タグなし
-                    </span>
-                  )}
                 </div>
               </div>
             </Link>
