@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Box, MapPin, QrCode, MoreVertical, Edit2, Trash2, X, Search as SearchIcon } from 'lucide-react';
+import { ArrowLeft, Box, MapPin, QrCode, MoreVertical, Edit2, Trash2, X, Search as SearchIcon, Printer } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState } from 'react';
@@ -80,6 +80,10 @@ export default function LocationDetailScreen() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handlePrintQR = () => {
+    window.print();
   };
 
   return (
@@ -226,6 +230,12 @@ export default function LocationDetailScreen() {
               </div>
               
               <div className="w-full space-y-3">
+                 <button 
+                  onClick={handlePrintQR}
+                  className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+                 >
+                   <Printer size={18} /> 印刷する
+                 </button>
                  <button 
                   onClick={() => setShowQR(false)}
                   className="w-full bg-gray-100 text-gray-700 font-bold py-3.5 rounded-xl hover:bg-gray-200 active:scale-95 transition-all"
