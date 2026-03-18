@@ -1,4 +1,4 @@
-import { ArrowLeft, Box, CheckCircle2, Clock, MapPin, Tag, User, MoreVertical, Edit2, Trash2, X, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Box, CheckCircle2, Clock, MapPin, Tag, User, MoreVertical, Edit2, Trash2, X, ChevronDown, Star } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import { useChannel } from '../contexts/ChannelContext';
@@ -8,7 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 export default function ItemDetailScreen() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { items, locations, updateItemStatus, updateItem, deleteItem } = useData();
+  const { items, locations, updateItemStatus, updateItem, deleteItem, toggleItemFavorite } = useData();
   const { currentChannel, getChannelMembers } = useChannel();
   const { currentUser } = useAuth();
   
@@ -207,6 +207,27 @@ export default function ItemDetailScreen() {
            </div>
         </section>
       </main>
+
+      {/* Favorite Button Section */}
+      <div className="px-5 pb-4">
+        <button 
+          onClick={async () => {
+            try {
+              await toggleItemFavorite(id);
+            } catch (err) {
+              console.error('Error toggling favorite:', err);
+            }
+          }}
+          className={`w-full font-bold text-sm py-3.5 rounded-xl shadow-sm transition-all flex justify-center items-center gap-2 border-2 ${
+            itemData.isFavorite
+              ? 'bg-yellow-50 text-yellow-600 border-yellow-200 hover:bg-yellow-100 active:scale-95'
+              : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 active:scale-95'
+          }`}
+        >
+          <Star size={18} fill={itemData.isFavorite ? 'currentColor' : 'none'} />
+          {itemData.isFavorite ? 'よく使うアイテムから削除' : 'よく使うアイテムに登録'}
+        </button>
+      </div>
 
       {/* Floating Action Bar - 共有用チャンネルのみ表示 */}
       {!isSoloChannel && (

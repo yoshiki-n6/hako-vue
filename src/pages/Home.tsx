@@ -31,10 +31,8 @@ export default function Home() {
     }
   };
 
-  // Get up to 4 most recently updated items
-  const recentItems = [...items]
-    .sort((a, b) => b.updatedAt?.toMillis?.() - a.updatedAt?.toMillis?.() || 0)
-    .slice(0, 4);
+  // Get up to 4 favorite items
+  const favoriteItems = items.filter(item => item.isFavorite === true).slice(0, 4);
 
   return (
     <div className="max-w-md mx-auto p-5 pb-20">
@@ -160,18 +158,18 @@ export default function Home() {
 
       <section className="mb-8">
         <div className="flex justify-between items-end mb-4">
-          <h2 className="text-lg font-bold text-gray-800">最近のアイテム</h2>
-          <Link to="/search" className="text-xs font-semibold text-primary-500 hover:text-blue-600 transition-colors">すべて見る</Link>
+          <h2 className="text-lg font-bold text-gray-800">よく使うアイテム</h2>
+          <Link to="/search" className="text-xs font-semibold text-primary-500 hover:text-blue-600 transition-colors">すべてのアイテムを見る</Link>
         </div>
         
-        {recentItems.length === 0 ? (
+        {favoriteItems.length === 0 ? (
           <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6 text-center">
-            <p className="text-sm font-bold text-gray-500 mb-1">まだアイテムがありません</p>
-            <p className="text-xs text-gray-400">下の撮影ボタンから最初のアイテムを登録しましょう</p>
+            <p className="text-sm font-bold text-gray-500 mb-1">よく使うアイテムはまだありません</p>
+            <p className="text-xs text-gray-400">アイテムを開いて「よく使うアイテムに登録」を押しましょう</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            {recentItems.map(item => {
+            {favoriteItems.map(item => {
               const location = locations.find(loc => loc.id === item.locationId);
               return (
                 <Link to={`/items/${item.id}`} key={item.id} className="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex flex-col group cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]">

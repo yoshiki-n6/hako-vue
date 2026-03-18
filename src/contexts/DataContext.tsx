@@ -22,6 +22,7 @@ export interface Item {
   tags: string[];
   itemPhotoUrl: string;
   status: 'stored' | 'taken_out';
+  isFavorite?: boolean;
   userId: string;
   channelId?: string;
   createdAt: any;
@@ -211,6 +212,20 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     await deleteDoc(itemRef);
   };
 
+  const toggleItemFavorite = async (itemId: string) => {
+    if (!currentUser) throw new Error("Not logged in");
+    if (!currentChannel) throw new Error("No channel selected");
+    
+    const item = items.find(i => i.id === itemId);
+    if (!item) throw new Error("Item not found");
+    
+    const itemRef = doc(db, `channels/${currentChannel.id}/items`, itemId);
+    await updateDoc(itemRef, {
+      isFavorite: !item.isFavorite,
+      updatedAt: serverTimestamp()
+    });
+  };
+
   const value = {
     locations,
     items,
@@ -222,7 +237,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     updateItem,
     updateLocation,
     deleteLocation,
-    deleteItem
+    deleteItem,
+    toggleItemFavorite
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
