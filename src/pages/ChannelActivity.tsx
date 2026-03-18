@@ -57,26 +57,37 @@ export default function ChannelActivityScreen() {
     loadLogs();
   }, [channelId, getActivityLogs]);
 
-  const formatDate = (timestamp: any) => {
+  const formatTime = (timestamp: any) => {
     if (!timestamp) return '';
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 1) return 'たった今';
-    if (minutes < 60) return `${minutes}分前`;
-    if (hours < 24) return `${hours}時間前`;
-    if (days < 7) return `${days}日前`;
-    
-    return date.toLocaleDateString('ja-JP', {
-      month: 'short',
-      day: 'numeric',
+    return date.toLocaleTimeString('ja-JP', {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const formatDateGroup = (timestamp: any) => {
+    if (!timestamp) return '';
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    // Reset time for comparison
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+    
+    if (dateOnly.getTime() === todayOnly.getTime()) {
+      return '今日';
+    } else if (dateOnly.getTime() === yesterdayOnly.getTime()) {
+      return '昨日';
+    } else {
+      return date.toLocaleDateString('ja-JP', {
+        month: 'short',
+        day: 'numeric'
+      });
+    }
   };
 
   const getLogIcon = (type: ActivityLog['type']) => {
@@ -241,27 +252,69 @@ export default function ChannelActivityScreen() {
             <p className="text-gray-500 font-medium">「{searchQuery}」の検索結果はありません</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {filteredLogs.map((log) => (
-              <div
-                key={log.id}
-                className={`p-4 rounded-2xl border ${getLogBgColor(log.type)}`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
-                    {getLogIcon(log.type)}
+          <div className="space-y-6">
+            {(() => {
+              // Group logs by date
+              const groupedLogs: Record<string, typeof filteredLogs> = {};
+              filteredLogs.forEach(log => {
+                const dateGroup = formatDateGroup(log.createdAt);
+                if (!groupedLogs[dateGroup]) {
+                  groupedLogs[dateGroup] = [];
+                }
+                groupedLogs[dateGroup].push(log);
+              });
+
+              // Get date groups in order: 今日 → 昨日 → 古い順
+              const dateGroups = Object.keys(groupedLogs).sort((a, b) => {
+                const order = ['今日', '昨日'];
+                const aIndex = order.indexOf(a);
+                const bIndex = order.indexOf(b);
+                
+                if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+                if (aIndex !== -1) return -1;
+                if (bIndex !== -1) return 1;
+                
+                // For other dates, sort by actual date (newer first)
+                const logA = groupedLogs[a][0];
+                const logB = groupedLogs[b][0];
+                const dateA = logA.createdAt.toDate ? logA.createdAt.toDate() : new Date(logA.createdAt);
+                const dateB = logB.createdAt.toDate ? logB.createdAt.toDate() : new Date(logB.createdAt);
+                return dateB.getTime() - dateA.getTime();
+              });
+
+              return dateGroups.map((dateGroup) => (
+                <div key={dateGroup} className="space-y-3">
+                  {/* Date separator */}
+                  <div className="flex items-center gap-3 pt-2">
+                    <div className="flex-1 h-px bg-gray-200"></div>
+                    <p className="text-xs font-bold text-gray-400 px-3">{dateGroup}</p>
+                    <div className="flex-1 h-px bg-gray-200"></div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm leading-relaxed">
-                      {getLogMessage(log)}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {formatDate(log.createdAt)}
-                    </p>
-                  </div>
+
+                  {/* Logs for this date */}
+                  {groupedLogs[dateGroup].map((log) => (
+                    <div
+                      key={log.id}
+                      className={`p-4 rounded-2xl border ${getLogBgColor(log.type)}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
+                          {getLogIcon(log.type)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm leading-relaxed">
+                            {getLogMessage(log)}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {formatTime(log.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
+              ));
+            })()}
           </div>
         )}
       </main>
