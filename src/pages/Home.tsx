@@ -3,12 +3,22 @@ import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { useChannel } from '../contexts/ChannelContext';
 import { MapPin, QrCode, Box, ChevronRight, Home as HomeIcon, Users, RotateCcw, History, ArrowUp } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Home() {
   const { currentUser } = useAuth();
   const { items, locations, updateItemStatus } = useData();
-  const { currentChannel } = useChannel();
+  const { currentChannel, getChannelMembers } = useChannel();
+  const [channelMembers, setChannelMembers] = useState<{ userId: string; nickname: string }[]>([]);
+  
+  // Load channel members
+  useEffect(() => {
+    if (currentChannel && currentChannel.type === 'shared') {
+      getChannelMembers(currentChannel.id).then(members => {
+        setChannelMembers(members.map(m => ({ userId: m.userId, nickname: m.nickname })));
+      }).catch(err => console.error('Failed to load channel members:', err));
+    }
+  }, [currentChannel]);
   
   // 一人暮らし用チャンネルかどうか
   const isSoloChannel = currentChannel?.type === 'solo';
@@ -33,6 +43,13 @@ export default function Home() {
 
   // Get up to 4 favorite items
   const favoriteItems = items.filter(item => item.isFavorite === true).slice(0, 4);
+
+  // Helper function to get user nickname
+  const getUserNickname = (userId: string | undefined) => {
+    if (!userId) return '不明なユーザー';
+    const member = channelMembers.find(m => m.userId === userId);
+    return member?.nickname || '不明なユーザー';
+  };
 
   return (
     <div className="max-w-md mx-auto p-5 pb-20">
@@ -184,7 +201,9 @@ export default function Home() {
                       {/* 共有用チャンネルのみ持ち出し中を表示 */}
                       {!isSoloChannel && item.status === 'taken_out' && (
                          <div className="absolute inset-0 bg-amber-500/20 backdrop-blur-[1px]">
-                            <span className="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm">持ち出し中</span>
+                            <span className="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm">
+                              {isMyTakeOut ? '持ち出し中' : `${getUserNickname(item.takenOutBy)}が持ち出し中`}
+                            </span>
                          </div>
                       )}
                     </div>
