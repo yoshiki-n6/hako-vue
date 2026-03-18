@@ -37,7 +37,7 @@ interface DataContextType {
   addItem: (item: Omit<Item, 'id' | 'userId' | 'channelId' | 'createdAt' | 'updatedAt'>) => Promise<string>;
   updateItemStatus: (itemId: string, status: 'stored' | 'taken_out') => Promise<void>;
   updateItemName: (itemId: string, name: string) => Promise<void>;
-  updateItem: (itemId: string, data: Partial<Pick<Item, 'name' | 'tags' | 'locationId'>>) => Promise<void>;
+  updateItem: (itemId: string, data: Partial<Pick<Item, 'name' | 'locationId'>>) => Promise<void>;
   updateLocation: (locationId: string, data: Partial<Pick<Location, 'name' | 'description' | 'markerText'>>) => Promise<void>;
   deleteLocation: (locationId: string) => Promise<void>;
   deleteItem: (itemId: string) => Promise<void>;
