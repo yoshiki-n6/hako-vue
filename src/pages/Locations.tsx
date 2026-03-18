@@ -30,7 +30,7 @@ export default function LocationsScreen() {
         <div className="relative">
           <input 
             type="text" 
-            placeholder="場所やマーカーで検索..." 
+            placeholder="場所や目印で検索..." 
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="w-full bg-gray-100 text-gray-900 rounded-2xl py-3.5 pl-11 pr-10 outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white transition-all font-medium text-sm border border-transparent focus:border-blue-200"
@@ -87,7 +87,7 @@ export default function LocationsScreen() {
                 <div className="p-4">
                   <p className="text-xs text-gray-500 font-medium line-clamp-1">{loc.description || '説明なし'}</p>
                   <div className="mt-2 text-[10px] text-gray-400 font-bold uppercase tracking-wider flex justify-between items-center">
-                    <span>マーカー: {loc.markerText || '未設定'}</span>
+                    <span>目印: {loc.markerText || '未設定'}</span>
                     <span className="text-primary-500 flex items-center gap-0.5 group-hover:translate-x-1 transition-transform">
                       詳細を見る &rarr;
                     </span>
