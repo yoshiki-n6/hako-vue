@@ -138,9 +138,13 @@ export default function ItemDetailScreen() {
               <span className="bg-emerald-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm border border-emerald-400">
                 <CheckCircle2 size={14} /> 保管中
               </span>
-            ) : (
+            ) : item.takenOutBy === currentUser?.uid ? (
               <span className="bg-amber-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm border border-amber-400">
                 <Box size={14} /> 持ち出し中
+              </span>
+            ) : (
+              <span className="bg-red-600/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm border border-red-500">
+                <Box size={14} /> {memberNicknameMap[item.takenOutBy || ''] || '不明なユーザー'}が持ち出し中
               </span>
             )}
           </div>
@@ -229,7 +233,7 @@ export default function ItemDetailScreen() {
                 ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100 active:scale-95' 
                 : item.takenOutBy && item.takenOutBy === currentUser?.uid
                 ? 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 active:scale-95'
-                : 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
+                : 'bg-red-50 text-red-600 border-red-200 cursor-not-allowed'
             }`}
           >
             {item.status === 'stored' ? (
@@ -237,7 +241,7 @@ export default function ItemDetailScreen() {
             ) : item.takenOutBy && item.takenOutBy === currentUser?.uid ? (
               <><CheckCircle2 size={18} /> 返却する</>
             ) : (
-              <><Box size={18} /> 他のユーザーが持ち出し中</>
+              <><Box size={18} /> {memberNicknameMap[item.takenOutBy || ''] || '不明なユーザー'}が持ち出し中</>
             )}
           </button>
         </div>
