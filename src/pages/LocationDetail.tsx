@@ -82,72 +82,114 @@ export default function LocationDetailScreen() {
     }
   };
 
-  const handlePrintQR = () => {
-    console.log("[v0] Print button clicked");
-    // モバイルでのwindow.print()の代替策として、QRコードのみを表示するフルスクリーンモードを実装
+  const handleShareQR = async () => {
+    console.log("[v0] Share button clicked");
+    
+    // QRコード要素を取得
     const qrElement = document.getElementById('qr-code-print');
-    if (qrElement) {
-      const printWindow = window.open('', '', 'width=600,height=600');
-      if (printWindow) {
-        printWindow.document.write(`
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="UTF-8">
-            <title>${location.name}のQRコード</title>
-            <style>
-              body {
-                margin: 0;
-                padding: 20px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                min-height: 100vh;
-                background: white;
-                font-family: system-ui, -apple-system, sans-serif;
-              }
-              .container {
-                text-align: center;
-              }
-              h1 {
-                font-size: 24px;
-                margin-bottom: 10px;
-                color: #111;
-              }
-              p {
-                font-size: 14px;
-                color: #666;
-                margin-bottom: 20px;
-              }
-              #qr-container {
-                background: white;
-                padding: 20px;
-                border-radius: 12px;
-                display: inline-block;
-              }
-              @media print {
-                body { margin: 0; padding: 10px; }
-              }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <h1>${location.name}</h1>
-              <p>この場所の情報QRコード</p>
-              <div id="qr-container">
-                ${qrElement.outerHTML}
-              </div>
-            </div>
-            <script>
-              setTimeout(() => {
-                window.print();
-              }, 500);
-            </script>
-          </body>
-          </html>
-        `);
-        printWindow.document.close();
-      }
+    if (!qrElement) return;
+
+    try {
+      // SVGをcanvasに変換してblobを取得
+      const svg = qrElement.querySelector('svg');
+      if (!svg) return;
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = async () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        
+        canvas.toBlob(async (blob) => {
+          if (!blob) return;
+
+          // Web Share APIが利用可能か確認
+          if (navigator.share) {
+            try {
+              const file = new File([blob], `${location.name}-QR.png`, { type: 'image/png' });
+              await navigator.share({
+                title: location.name,
+                text: `${location.name}の収納場所情報`,
+                files: [file],
+              });
+              console.log("[v0] Share successful");
+            } catch (err) {
+              console.log("[v0] Share cancelled or failed:", err);
+            }
+          } else {
+            // フォールバック: 印刷ダイアログを表示
+            const printWindow = window.open('', '', 'width=600,height=600');
+            if (printWindow) {
+              printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <meta charset="UTF-8">
+                  <title>${location.name}のQRコード</title>
+                  <style>
+                    body {
+                      margin: 0;
+                      padding: 20px;
+                      display: flex;
+                      justify-content: center;
+                      align-items: center;
+                      min-height: 100vh;
+                      background: white;
+                      font-family: system-ui, -apple-system, sans-serif;
+                    }
+                    .container {
+                      text-align: center;
+                    }
+                    h1 {
+                      font-size: 24px;
+                      margin-bottom: 10px;
+                      color: #111;
+                    }
+                    p {
+                      font-size: 14px;
+                      color: #666;
+                      margin-bottom: 20px;
+                    }
+                    img {
+                      width: 250px;
+                      height: 250px;
+                      border-radius: 12px;
+                    }
+                    @media print {
+                      body { margin: 0; padding: 10px; }
+                    }
+                  </style>
+                </head>
+                <body>
+                  <div class="container">
+                    <h1>${location.name}</h1>
+                    <p>この場所の情報QRコード</p>
+                    <img src="${canvas.toDataURL()}" alt="QRコード" />
+                  </div>
+                  <script>
+                    setTimeout(() => {
+                      window.print();
+                    }, 500);
+                  </script>
+                </body>
+                </html>
+              `);
+              printWindow.document.close();
+            }
+          }
+        }, 'image/png');
+      };
+      
+      // SVGをdata URLに変換
+      const svgString = new XMLSerializer().serializeToString(svg);
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      img.src = svgUrl;
+    } catch (err) {
+      console.error("[v0] Error in handleShareQR:", err);
     }
   };
 
@@ -296,10 +338,10 @@ export default function LocationDetailScreen() {
               
               <div className="w-full space-y-3">
                  <button 
-                  onClick={handlePrintQR}
+                  onClick={handleShareQR}
                   className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2"
                  >
-                   <Printer size={18} /> 印刷する
+                   <Printer size={18} /> 共有・印刷する
                  </button>
                  <button 
                   onClick={() => setShowQR(false)}
