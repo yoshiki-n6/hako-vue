@@ -16,6 +16,10 @@ export default function QRLocationSelectScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [savingLocationName, setSavingLocationName] = useState('');
+  const [itemQuantity, setItemQuantity] = useState(1);
+  const [showQuantityModal, setShowQuantityModal] = useState(false);
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
+  const [quantityInputMethod, setQuantityInputMethod] = useState<'slider' | 'input'>('slider');
 
   const handleScan = async (detectedCodes: { rawValue: string }[]) => {
     if (detectedCodes.length === 0 || isSaving) return;
@@ -41,8 +45,24 @@ export default function QRLocationSelectScreen() {
         return;
       }
       
-      // Save item to this location
+      // Show quantity modal instead of saving directly
+      setSelectedLocationId(locationId);
+      setShowQuantityModal(true);
+      
+    } catch (err) {
+      console.error('QR scan error:', err);
+      setError('QRコードの読み取りに失敗しました');
+    }
+  };
+
+  const handleConfirmQuantity = async () => {
+    if (!selectedLocationId) return;
+    
+    try {
       setIsSaving(true);
+      const matchedLocation = locations.find(loc => loc.id === selectedLocationId);
+      if (!matchedLocation) return;
+      
       setSavingLocationName(matchedLocation.name);
       
       const imageUrl = await uploadImage(itemPhotoUrl, 'items', currentUser?.uid || 'anonymous');
@@ -51,15 +71,17 @@ export default function QRLocationSelectScreen() {
         locationId: matchedLocation.id,
         name: itemName,
         itemPhotoUrl: imageUrl,
+        quantity: itemQuantity,
+        takenOutQuantity: 0,
         status: 'stored'
       });
       
-      alert(`${matchedLocation.name}に保存しました！`);
+      alert(`${matchedLocation.name}に${itemQuantity}個保存しました！`);
       navigate('/');
       
     } catch (err) {
-      console.error('QR scan error:', err);
-      setError('QRコードの読み取りに失敗しました');
+      console.error('Save error:', err);
+      setError('保存に失敗しました');
       setIsSaving(false);
     }
   };
@@ -129,6 +151,94 @@ export default function QRLocationSelectScreen() {
             <p className="text-sm text-gray-400">
               {savingLocationName}に保存しています
             </p>
+          </div>
+        )}
+
+        {/* Quantity Modal */}
+        {showQuantityModal && (
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex items-end z-50">
+            <div className="w-full bg-white rounded-t-3xl p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+              <h2 className="text-lg font-bold text-gray-900">個数を選択</h2>
+              
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setQuantityInputMethod('slider')}
+                  className={`flex-1 py-2 rounded-lg font-bold text-sm transition-colors ${
+                    quantityInputMethod === 'slider'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                  }`}
+                >
+                  スライダー
+                </button>
+                <button
+                  onClick={() => setQuantityInputMethod('input')}
+                  className={`flex-1 py-2 rounded-lg font-bold text-sm transition-colors ${
+                    quantityInputMethod === 'input'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                  }`}
+                >
+                  数値入力
+                </button>
+              </div>
+
+              {quantityInputMethod === 'slider' ? (
+                <div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={itemQuantity}
+                    onChange={e => setItemQuantity(parseInt(e.target.value))}
+                    className="w-full"
+                  />
+                  <div className="text-center mt-2 text-blue-700 font-bold text-lg">{itemQuantity}個</div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setItemQuantity(Math.max(1, itemQuantity - 1))}
+                    className="flex-1 bg-blue-100 text-blue-700 py-2 rounded-lg font-bold hover:bg-blue-200"
+                  >
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    max="999"
+                    value={itemQuantity}
+                    onChange={e => setItemQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="flex-1 bg-gray-50 border border-blue-200 rounded-lg px-3 py-2 text-center font-bold text-lg outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    onClick={() => setItemQuantity(Math.min(999, itemQuantity + 1))}
+                    className="flex-1 bg-blue-100 text-blue-700 py-2 rounded-lg font-bold hover:bg-blue-200"
+                  >
+                    +
+                  </button>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => {
+                    setShowQuantityModal(false);
+                    setItemQuantity(1);
+                    setSelectedLocationId(null);
+                  }}
+                  className="flex-1 py-3 rounded-xl border border-gray-200 font-bold text-gray-900 hover:bg-gray-50"
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick={handleConfirmQuantity}
+                  className="flex-1 py-3 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600"
+                >
+                  保存する
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </main>

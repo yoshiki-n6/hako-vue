@@ -99,10 +99,23 @@ export default function SearchScreen() {
                 </div>
                 <div className="flex-1 pt-1">
                   <h3 className="font-extrabold text-base text-gray-900 leading-tight mb-1 group-hover:text-blue-600 transition-colors">{item.name}</h3>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 mb-1">
                     <MapPin size={14} className="text-blue-600" strokeWidth={2.5} />
                     <span className="text-xs font-bold text-gray-600">{item.locationName}</span>
                   </div>
+                  {/* Inventory display */}
+                  {item.quantity && (
+                    <p className={`text-[10px] font-bold ${
+                      item.quantity - item.takenOutQuantity > 0
+                        ? 'text-emerald-600'
+                        : 'text-red-600'
+                    }`}>
+                      {item.quantity - item.takenOutQuantity > 0 
+                        ? `在庫あり: ${item.quantity - item.takenOutQuantity}個`
+                        : '在庫なし'
+                      }
+                    </p>
+                  )}
                 </div>
               </div>
             </Link>

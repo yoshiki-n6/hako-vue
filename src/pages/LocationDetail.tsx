@@ -359,6 +359,19 @@ export default function LocationDetailScreen() {
                 </div>
                 <div className="p-3">
                   <h3 className="font-bold text-xs text-gray-900 line-clamp-2 leading-snug">{item.name}</h3>
+                  {/* Inventory display */}
+                  {item.quantity && (
+                    <p className={`text-[10px] font-bold mt-1 ${
+                      item.quantity - item.takenOutQuantity > 0
+                        ? 'text-emerald-600'
+                        : 'text-red-600'
+                    }`}>
+                      {item.quantity - item.takenOutQuantity > 0 
+                        ? `在庫あり: ${item.quantity - item.takenOutQuantity}個`
+                        : '在庫なし'
+                      }
+                    </p>
+                  )}
                 </div>
               </Link>
             ))}
