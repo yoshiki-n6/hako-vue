@@ -22,6 +22,8 @@ export interface Item {
   tags: string[];
   itemPhotoUrl: string;
   status: 'stored' | 'taken_out';
+  isFavorite?: boolean;
+  takenOutBy?: string; // User ID who took out the item
   userId: string;
   channelId?: string;
   createdAt: any;
@@ -40,6 +42,7 @@ interface DataContextType {
   updateLocation: (locationId: string, data: Partial<Pick<Location, 'name' | 'description' | 'markerText'>>) => Promise<void>;
   deleteLocation: (locationId: string) => Promise<void>;
   deleteItem: (itemId: string) => Promise<void>;
+  toggleItemFavorite: (itemId: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | null>(null);
@@ -150,10 +153,20 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     if (!currentChannel) throw new Error("No channel selected");
     
     const itemRef = doc(db, `channels/${currentChannel.id}/items`, itemId);
-    await updateDoc(itemRef, {
+    
+    // If taking out, record who took it out; if storing, clear the takenOutBy field
+    const updateData: any = {
       status,
       updatedAt: serverTimestamp()
-    });
+    };
+    
+    if (status === 'taken_out') {
+      updateData.takenOutBy = currentUser.uid;
+    } else {
+      updateData.takenOutBy = null;
+    }
+    
+    await updateDoc(itemRef, updateData);
     
     // Add activity log for shared channels
     try {
@@ -211,6 +224,20 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     await deleteDoc(itemRef);
   };
 
+  const toggleItemFavorite = async (itemId: string) => {
+    if (!currentUser) throw new Error("Not logged in");
+    if (!currentChannel) throw new Error("No channel selected");
+    
+    const item = items.find(i => i.id === itemId);
+    if (!item) throw new Error("Item not found");
+    
+    const itemRef = doc(db, `channels/${currentChannel.id}/items`, itemId);
+    await updateDoc(itemRef, {
+      isFavorite: !item.isFavorite,
+      updatedAt: serverTimestamp()
+    });
+  };
+
   const value = {
     locations,
     items,
@@ -222,7 +249,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     updateItem,
     updateLocation,
     deleteLocation,
-    deleteItem
+    deleteItem,
+    toggleItemFavorite
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
