@@ -33,9 +33,6 @@ export default function ItemDetailScreen() {
   const [editName, setEditName] = useState('');
   const [editLocationId, setEditLocationId] = useState('');
   const [saving, setSaving] = useState(false);
-  const [showQuantityModal, setShowQuantityModal] = useState(false);
-  const [takenOutQuantity, setTakenOutQuantity] = useState(1);
-  const [quantityInputMethod, setQuantityInputMethod] = useState<'slider' | 'input'>('slider');
 
   const itemData = items.find(i => i.id === id);
   const locationData = itemData ? locations.find(l => l.id === itemData.locationId) : null;
@@ -55,26 +52,7 @@ export default function ItemDetailScreen() {
 
   const handleStatusToggle = async () => {
     const newStatus = item.status === 'stored' ? 'taken_out' : 'stored';
-    
-    // If taking out, show quantity modal first
-    if (newStatus === 'taken_out') {
-      const availableQuantity = item.quantity - item.takenOutQuantity;
-      if (availableQuantity > 0) {
-        setTakenOutQuantity(1);
-        setShowQuantityModal(true);
-        return;
-      }
-    }
-    
-    // If returning, just update status
     await updateItemStatus(item.id, newStatus);
-  };
-
-  const handleConfirmTakeOut = async () => {
-    // Update status to taken out and set the quantity
-    // Note: In a real app, you'd update both status and takenOutQuantity atomically
-    await updateItemStatus(item.id, 'taken_out');
-    setShowQuantityModal(false);
   };
 
   const handleOpenEdit = () => {
@@ -246,36 +224,19 @@ export default function ItemDetailScreen() {
 
       {/* Floating Action Bar - 共有用チャンネルのみ表示 */}
       {!isSoloChannel && (
-        <div className="fixed bottom-0 inset-x-0 w-full max-w-md mx-auto p-4 bg-white/90 backdrop-blur-md border-t border-gray-100 z-20 pb-8 flex flex-col gap-3">
-          {/* Inventory display */}
-          <div className="text-center">
-            {item.quantity - item.takenOutQuantity > 0 ? (
-              <p className="text-sm font-bold text-emerald-600">
-                在庫あり：{item.quantity - item.takenOutQuantity}個
-              </p>
-            ) : (
-              <p className="text-sm font-bold text-red-600">
-                在庫なし
-              </p>
-            )}
-          </div>
-
+        <div className="fixed bottom-0 inset-x-0 w-full max-w-md mx-auto p-4 bg-white/90 backdrop-blur-md border-t border-gray-100 z-20 pb-8 flex justify-center gap-3">
           <button 
             onClick={handleStatusToggle}
-            disabled={item.status === 'taken_out' && item.takenOutBy !== currentUser?.uid || (item.quantity - item.takenOutQuantity === 0 && item.status === 'stored')}
+            disabled={item.status === 'taken_out' && item.takenOutBy !== currentUser?.uid}
             className={`flex-1 font-bold text-sm py-3.5 rounded-xl shadow-sm transition-all flex justify-center items-center gap-2 border-2 ${
-              item.quantity - item.takenOutQuantity === 0 && item.status === 'stored'
-                ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
-                : item.status === 'stored' 
+              item.status === 'stored' 
                 ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100 active:scale-95' 
                 : item.takenOutBy && item.takenOutBy === currentUser?.uid
                 ? 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 active:scale-95'
                 : 'bg-red-50 text-red-600 border-red-200 cursor-not-allowed'
             }`}
           >
-            {item.quantity - item.takenOutQuantity === 0 && item.status === 'stored' ? (
-              <><Box size={18} /> 在庫なし</>
-            ) : item.status === 'stored' ? (
+            {item.status === 'stored' ? (
               <><Box size={18} /> 持ち出し中にする</>
             ) : item.takenOutBy && item.takenOutBy === currentUser?.uid ? (
               <><CheckCircle2 size={18} /> 返却する</>
@@ -283,93 +244,6 @@ export default function ItemDetailScreen() {
               <><Box size={18} /> {memberNicknameMap[item.takenOutBy || ''] || '不明なユーザー'}が持ち出し中</>
             )}
           </button>
-        </div>
-      )}
-
-      {/* Quantity Modal */}
-      {showQuantityModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-end z-50">
-          <div className="w-full bg-white rounded-t-3xl p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-            <h2 className="text-lg font-bold text-gray-900">持ち出す個数を選択</h2>
-            <p className="text-sm text-gray-600">
-              利用可能: {item.quantity - item.takenOutQuantity}個
-            </p>
-            
-            <div className="flex gap-2">
-              <button
-                onClick={() => setQuantityInputMethod('slider')}
-                className={`flex-1 py-2 rounded-lg font-bold text-sm transition-colors ${
-                  quantityInputMethod === 'slider'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                }`}
-              >
-                スライダー
-              </button>
-              <button
-                onClick={() => setQuantityInputMethod('input')}
-                className={`flex-1 py-2 rounded-lg font-bold text-sm transition-colors ${
-                  quantityInputMethod === 'input'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                }`}
-              >
-                数値入力
-              </button>
-            </div>
-
-            {quantityInputMethod === 'slider' ? (
-              <div>
-                <input
-                  type="range"
-                  min="1"
-                  max={item.quantity - item.takenOutQuantity}
-                  value={takenOutQuantity}
-                  onChange={e => setTakenOutQuantity(parseInt(e.target.value))}
-                  className="w-full"
-                />
-                <div className="text-center mt-2 text-blue-700 font-bold text-lg">{takenOutQuantity}個</div>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setTakenOutQuantity(Math.max(1, takenOutQuantity - 1))}
-                  className="flex-1 bg-blue-100 text-blue-700 py-2 rounded-lg font-bold hover:bg-blue-200"
-                >
-                  −
-                </button>
-                <input
-                  type="number"
-                  min="1"
-                  max={item.quantity - item.takenOutQuantity}
-                  value={takenOutQuantity}
-                  onChange={e => setTakenOutQuantity(Math.max(1, Math.min(item.quantity - item.takenOutQuantity, parseInt(e.target.value) || 1)))}
-                  className="flex-1 bg-gray-50 border border-blue-200 rounded-lg px-3 py-2 text-center font-bold text-lg outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  onClick={() => setTakenOutQuantity(Math.min(item.quantity - item.takenOutQuantity, takenOutQuantity + 1))}
-                  className="flex-1 bg-blue-100 text-blue-700 py-2 rounded-lg font-bold hover:bg-blue-200"
-                >
-                  +
-                </button>
-              </div>
-            )}
-
-            <div className="flex gap-3 pt-4">
-              <button
-                onClick={() => setShowQuantityModal(false)}
-                className="flex-1 py-3 rounded-xl border border-gray-200 font-bold text-gray-900 hover:bg-gray-50"
-              >
-                キャンセル
-              </button>
-              <button
-                onClick={handleConfirmTakeOut}
-                className="flex-1 py-3 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600"
-              >
-                {takenOutQuantity}個を持ち出す
-              </button>
-            </div>
-          </div>
         </div>
       )}
 

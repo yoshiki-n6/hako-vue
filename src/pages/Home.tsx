@@ -218,19 +218,6 @@ export default function Home() {
                         <MapPin size={10} className="text-gray-400 shrink-0" />
                         {location?.name || '不明な場所'}
                       </p>
-                      {/* Inventory display */}
-                      {item.quantity && (
-                        <p className={`text-[10px] font-bold mt-1 ${
-                          item.quantity - item.takenOutQuantity > 0
-                            ? 'text-emerald-600'
-                            : 'text-red-600'
-                        }`}>
-                          {item.quantity - item.takenOutQuantity > 0 
-                            ? `在庫あり: ${item.quantity - item.takenOutQuantity}個`
-                            : '在庫なし'
-                          }
-                        </p>
-                      )}
                     </div>
                   </Link>
                   

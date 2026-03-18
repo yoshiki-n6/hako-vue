@@ -21,8 +21,6 @@ export interface Item {
   name: string;
   itemPhotoUrl: string;
   status: 'stored' | 'taken_out';
-  quantity: number; // Total quantity in storage
-  takenOutQuantity: number; // Quantity currently taken out
   isFavorite?: boolean;
   takenOutBy?: string; // User ID who took out the item
   userId: string;

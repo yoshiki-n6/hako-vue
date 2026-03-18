@@ -14,8 +14,6 @@ export default function LocationSelectScreen() {
   const { currentUser } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [showExistingLocations, setShowExistingLocations] = useState(false);
-  const [itemQuantity, setItemQuantity] = useState(1);
-  const [quantityInputMethod, setQuantityInputMethod] = useState<'slider' | 'input'>('slider');
 
   // Calculate items count currently stored at each location
   const locationsWithCounts = locations.map(loc => ({
@@ -88,71 +86,6 @@ export default function LocationSelectScreen() {
           </button>
         </div>
 
-        {/* 2. 個数を選択 */}
-        <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl shadow-sm">
-          <label className="block text-xs font-bold text-blue-700 uppercase tracking-wider mb-3">個数を選択</label>
-          
-          <div className="flex gap-2 mb-3">
-            <button
-              onClick={() => setQuantityInputMethod('slider')}
-              className={`flex-1 py-2 rounded-lg font-bold text-sm transition-colors ${
-                quantityInputMethod === 'slider'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-              }`}
-            >
-              スライダー
-            </button>
-            <button
-              onClick={() => setQuantityInputMethod('input')}
-              className={`flex-1 py-2 rounded-lg font-bold text-sm transition-colors ${
-                quantityInputMethod === 'input'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-              }`}
-            >
-              数値入力
-            </button>
-          </div>
-
-          {quantityInputMethod === 'slider' ? (
-            <div>
-              <input
-                type="range"
-                min="1"
-                max="10"
-                value={itemQuantity}
-                onChange={e => setItemQuantity(parseInt(e.target.value))}
-                className="w-full"
-              />
-              <div className="text-center mt-2 text-blue-700 font-bold text-lg">{itemQuantity}個</div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setItemQuantity(Math.max(1, itemQuantity - 1))}
-                className="flex-1 bg-blue-100 text-blue-700 py-2 rounded-lg font-bold hover:bg-blue-200"
-              >
-                −
-              </button>
-              <input
-                type="number"
-                min="1"
-                max="999"
-                value={itemQuantity}
-                onChange={e => setItemQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                className="flex-1 bg-white border border-blue-200 rounded-lg px-3 py-2 text-center font-bold text-lg outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                onClick={() => setItemQuantity(Math.min(999, itemQuantity + 1))}
-                className="flex-1 bg-blue-100 text-blue-700 py-2 rounded-lg font-bold hover:bg-blue-200"
-              >
-                +
-              </button>
-            </div>
-          )}
-        </div>
-
         {/* 3. 既存の場所から選ぶ（折りたたみ式） */}
         <div className="mt-6">
           <button 
@@ -198,12 +131,10 @@ export default function LocationSelectScreen() {
                           locationId: loc.id,
                           name: itemName,
                           itemPhotoUrl: imageUrl,
-                          quantity: itemQuantity,
-                          takenOutQuantity: 0,
                           status: 'stored'
                         });
 
-                        alert(`${loc.name}に${itemQuantity}個保存しました！`);
+                        alert(`${loc.name}に保存しました！`);
                         navigate('/');
                       } catch (error) {
                         console.error("Failed to save item", error);
