@@ -23,8 +23,8 @@ export default function Home() {
   // 一人暮らし用チャンネルかどうか
   const isSoloChannel = currentChannel?.type === 'solo';
 
-  // 持ち出し中のアイテム
-  const takenOutItems = items.filter(item => item.status === 'taken_out');
+  // Get only items taken out by current user
+  const myTakenOutItems = items.filter(item => item.status === 'taken_out' && item.takenOutBy === currentUser?.uid);
   const [showTakenOut, setShowTakenOut] = useState(false);
   const [returningId, setReturningId] = useState<string | null>(null);
 
@@ -102,22 +102,21 @@ export default function Home() {
               <Box size={20} className="text-white" />
             </div>
             <div className="text-left">
-              <p className="text-sm font-bold text-amber-800">持ち出し中のアイテム</p>
-              <p className="text-xs text-amber-600">{takenOutItems.length}個のアイテム</p>
+              <p className="text-sm font-bold text-amber-800">自分が持ち出し中のアイテム</p>
+              <p className="text-xs text-amber-600">{myTakenOutItems.length}個のアイテム</p>
             </div>
           </div>
           <ChevronRight size={20} className={`text-amber-500 transition-transform ${showTakenOut ? 'rotate-90' : ''}`} />
         </button>
       )}
 
-      {/* 持ち出し中アイテム一覧 */}
-      {!isSoloChannel && showTakenOut && takenOutItems.length > 0 && (
+      {/* 自分が持ち出し中のアイテム一覧 */}
+      {!isSoloChannel && showTakenOut && myTakenOutItems.length > 0 && (
         <div className="mb-6 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="divide-y divide-gray-50">
-            {takenOutItems.map(item => {
+            {myTakenOutItems.map(item => {
               const location = locations.find(loc => loc.id === item.locationId);
               const isReturning = returningId === item.id;
-              const isMyTakeOut = item.takenOutBy === currentUser?.uid;
               return (
                 <Link 
                   to={`/items/${item.id}`} 
@@ -134,21 +133,14 @@ export default function Home() {
                       {location?.name || '不明な場所'}
                     </p>
                   </div>
-                  {isMyTakeOut && (
-                    <button
-                      onClick={(e) => handleReturn(e, item.id)}
-                      disabled={isReturning}
-                      className="flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-full shrink-0 hover:bg-emerald-100 transition-colors disabled:opacity-50 active:scale-95"
-                    >
-                      <RotateCcw size={11} className={isReturning ? 'animate-spin' : ''} />
-                      返却
-                    </button>
-                  )}
-                  {!isMyTakeOut && (
-                    <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded-full shrink-0">
-                      {getUserNickname(item.takenOutBy)}が持ち出し中
-                    </span>
-                  )}
+                  <button
+                    onClick={(e) => handleReturn(e, item.id)}
+                    disabled={isReturning}
+                    className="flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-full shrink-0 hover:bg-emerald-100 transition-colors disabled:opacity-50 active:scale-95"
+                  >
+                    <RotateCcw size={11} className={isReturning ? 'animate-spin' : ''} />
+                    返却
+                  </button>
                 </Link>
               );
             })}
@@ -156,7 +148,7 @@ export default function Home() {
         </div>
       )}
 
-      {!isSoloChannel && showTakenOut && takenOutItems.length === 0 && (
+      {!isSoloChannel && showTakenOut && myTakenOutItems.length === 0 && (
         <div className="mb-6 bg-gray-50 border border-gray-100 rounded-2xl p-6 text-center">
           <p className="text-sm font-bold text-gray-500">持ち出し中のアイテムはありません</p>
         </div>
