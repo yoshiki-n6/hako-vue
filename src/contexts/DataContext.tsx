@@ -23,6 +23,7 @@ export interface Item {
   itemPhotoUrl: string;
   status: 'stored' | 'taken_out';
   isFavorite?: boolean;
+  takenOutBy?: string; // User ID who took out the item
   userId: string;
   channelId?: string;
   createdAt: any;
@@ -151,10 +152,20 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     if (!currentChannel) throw new Error("No channel selected");
     
     const itemRef = doc(db, `channels/${currentChannel.id}/items`, itemId);
-    await updateDoc(itemRef, {
+    
+    // If taking out, record who took it out; if storing, clear the takenOutBy field
+    const updateData: any = {
       status,
       updatedAt: serverTimestamp()
-    });
+    };
+    
+    if (status === 'taken_out') {
+      updateData.takenOutBy = currentUser.uid;
+    } else {
+      updateData.takenOutBy = null;
+    }
+    
+    await updateDoc(itemRef, updateData);
     
     // Add activity log for shared channels
     try {
