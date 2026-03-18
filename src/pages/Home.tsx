@@ -117,6 +117,7 @@ export default function Home() {
             {takenOutItems.map(item => {
               const location = locations.find(loc => loc.id === item.locationId);
               const isReturning = returningId === item.id;
+              const isMyTakeOut = item.takenOutBy === currentUser?.uid;
               return (
                 <Link 
                   to={`/items/${item.id}`} 
@@ -133,14 +134,21 @@ export default function Home() {
                       {location?.name || '不明な場所'}
                     </p>
                   </div>
-                  <button
-                    onClick={(e) => handleReturn(e, item.id)}
-                    disabled={isReturning}
-                    className="flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-full shrink-0 hover:bg-emerald-100 transition-colors disabled:opacity-50 active:scale-95"
-                  >
-                    <RotateCcw size={11} className={isReturning ? 'animate-spin' : ''} />
-                    返却
-                  </button>
+                  {isMyTakeOut && (
+                    <button
+                      onClick={(e) => handleReturn(e, item.id)}
+                      disabled={isReturning}
+                      className="flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-full shrink-0 hover:bg-emerald-100 transition-colors disabled:opacity-50 active:scale-95"
+                    >
+                      <RotateCcw size={11} className={isReturning ? 'animate-spin' : ''} />
+                      返却
+                    </button>
+                  )}
+                  {!isMyTakeOut && (
+                    <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded-full shrink-0">
+                      {getUserNickname(item.takenOutBy)}が持ち出し中
+                    </span>
+                  )}
                 </Link>
               );
             })}
