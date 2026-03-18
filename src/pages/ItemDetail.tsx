@@ -8,7 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 export default function ItemDetailScreen() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { items, locations, updateItemStatus, updateItem, deleteItem, toggleItemFavorite } = useData();
+  const { items, locations, updateItemStatus, updateItem, deleteItem, toggleItemFavorite, isItemFavorite } = useData();
   const { currentChannel, getChannelMembers } = useChannel();
   const { currentUser } = useAuth();
   
@@ -212,13 +212,13 @@ export default function ItemDetailScreen() {
             }
           }}
           className={`w-full font-bold text-sm py-3.5 rounded-xl shadow-sm transition-all flex justify-center items-center gap-2 border-2 ${
-            itemData.isFavorite
+            isItemFavorite(itemData.id)
               ? 'bg-yellow-50 text-yellow-600 border-yellow-200 hover:bg-yellow-100 active:scale-95'
               : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 active:scale-95'
           }`}
         >
-          <Star size={18} fill={itemData.isFavorite ? 'currentColor' : 'none'} />
-          {itemData.isFavorite ? 'よく使うアイテムから削除' : 'よく使うアイテムに登録'}
+          <Star size={18} fill={isItemFavorite(itemData.id) ? 'currentColor' : 'none'} />
+          {isItemFavorite(itemData.id) ? 'よく使うアイテムから削除' : 'よく使うアイテムに登録'}
         </button>
       </div>
 

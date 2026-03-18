@@ -21,7 +21,6 @@ export interface Item {
   name: string;
   itemPhotoUrl: string;
   status: 'stored' | 'taken_out';
-  isFavorite?: boolean;
   takenOutBy?: string; // User ID who took out the item
   userId: string;
   channelId?: string;
@@ -42,6 +41,8 @@ interface DataContextType {
   deleteLocation: (locationId: string) => Promise<void>;
   deleteItem: (itemId: string) => Promise<void>;
   toggleItemFavorite: (itemId: string) => Promise<void>;
+  isItemFavorite: (itemId: string) => boolean;
+  getUserFavoriteItems: () => Item[];
 }
 
 const DataContext = createContext<DataContextType | null>(null);
@@ -60,6 +61,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [locations, setLocations] = useState<Location[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userFavorites, setUserFavorites] = useState<Set<string>>(new Set());
 
   // Subscribe to channel's data
   useEffect(() => {
@@ -71,6 +73,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     if (!currentUser || !currentChannel) {
       setLocations([]);
       setItems([]);
+      setUserFavorites(new Set());
       setLoading(false);
       return;
     }
@@ -86,6 +89,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     // Use channel-based paths
     const locationsRef = collection(db, `channels/${currentChannel.id}/locations`);
     const itemsRef = collection(db, `channels/${currentChannel.id}/items`);
+    const userFavoritesRef = collection(db, `channels/${currentChannel.id}/userFavorites/${currentUser.uid}/favorites`);
 
     const unsubLocations = onSnapshot(locationsRef, (snapshot) => {
       const locData: Location[] = [];
@@ -104,9 +108,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
+    // Subscribe to user's favorites
+    const unsubUserFavorites = onSnapshot(userFavoritesRef, (snapshot) => {
+      const favoriteIds = new Set<string>();
+      snapshot.forEach(doc => {
+        favoriteIds.add(doc.id);
+      });
+      setUserFavorites(favoriteIds);
+    });
+
     return () => {
       unsubLocations();
       unsubItems();
+      unsubUserFavorites();
     };
   }, [currentUser, currentChannel, channelLoading, needsOnboarding]);
 
@@ -227,14 +241,26 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     if (!currentUser) throw new Error("Not logged in");
     if (!currentChannel) throw new Error("No channel selected");
     
-    const item = items.find(i => i.id === itemId);
-    if (!item) throw new Error("Item not found");
+    const isFavorite = userFavorites.has(itemId);
+    const favRef = doc(db, `channels/${currentChannel.id}/userFavorites/${currentUser.uid}/favorites`, itemId);
     
-    const itemRef = doc(db, `channels/${currentChannel.id}/items`, itemId);
-    await updateDoc(itemRef, {
-      isFavorite: !item.isFavorite,
-      updatedAt: serverTimestamp()
-    });
+    if (isFavorite) {
+      // Remove from favorites
+      await deleteDoc(favRef);
+    } else {
+      // Add to favorites
+      await setDoc(favRef, {
+        addedAt: serverTimestamp()
+      });
+    }
+  };
+
+  const isItemFavorite = (itemId: string): boolean => {
+    return userFavorites.has(itemId);
+  };
+
+  const getUserFavoriteItems = (): Item[] => {
+    return items.filter(item => userFavorites.has(item.id)).slice(0, 4);
   };
 
   const value = {
@@ -249,7 +275,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     updateLocation,
     deleteLocation,
     deleteItem,
-    toggleItemFavorite
+    toggleItemFavorite,
+    isItemFavorite,
+    getUserFavoriteItems
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

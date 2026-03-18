@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 
 export default function Home() {
   const { currentUser } = useAuth();
-  const { items, locations, updateItemStatus } = useData();
+  const { items, locations, updateItemStatus, getUserFavoriteItems } = useData();
   const { currentChannel, getChannelMembers } = useChannel();
   const [channelMembers, setChannelMembers] = useState<{ userId: string; nickname: string }[]>([]);
   
@@ -41,8 +41,8 @@ export default function Home() {
     }
   };
 
-  // Get up to 4 favorite items
-  const favoriteItems = items.filter(item => item.isFavorite === true).slice(0, 4);
+  // Get user's favorite items
+  const favoriteItems = getUserFavoriteItems();
 
   // Helper function to get user nickname
   const getUserNickname = (userId: string | undefined) => {
@@ -154,7 +154,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* アクティビティログボタン（共有チャンネル�����み） */}
+      {/* アクティビティログボタン（共有チャンネル�������み） */}
       {!isSoloChannel && currentChannel && (
         <Link
           to={`/channel/${currentChannel.id}/activity`}
