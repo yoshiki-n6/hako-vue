@@ -24,6 +24,8 @@ export default function ChannelActivityScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [dateGroups, setDateGroups] = useState<string[]>([]);
 
   const channel = channels.find(c => c.id === channelId);
 
@@ -46,6 +48,40 @@ export default function ChannelActivityScreen() {
       try {
         const activityLogs = await getActivityLogs(channelId);
         setLogs(activityLogs);
+        
+        // Get unique date groups
+        const groupedLogs: Record<string, typeof activityLogs> = {};
+        activityLogs.forEach(log => {
+          const dateGroup = formatDateGroup(log.createdAt);
+          if (!groupedLogs[dateGroup]) {
+            groupedLogs[dateGroup] = [];
+          }
+          groupedLogs[dateGroup].push(log);
+        });
+
+        // Get date groups in order: 今日 → 昨日 → 古い順
+        const sortedDateGroups = Object.keys(groupedLogs).sort((a, b) => {
+          const order = ['今日', '昨日'];
+          const aIndex = order.indexOf(a);
+          const bIndex = order.indexOf(b);
+          
+          if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+          if (aIndex !== -1) return -1;
+          if (bIndex !== -1) return 1;
+          
+          // For other dates, sort by actual date (newer first)
+          const logA = groupedLogs[a][0];
+          const logB = groupedLogs[b][0];
+          const dateA = logA.createdAt.toDate ? logA.createdAt.toDate() : new Date(logA.createdAt);
+          const dateB = logB.createdAt.toDate ? logB.createdAt.toDate() : new Date(logB.createdAt);
+          return dateB.getTime() - dateA.getTime();
+        });
+        
+        setDateGroups(sortedDateGroups);
+        // Set first date as default
+        if (sortedDateGroups.length > 0) {
+          setSelectedDate(sortedDateGroups[0]);
+        }
       } catch (err) {
         console.error('Failed to load activity logs:', err);
         setError('ログの読み込みに失敗しました');
@@ -84,8 +120,32 @@ export default function ChannelActivityScreen() {
       return '昨日';
     } else {
       return date.toLocaleDateString('ja-JP', {
-        month: 'short',
-        day: 'numeric'
+        month: '2-digit',
+        day: '2-digit'
+      });
+    }
+  };
+
+  const formatDateGroupFull = (timestamp: any) => {
+    if (!timestamp) return '';
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    // Reset time for comparison
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+    
+    if (dateOnly.getTime() === todayOnly.getTime()) {
+      return `今日（${date.toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' })}）`;
+    } else if (dateOnly.getTime() === yesterdayOnly.getTime()) {
+      return `昨日（${date.toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' })}）`;
+    } else {
+      return date.toLocaleDateString('ja-JP', {
+        month: '2-digit',
+        day: '2-digit'
       });
     }
   };
@@ -201,6 +261,26 @@ export default function ChannelActivityScreen() {
           <h1 className="text-xl font-black text-gray-900">{channel.name}</h1>
           <p className="text-sm text-gray-500">アクティビティログ</p>
         </div>
+
+        {/* Date tabs */}
+        {dateGroups.length > 0 && (
+          <div className="mb-3 flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
+            {dateGroups.map((date) => (
+              <button
+                key={date}
+                onClick={() => setSelectedDate(date)}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${
+                  selectedDate === date
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {formatDateGroupFull(logs.find(log => formatDateGroup(log.createdAt) === date)?.createdAt)}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
           <input
@@ -254,45 +334,25 @@ export default function ChannelActivityScreen() {
         ) : (
           <div className="space-y-6">
             {(() => {
-              // Group logs by date
-              const groupedLogs: Record<string, typeof filteredLogs> = {};
-              filteredLogs.forEach(log => {
-                const dateGroup = formatDateGroup(log.createdAt);
-                if (!groupedLogs[dateGroup]) {
-                  groupedLogs[dateGroup] = [];
-                }
-                groupedLogs[dateGroup].push(log);
-              });
+              // Filter logs by selected date
+              const logsForSelectedDate = selectedDate
+                ? filteredLogs.filter(log => formatDateGroup(log.createdAt) === selectedDate)
+                : filteredLogs;
 
-              // Get date groups in order: 今日 → 昨日 → 古い順
-              const dateGroups = Object.keys(groupedLogs).sort((a, b) => {
-                const order = ['今日', '昨日'];
-                const aIndex = order.indexOf(a);
-                const bIndex = order.indexOf(b);
-                
-                if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
-                if (aIndex !== -1) return -1;
-                if (bIndex !== -1) return 1;
-                
-                // For other dates, sort by actual date (newer first)
-                const logA = groupedLogs[a][0];
-                const logB = groupedLogs[b][0];
-                const dateA = logA.createdAt.toDate ? logA.createdAt.toDate() : new Date(logA.createdAt);
-                const dateB = logB.createdAt.toDate ? logB.createdAt.toDate() : new Date(logB.createdAt);
-                return dateB.getTime() - dateA.getTime();
-              });
-
-              return dateGroups.map((dateGroup) => (
-                <div key={dateGroup} className="space-y-3">
-                  {/* Date separator */}
-                  <div className="flex items-center gap-3 pt-2">
-                    <div className="flex-1 h-px bg-gray-200"></div>
-                    <p className="text-xs font-bold text-gray-400 px-3">{dateGroup}</p>
-                    <div className="flex-1 h-px bg-gray-200"></div>
+              if (logsForSelectedDate.length === 0) {
+                return (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Box size={32} className="text-gray-400" />
+                    </div>
+                    <p className="text-gray-500 font-medium">この日のアクティビティはありません</p>
                   </div>
+                );
+              }
 
-                  {/* Logs for this date */}
-                  {groupedLogs[dateGroup].map((log) => (
+              return (
+                <div className="space-y-3">
+                  {logsForSelectedDate.map((log) => (
                     <div
                       key={log.id}
                       className={`p-4 rounded-2xl border ${getLogBgColor(log.type)}`}
@@ -313,7 +373,7 @@ export default function ChannelActivityScreen() {
                     </div>
                   ))}
                 </div>
-              ));
+              );
             })()}
           </div>
         )}
