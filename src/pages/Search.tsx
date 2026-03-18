@@ -1,11 +1,35 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search as SearchIcon, MapPin, Tag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
+import { useChannel } from '../contexts/ChannelContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function SearchScreen() {
   const [query, setQuery] = useState('');
   const { items, locations } = useData();
+  const { currentChannel, getChannelMembers } = useChannel();
+  const { currentUser } = useAuth();
+  const [channelMembers, setChannelMembers] = useState<{ userId: string; nickname: string }[]>([]);
+  
+  // Load channel members
+  useEffect(() => {
+    if (currentChannel && currentChannel.type === 'shared') {
+      getChannelMembers(currentChannel.id).then(members => {
+        setChannelMembers(members.map(m => ({ userId: m.userId, nickname: m.nickname })));
+      }).catch(err => console.error('Failed to load channel members:', err));
+    }
+  }, [currentChannel]);
+  
+  // 一人暮らし用チャンネルかどうか
+  const isSoloChannel = currentChannel?.type === 'solo';
+  
+  // Helper function to get user nickname
+  const getUserNickname = (userId: string | undefined) => {
+    if (!userId) return '不明なユーザー';
+    const member = channelMembers.find(m => m.userId === userId);
+    return member?.nickname || '不明なユーザー';
+  };
 
   // Combine items with their location data and filter by query
   const searchResults = items.map(item => {
@@ -58,6 +82,15 @@ export default function SearchScreen() {
               {/* Item Photo - Highly Emphasized */}
               <div className="relative w-full h-56 bg-gray-200">
                 <img src={item.itemPhotoUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                
+                {/* 共有用チャンネルのみ持ち出し中を表示 */}
+                {!isSoloChannel && item.status === 'taken_out' && (
+                  <div className={`absolute inset-0 backdrop-blur-[1px]`}>
+                    <span className={`absolute top-2 right-2 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm bg-amber-600`}>
+                      {item.takenOutBy === currentUser?.uid ? '持ち出し中' : `${getUserNickname(item.takenOutBy)}が持ち出し中`}
+                    </span>
+                  </div>
+                )}
               </div>
               
               {/* Location Context */}
