@@ -234,16 +234,21 @@ export default function ItemDetailScreen() {
         <div className="fixed bottom-0 inset-x-0 w-full max-w-md mx-auto p-4 bg-white/90 backdrop-blur-md border-t border-gray-100 z-20 pb-8 flex justify-center gap-3">
           <button 
             onClick={handleStatusToggle}
+            disabled={item.status === 'taken_out' && item.takenOutBy !== currentUser?.uid}
             className={`flex-1 font-bold text-sm py-3.5 rounded-xl shadow-sm transition-all flex justify-center items-center gap-2 border-2 ${
               item.status === 'stored' 
                 ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100 active:scale-95' 
-                : 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 active:scale-95'
+                : item.takenOutBy === currentUser?.uid
+                ? 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 active:scale-95'
+                : 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
             }`}
           >
             {item.status === 'stored' ? (
               <><Box size={18} /> 持ち出し中にする</>
-            ) : (
+            ) : item.takenOutBy === currentUser?.uid ? (
               <><CheckCircle2 size={18} /> 返却する</>
+            ) : (
+              <><Box size={18} /> 他のユーザーが持ち出し中</>
             )}
           </button>
         </div>
