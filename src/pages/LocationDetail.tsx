@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Box, MapPin, QrCode, MoreVertical, Edit2, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Box, MapPin, QrCode, MoreVertical, Edit2, Trash2, X, Search as SearchIcon, Printer } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState } from 'react';
@@ -16,11 +16,17 @@ export default function LocationDetailScreen() {
   const [editDescription, setEditDescription] = useState('');
   const [editMarkerText, setEditMarkerText] = useState('');
   const [saving, setSaving] = useState(false);
+  const [itemSearchQuery, setItemSearchQuery] = useState('');
 
   // Find the current location
   const location = locations.find(loc => loc.id === id);
   // Find all items in this location
   const locationItems = items.filter(item => item.locationId === id);
+  // Filter items by search query
+  const filteredItems = locationItems.filter(item =>
+    item.name.toLowerCase().includes(itemSearchQuery.toLowerCase()) ||
+    item.tags.some(tag => tag.toLowerCase().includes(itemSearchQuery.toLowerCase()))
+  );
 
   if (!location) {
     return (
@@ -74,6 +80,10 @@ export default function LocationDetailScreen() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handlePrintQR = () => {
+    window.print();
   };
 
   return (
@@ -147,8 +157,29 @@ export default function LocationDetailScreen() {
 
         <div className="flex items-center justify-between mb-4 px-1">
           <h2 className="text-sm font-bold text-gray-800">保管されているアイテム</h2>
-          <span className="text-xs font-bold text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">{locationItems.length}</span>
+          <span className="text-xs font-bold text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">{filteredItems.length}</span>
         </div>
+
+        {locationItems.length > 0 && (
+          <div className="mb-4 relative">
+            <input
+              type="text"
+              placeholder="アイテムを検索..."
+              value={itemSearchQuery}
+              onChange={(e) => setItemSearchQuery(e.target.value)}
+              className="w-full bg-gray-100 text-gray-900 rounded-xl py-2.5 pl-9 pr-9 outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white transition-all font-medium text-sm border border-transparent focus:border-blue-200"
+            />
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            {itemSearchQuery && (
+              <button
+                onClick={() => setItemSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+        )}
 
         {locationItems.length === 0 ? (
            <div className="bg-white border text-center border-gray-100 rounded-2xl p-6 shadow-sm">
@@ -156,9 +187,15 @@ export default function LocationDetailScreen() {
              <p className="text-sm font-bold text-gray-500 mb-1">アイテムがありません</p>
              <p className="text-xs text-gray-400">アイテムを登録してここに追加しましょう</p>
            </div>
+        ) : filteredItems.length === 0 ? (
+           <div className="bg-white border text-center border-gray-100 rounded-2xl p-6 shadow-sm">
+             <SearchIcon size={24} className="mx-auto text-gray-300 mb-2" />
+             <p className="text-sm font-bold text-gray-500 mb-1">見つかりませんでした</p>
+             <p className="text-xs text-gray-400">別のキーワードを試してください</p>
+           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            {locationItems.map(item => (
+            {filteredItems.map(item => (
               <Link to={`/items/${item.id}`} key={item.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 group active:scale-[0.98] transition-transform">
                 <div className="aspect-square bg-gray-100 w-full relative">
                   <img src={item.itemPhotoUrl} alt={item.name} className="w-full h-full object-cover" />
@@ -193,6 +230,12 @@ export default function LocationDetailScreen() {
               </div>
               
               <div className="w-full space-y-3">
+                 <button 
+                  onClick={handlePrintQR}
+                  className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+                 >
+                   <Printer size={18} /> 印刷する
+                 </button>
                  <button 
                   onClick={() => setShowQR(false)}
                   className="w-full bg-gray-100 text-gray-700 font-bold py-3.5 rounded-xl hover:bg-gray-200 active:scale-95 transition-all"
