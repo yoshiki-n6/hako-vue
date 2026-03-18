@@ -213,7 +213,7 @@ export default function ItemDetailScreen() {
         <button 
           onClick={async () => {
             try {
-              await toggleItemFavorite(id);
+              if (id) await toggleItemFavorite(id);
             } catch (err) {
               console.error('Error toggling favorite:', err);
             }
