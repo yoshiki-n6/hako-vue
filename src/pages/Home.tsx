@@ -154,7 +154,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* アクティビティログボタン（共有チャンネルのみ） */}
+      {/* アクティビティログボタン（共有チャンネル���み） */}
       {!isSoloChannel && currentChannel && (
         <Link
           to={`/channel/${currentChannel.id}/activity`}
@@ -193,14 +193,20 @@ export default function Home() {
               const showReturnButton = !isSoloChannel && isMyTakeOut;
               
               return (
-                <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden group">
+                <div key={item.id} className={`rounded-2xl shadow-sm border flex flex-col overflow-hidden group ${
+                  item.status === 'stored' 
+                    ? 'bg-white border-gray-100' 
+                    : isMyTakeOut 
+                    ? 'bg-emerald-50 border-emerald-200' 
+                    : 'bg-amber-50 border-amber-200'
+                }`}>
                   <Link to={`/items/${item.id}`} className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] flex flex-col flex-1">
                     <div className="w-full aspect-square bg-gray-100 rounded-t-2xl flex items-center justify-center text-gray-400 overflow-hidden relative">
                       <img src={item.itemPhotoUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       {/* 共有用チャンネルのみ持ち出し中を表示 */}
                       {!isSoloChannel && item.status === 'taken_out' && (
-                         <div className="absolute inset-0 bg-amber-500/20 backdrop-blur-[1px]">
-                            <span className="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm">
+                         <div className={`absolute inset-0 backdrop-blur-[1px] ${isMyTakeOut ? 'bg-emerald-500/20' : 'bg-amber-500/20'}`}>
+                            <span className={`absolute top-2 right-2 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm ${isMyTakeOut ? 'bg-emerald-600' : 'bg-amber-600'}`}>
                               {isMyTakeOut ? '持ち出し中' : `${getUserNickname(item.takenOutBy)}が持ち出し中`}
                             </span>
                          </div>
