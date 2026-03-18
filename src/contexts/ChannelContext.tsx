@@ -11,8 +11,7 @@ import {
   serverTimestamp,
   writeBatch,
   deleteDoc,
-  orderBy,
-  limit
+  orderBy
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from './AuthContext';
