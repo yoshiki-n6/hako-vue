@@ -23,8 +23,8 @@ export default function Home() {
   // 一人暮らし用チャンネルかどうか
   const isSoloChannel = currentChannel?.type === 'solo';
 
-  // 持ち出し中のアイテム
-  const takenOutItems = items.filter(item => item.status === 'taken_out');
+  // Get only items taken out by current user
+  const myTakenOutItems = items.filter(item => item.status === 'taken_out' && item.takenOutBy === currentUser?.uid);
   const [showTakenOut, setShowTakenOut] = useState(false);
   const [returningId, setReturningId] = useState<string | null>(null);
 
@@ -102,19 +102,19 @@ export default function Home() {
               <Box size={20} className="text-white" />
             </div>
             <div className="text-left">
-              <p className="text-sm font-bold text-amber-800">持ち出し中のアイテム</p>
-              <p className="text-xs text-amber-600">{takenOutItems.length}個のアイテム</p>
+              <p className="text-sm font-bold text-amber-800">自分が持ち出し中のアイテム</p>
+              <p className="text-xs text-amber-600">{myTakenOutItems.length}個のアイテム</p>
             </div>
           </div>
           <ChevronRight size={20} className={`text-amber-500 transition-transform ${showTakenOut ? 'rotate-90' : ''}`} />
         </button>
       )}
 
-      {/* 持ち出し中アイテム一覧 */}
-      {!isSoloChannel && showTakenOut && takenOutItems.length > 0 && (
+      {/* 自分が持ち出し中のアイテム一覧 */}
+      {!isSoloChannel && showTakenOut && myTakenOutItems.length > 0 && (
         <div className="mb-6 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="divide-y divide-gray-50">
-            {takenOutItems.map(item => {
+            {myTakenOutItems.map(item => {
               const location = locations.find(loc => loc.id === item.locationId);
               const isReturning = returningId === item.id;
               return (
@@ -148,13 +148,13 @@ export default function Home() {
         </div>
       )}
 
-      {!isSoloChannel && showTakenOut && takenOutItems.length === 0 && (
+      {!isSoloChannel && showTakenOut && myTakenOutItems.length === 0 && (
         <div className="mb-6 bg-gray-50 border border-gray-100 rounded-2xl p-6 text-center">
           <p className="text-sm font-bold text-gray-500">持ち出し中のアイテムはありません</p>
         </div>
       )}
 
-      {/* アクティビティログボタン（共有チャンネルのみ） */}
+      {/* アクティビティログボタン（共有チャンネル�����み） */}
       {!isSoloChannel && currentChannel && (
         <Link
           to={`/channel/${currentChannel.id}/activity`}
@@ -193,14 +193,20 @@ export default function Home() {
               const showReturnButton = !isSoloChannel && isMyTakeOut;
               
               return (
-                <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden group">
+                <div key={item.id} className={`rounded-2xl shadow-sm border flex flex-col overflow-hidden group ${
+                  item.status === 'stored' 
+                    ? 'bg-white border-gray-100' 
+                    : isMyTakeOut 
+                    ? 'bg-amber-50 border-amber-200' 
+                    : 'bg-red-50 border-red-200'
+                }`}>
                   <Link to={`/items/${item.id}`} className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] flex flex-col flex-1">
                     <div className="w-full aspect-square bg-gray-100 rounded-t-2xl flex items-center justify-center text-gray-400 overflow-hidden relative">
                       <img src={item.itemPhotoUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       {/* 共有用チャンネルのみ持ち出し中を表示 */}
                       {!isSoloChannel && item.status === 'taken_out' && (
-                         <div className="absolute inset-0 bg-amber-500/20 backdrop-blur-[1px]">
-                            <span className="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm">
+                         <div className={`absolute inset-0 backdrop-blur-[1px] ${isMyTakeOut ? 'bg-amber-500/20' : 'bg-red-900/40'}`}>
+                            <span className={`absolute top-2 right-2 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm ${isMyTakeOut ? 'bg-amber-600' : 'bg-red-500'}`}>
                               {isMyTakeOut ? '持ち出し中' : `${getUserNickname(item.takenOutBy)}が持ち出し中`}
                             </span>
                          </div>
