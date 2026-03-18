@@ -345,27 +345,27 @@ export default function LocationDetailScreen() {
 
       {/* QR Code Modal */}
       {showQR && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
           <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setShowQR(false)}></div>
-          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative z-10 animate-fade-in-up">
-            <div className="p-6 text-center">
-              <h2 className="text-lg font-extrabold text-gray-900 mb-1">{location.name}</h2>
-              <p className="text-xs text-gray-500 font-medium mb-8">このQRコードを印刷して、実際の収納場所に<br/>貼り付けると便利です</p>
+          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative z-10 animate-fade-in-up max-h-[90vh] overflow-y-auto">
+            <div className="p-4 sm:p-6 text-center">
+              <h2 className="text-base sm:text-lg font-extrabold text-gray-900 mb-0.5 sm:mb-1">{location.name}</h2>
+              <p className="text-[11px] sm:text-xs text-gray-500 font-medium mb-4 sm:mb-6">このQRコードを印刷して、実際の収納場所に<br/>貼り付けると便利です</p>
               
-              <div className="bg-white border-2 border-gray-100 p-4 rounded-3xl inline-block mx-auto mb-6 shadow-sm" id="qr-code-print">
-                <QRCodeSVG value={qrUrl} size={200} level="H" includeMargin={false} />
+              <div className="bg-white border-2 border-gray-100 p-2.5 sm:p-4 rounded-2xl sm:rounded-3xl inline-block mx-auto mb-4 sm:mb-6 shadow-sm" id="qr-code-print">
+                <QRCodeSVG value={qrUrl} size={160} level="H" includeMargin={false} />
               </div>
               
-              <div className="w-full space-y-3">
+              <div className="w-full space-y-2 sm:space-y-3">
                  <button 
                   onClick={handleShareQR}
-                  className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+                  className="w-full bg-blue-600 text-white font-bold py-2.5 sm:py-3.5 text-sm sm:text-base rounded-lg sm:rounded-xl hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2"
                  >
-                   <Printer size={18} /> 共有・印刷する
+                   <Printer size={16} className="sm:w-[18px] sm:h-[18px]" /> 共有・印刷する
                  </button>
                  <button 
                   onClick={() => setShowQR(false)}
-                  className="w-full bg-gray-100 text-gray-700 font-bold py-3.5 rounded-xl hover:bg-gray-200 active:scale-95 transition-all"
+                  className="w-full bg-gray-100 text-gray-700 font-bold py-2.5 sm:py-3.5 text-sm sm:text-base rounded-lg sm:rounded-xl hover:bg-gray-200 active:scale-95 transition-all"
                  >
                    閉じる
                  </button>
