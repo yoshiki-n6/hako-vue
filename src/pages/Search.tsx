@@ -86,7 +86,7 @@ export default function SearchScreen() {
                 {/* 共有用チャンネルのみ持ち出し中を表示 */}
                 {!isSoloChannel && item.status === 'taken_out' && (
                   <div className={`absolute inset-0 backdrop-blur-[1px]`}>
-                    <span className={`absolute top-2 right-2 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm bg-amber-600`}>
+                    <span className={`absolute top-2 right-2 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm ${item.takenOutBy === currentUser?.uid ? 'bg-amber-600' : 'bg-red-600'}`}>
                       {item.takenOutBy === currentUser?.uid ? '持ち出し中' : `${getUserNickname(item.takenOutBy)}が持ち出し中`}
                     </span>
                   </div>

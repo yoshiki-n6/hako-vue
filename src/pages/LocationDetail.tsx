@@ -1,13 +1,17 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Box, MapPin, QrCode, MoreVertical, Edit2, Trash2, X, Search as SearchIcon, Printer } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { useChannel } from '../contexts/ChannelContext';
+import { useAuth } from '../contexts/AuthContext';
 import { QRCodeSVG } from 'qrcode.react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function LocationDetailScreen() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { locations, items, updateLocation, deleteLocation, deleteItem } = useData();
+  const { currentChannel, getChannelMembers } = useChannel();
+  const { currentUser } = useAuth();
   const [showQR, setShowQR] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -17,6 +21,26 @@ export default function LocationDetailScreen() {
   const [editMarkerText, setEditMarkerText] = useState('');
   const [saving, setSaving] = useState(false);
   const [itemSearchQuery, setItemSearchQuery] = useState('');
+  const [channelMembers, setChannelMembers] = useState<{ userId: string; nickname: string }[]>([]);
+
+  // Load channel members
+  useEffect(() => {
+    if (currentChannel && currentChannel.type === 'shared') {
+      getChannelMembers(currentChannel.id).then(members => {
+        setChannelMembers(members.map(m => ({ userId: m.userId, nickname: m.nickname })));
+      }).catch(err => console.error('Failed to load channel members:', err));
+    }
+  }, [currentChannel]);
+  
+  // 一人暮らし用チャンネルかどうか
+  const isSoloChannel = currentChannel?.type === 'solo';
+  
+  // Helper function to get user nickname
+  const getUserNickname = (userId: string | undefined) => {
+    if (!userId) return '不明なユーザー';
+    const member = channelMembers.find(m => m.userId === userId);
+    return member?.nickname || '不明なユーザー';
+  };
 
   // Find the current location
   const location = locations.find(loc => loc.id === id);
@@ -326,10 +350,10 @@ export default function LocationDetailScreen() {
               <Link to={`/items/${item.id}`} key={item.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 group active:scale-[0.98] transition-transform">
                 <div className="aspect-square bg-gray-100 w-full relative">
                   <img src={item.itemPhotoUrl} alt={item.name} className="w-full h-full object-cover" />
-                  {item.status === 'taken_out' && (
-                    <div className="absolute inset-0 bg-red-900/40 backdrop-blur-[2px] flex items-center justify-center">
-                      <span className="bg-red-500 text-white font-bold text-[10px] uppercase tracking-wider px-2 py-1 rounded-full shadow-sm">
-                        持ち出し中
+                  {!isSoloChannel && item.status === 'taken_out' && (
+                    <div className={`absolute inset-0 backdrop-blur-[2px] flex items-center justify-center ${item.takenOutBy === currentUser?.uid ? 'bg-amber-900/40' : 'bg-red-900/40'}`}>
+                      <span className={`text-white font-bold text-[10px] uppercase tracking-wider px-2 py-1 rounded-full shadow-sm ${item.takenOutBy === currentUser?.uid ? 'bg-amber-600' : 'bg-red-600'}`}>
+                        {item.takenOutBy === currentUser?.uid ? '持ち出し中' : `${getUserNickname(item.takenOutBy)}が持ち出し中`}
                       </span>
                     </div>
                   )}
