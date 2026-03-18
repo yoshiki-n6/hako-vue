@@ -96,6 +96,7 @@ export default function LocationDetailScreen() {
 
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
+      if (!ctx) return; // ctxがnullの場合は処理を中止
       const img = new Image();
       
       img.onload = async () => {
