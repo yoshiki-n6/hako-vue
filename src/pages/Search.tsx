@@ -55,34 +55,22 @@ export default function SearchScreen() {
           <div className="space-y-6">
             {searchResults.map(item => (
             <Link to={`/items/${item.id}`} key={item.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 flex flex-col group cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] block">
-              {/* Context Landscape Photo - Highly Emphasized */}
+              {/* Item Photo - Highly Emphasized */}
               <div className="relative w-full h-56 bg-gray-200">
-                <img src={item.landscapePhoto} alt="location context" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/20 to-black/10"></div>
-                
-                {/* Location Badge */}
-                <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-gray-800 flex items-center gap-1.5 shadow-sm border border-white/20">
-                  <MapPin size={14} className="text-blue-600" strokeWidth={2.5} />
-                  {item.locationName}
-                </div>
-
-                {/* Marker Info at Bottom */}
-                <div className="absolute bottom-4 left-4 right-4 text-white">
-                  <p className="text-[10px] uppercase tracking-widest font-bold text-gray-300 mb-0.5 opacity-90 drop-shadow-md">しまった場所の目印</p>
-                  <p className="text-lg font-extrabold flex items-center gap-2 drop-shadow-md">
-                     <span className="w-1.5 h-1.5 rounded-full bg-blue-400 inline-block"></span>
-                     {item.markerText}
-                  </p>
-                </div>
+                <img src={item.itemPhotoUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               </div>
               
-              {/* Item Info */}
-              <div className="p-4 flex gap-4 items-center">
-                <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border-2 border-white shadow-sm bg-gray-50 -mt-10 relative z-10 transition-transform group-hover:-translate-y-1">
-                  <img src={item.itemPhotoUrl} alt={item.name} className="w-full h-full object-cover" />
+              {/* Location Context */}
+              <div className="p-4 flex gap-4 items-start">
+                <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border-2 border-gray-200 shadow-sm bg-gray-50 relative z-10 transition-transform group-hover:scale-105">
+                  <img src={item.landscapePhoto} alt="location context" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 pt-1">
                   <h3 className="font-extrabold text-base text-gray-900 leading-tight mb-1 group-hover:text-blue-600 transition-colors">{item.name}</h3>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <MapPin size={14} className="text-blue-600" strokeWidth={2.5} />
+                    <span className="text-xs font-bold text-gray-600">{item.locationName}</span>
+                  </div>
                   {item.tags && item.tags.length > 0 ? (
                     <div className="flex gap-2 flex-wrap">
                       {item.tags.map((tag, idx) => (
