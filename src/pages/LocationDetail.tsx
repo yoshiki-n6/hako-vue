@@ -83,7 +83,72 @@ export default function LocationDetailScreen() {
   };
 
   const handlePrintQR = () => {
-    window.print();
+    console.log("[v0] Print button clicked");
+    // モバイルでのwindow.print()の代替策として、QRコードのみを表示するフルスクリーンモードを実装
+    const qrElement = document.getElementById('qr-code-print');
+    if (qrElement) {
+      const printWindow = window.open('', '', 'width=600,height=600');
+      if (printWindow) {
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>${location.name}のQRコード</title>
+            <style>
+              body {
+                margin: 0;
+                padding: 20px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                background: white;
+                font-family: system-ui, -apple-system, sans-serif;
+              }
+              .container {
+                text-align: center;
+              }
+              h1 {
+                font-size: 24px;
+                margin-bottom: 10px;
+                color: #111;
+              }
+              p {
+                font-size: 14px;
+                color: #666;
+                margin-bottom: 20px;
+              }
+              #qr-container {
+                background: white;
+                padding: 20px;
+                border-radius: 12px;
+                display: inline-block;
+              }
+              @media print {
+                body { margin: 0; padding: 10px; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>${location.name}</h1>
+              <p>この場所の情報QRコード</p>
+              <div id="qr-container">
+                ${qrElement.outerHTML}
+              </div>
+            </div>
+            <script>
+              setTimeout(() => {
+                window.print();
+              }, 500);
+            </script>
+          </body>
+          </html>
+        `);
+        printWindow.document.close();
+      }
+    }
   };
 
   return (
@@ -225,7 +290,7 @@ export default function LocationDetailScreen() {
               <h2 className="text-lg font-extrabold text-gray-900 mb-1">{location.name}</h2>
               <p className="text-xs text-gray-500 font-medium mb-8">このQRコードを印刷して、実際の収納場所に<br/>貼り付けると便利です</p>
               
-              <div className="bg-white border-2 border-gray-100 p-4 rounded-3xl inline-block mx-auto mb-6 shadow-sm">
+              <div className="bg-white border-2 border-gray-100 p-4 rounded-3xl inline-block mx-auto mb-6 shadow-sm" id="qr-code-print">
                 <QRCodeSVG value={qrUrl} size={200} level="H" includeMargin={false} />
               </div>
               
