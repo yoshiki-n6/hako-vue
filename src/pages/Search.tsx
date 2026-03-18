@@ -31,7 +31,7 @@ export default function SearchScreen() {
             placeholder="アイテム名、場所、タグで検索..." 
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full bg-gray-100 text-gray-900 rounded-2xl py-3.5 pl-11 pr-4 outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white transition-all font-medium text-sm border border-transparent focus:border-blue-200"
+            className="w-full bg-gray-100 text-gray-900 rounded-2xl py-3.5 pl-11 pr-4 outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white transition-all font-medium text-base border border-transparent focus:border-blue-200"
           />
           <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
         </div>
