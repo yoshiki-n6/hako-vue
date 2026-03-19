@@ -15,26 +15,47 @@ self.addEventListener('push', (event) => {
     const { title = '通知', body = '', icon = '/pwa-192x192.jpg', data = {} } = payload.notification || {};
     const tag = payload.notification?.tag || payload.messageId || String(Date.now());
 
-    const promiseChain = self.registration.showNotification(title, {
-      body,
-      icon,
-      tag,
-      data,
-    }).catch((e) => {
-      console.error('[sw] showNotification failed on iOS:', e);
-    }).finally(() => {
-      // プラウザの通知表示に関わらず BroadcastChannel を使って全画面に一斉送信
-      try {
-        const channel = new BroadcastChannel('fcm-push-channel');
-        channel.postMessage({
-          type: 'FCM_PUSH_RECEIVED',
-          payload: payload
+    // アプリがフォアグラウンド（最前面）で開かれているかチェック
+    const promiseChain = self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clients) => {
+        let isFocused = false;
+        for (const client of clients) {
+          if (client.focused) {
+            isFocused = true;
+            break;
+          }
+        }
+
+        // フォーカスされている場合はネイティブ通知をスキップ（アプリ内トーストのみにするため）
+        if (isFocused) {
+          console.log('[sw] App is focused. Skipping native notification.');
+          return Promise.resolve();
+        }
+
+        // バックグラウンドの場合はネイティブ通知を表示
+        return self.registration.showNotification(title, {
+          body,
+          icon,
+          tag,
+          data,
         });
-        channel.close();
-      } catch (e) {
-        console.error('[sw] BroadcastChannel error:', e);
-      }
-    });
+      })
+      .catch((e) => {
+        console.error('[sw] showNotification failed on iOS:', e);
+      })
+      .finally(() => {
+        // ネイティブ通知の有無に関わらず、画面側にデータをブロードキャスト送信（アプリ内トースト用）
+        try {
+          const channel = new BroadcastChannel('fcm-push-channel');
+          channel.postMessage({
+            type: 'FCM_PUSH_RECEIVED',
+            payload: payload
+          });
+          channel.close();
+        } catch (e) {
+          console.error('[sw] BroadcastChannel error:', e);
+        }
+      });
 
     event.waitUntil(promiseChain);
   } catch (e) {
