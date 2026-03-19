@@ -155,11 +155,11 @@ export default function SearchScreen() {
                 <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border-2 border-gray-200 shadow-sm bg-gray-50 relative z-10 transition-transform group-hover:scale-105">
                   <img src={item.landscapePhoto} alt="location context" className="w-full h-full object-cover" />
                 </div>
-                <div className="flex-1 pt-1">
-                  <h3 className="font-extrabold text-base text-gray-900 leading-tight mb-1 group-hover:text-blue-600 transition-colors">{item.name}</h3>
-                  <div className="flex items-center gap-1.5">
-                    <MapPin size={14} className="text-blue-600" strokeWidth={2.5} />
-                    <span className="text-xs font-bold text-gray-600">{item.locationName}</span>
+                <div className="flex-1 pt-1 min-w-0">
+                  <h3 className="font-extrabold text-base text-gray-900 leading-tight mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">{item.name}</h3>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <MapPin size={14} className="text-blue-600 shrink-0" strokeWidth={2.5} />
+                    <span className="text-xs font-bold text-gray-600 truncate">{item.locationName}</span>
                   </div>
                 </div>
               </div>

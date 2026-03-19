@@ -243,7 +243,7 @@ export default function LocationDetailScreen() {
           <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-800 hover:bg-gray-100 rounded-full transition-colors">
             <ArrowLeft size={24} />
           </button>
-          <h1 className="text-lg font-bold ml-2 text-gray-900 line-clamp-1">{location.name}</h1>
+          <h1 className="text-lg font-bold ml-2 text-gray-900 line-clamp-1 min-w-0">{location.name}</h1>
         </div>
         <div className="flex items-center gap-2">
           <button 
@@ -371,8 +371,8 @@ export default function LocationDetailScreen() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
           <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setShowQR(false)}></div>
           <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative z-10 animate-fade-in-up max-h-[90vh] overflow-y-auto">
-            <div className="p-4 sm:p-6 text-center">
-              <h2 className="text-base sm:text-lg font-extrabold text-gray-900 mb-0.5 sm:mb-1">{location.name}</h2>
+            <div className="p-4 sm:p-6 text-center min-w-0">
+              <h2 className="text-base sm:text-lg font-extrabold text-gray-900 mb-0.5 sm:mb-1 line-clamp-2">{location.name}</h2>
               <p className="text-[11px] sm:text-xs text-gray-500 font-medium mb-4 sm:mb-6">このQRコードを印刷して、実際の収納場所に<br/>貼り付けると便利です</p>
               
               <div className="bg-white border-2 border-gray-100 p-2.5 sm:p-4 rounded-2xl sm:rounded-3xl inline-block mx-auto mb-4 sm:mb-6 shadow-sm" id="qr-code-print">

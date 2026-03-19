@@ -150,8 +150,8 @@ export default function ItemDetailScreen() {
           </div>
         )}
 
-        <div className="absolute bottom-5 left-5 right-5 text-white">
-          <h1 className="text-3xl font-extrabold tracking-tight drop-shadow-md">{item.name}</h1>
+        <div className="absolute bottom-5 left-5 right-5 text-white min-w-0">
+          <h1 className="text-3xl font-extrabold tracking-tight drop-shadow-md line-clamp-2">{item.name}</h1>
         </div>
       </div>
 
@@ -175,8 +175,8 @@ export default function ItemDetailScreen() {
                    </p>
                  </div>
               </div>
-              <div className="p-4 flex justify-between items-center bg-white relative z-20">
-                 <h3 className="font-bold text-gray-900 text-base">{item.locationName}</h3>
+              <div className="p-4 flex justify-between items-center bg-white relative z-20 min-w-0">
+                 <h3 className="font-bold text-gray-900 text-base truncate">{item.locationName}</h3>
                  <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full hover:bg-blue-100 transition-colors shadow-sm cursor-pointer active:scale-95">場所を見る</span>
               </div>
            </div>

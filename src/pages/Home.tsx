@@ -121,7 +121,7 @@ export default function Home() {
                 <Link 
                   to={`/items/${item.id}`} 
                   key={item.id} 
-                  className="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors min-w-0"
                 >
                   <div className="w-12 h-12 bg-gray-100 rounded-xl overflow-hidden shrink-0">
                     <img src={item.itemPhotoUrl} alt={item.name} className="w-full h-full object-cover" />
@@ -154,7 +154,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* アクティビティログボタン（共有チャンネル�������み） */}
+      {/* アクティビティログボタン（共有チャンネル���������み） */}
       {!isSoloChannel && currentChannel && (
         <Link
           to={`/channel/${currentChannel.id}/activity`}
@@ -212,9 +212,9 @@ export default function Home() {
                          </div>
                       )}
                     </div>
-                    <div className="p-3 flex-1 flex flex-col">
+                    <div className="p-3 flex-1 flex flex-col min-w-0">
                       <p className="font-bold text-gray-800 text-sm truncate group-hover:text-blue-600 transition-colors">{item.name}</p>
-                      <p className="text-xs text-gray-500 truncate mt-0.5 flex items-center gap-1">
+                      <p className="text-xs text-gray-500 truncate mt-0.5 flex items-center gap-1 min-w-0">
                         <MapPin size={10} className="text-gray-400 shrink-0" />
                         {location?.name || '不明な場所'}
                       </p>
