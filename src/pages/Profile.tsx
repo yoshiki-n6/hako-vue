@@ -733,14 +733,6 @@ export default function ProfileScreen() {
               )}
             </div>
 
-            <div className="px-5 pb-5">
-              <button
-                onClick={() => setShowAppSettings(false)}
-                className={`w-full py-3 font-bold rounded-2xl transition-colors ${dark ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' : 'bg-gray-900 text-white hover:bg-gray-700'}`}
-              >
-                閉じる
-              </button>
-            </div>
           </div>
         </div>
       )}
