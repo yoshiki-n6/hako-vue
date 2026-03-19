@@ -366,7 +366,7 @@ export default function ProfileScreen() {
         <h3 className={`text-lg font-bold text-center mb-2 ${text}`}>チャンネルを脱退</h3>
         <p className={`text-sm text-center mb-2 ${subtext}`}>「{showLeaveConfirm.name}」から脱退しますか？</p>
         {showLeaveConfirm.memberIds.length === 1 && (
-          <p className="text-xs text-red-500 bg-red-50 p-3 rounded-xl text-center mb-2">あなたが最後のメンバーです。脱退するとチャンネルは削除されます。</p>
+          <p className="text-xs text-red-500 bg-red-50 p-3 rounded-xl text-center mb-2">あなたが最後のメンバーです。脱退するとチャンネ���は削除されます。</p>
         )}
         {channels.length === 1 && (
           <p className="text-xs text-amber-600 bg-amber-50 p-3 rounded-xl text-center mb-4">これが最後のチャンネルです。脱退後は新しいチャンネルを作成または参加してください。</p>
@@ -715,7 +715,6 @@ export default function ProfileScreen() {
                 </div>
               )}
             </div>
-
           </div>
         </div>
       )}
