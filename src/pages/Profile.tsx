@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, LogOut, Code, ChevronRight, User as UserIcon, Plus, KeyRound, Star, Copy, Check, RefreshCw, Edit2, Users, X, Home, History, MoreVertical, Trash2, Pencil, AlertTriangle, Upload, Moon, Bell, BellOff } from 'lucide-react';
+import { Settings, LogOut, User as UserIcon, Plus, KeyRound, Star, Copy, Check, RefreshCw, Edit2, Users, X, Home, History, MoreVertical, Trash2, Pencil, AlertTriangle, Upload, Moon, Bell, BellOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useChannel } from '../contexts/ChannelContext';
 import type { Channel, ChannelMember } from '../contexts/ChannelContext';
