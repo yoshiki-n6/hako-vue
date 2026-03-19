@@ -29,15 +29,6 @@ export function useReturnReminder() {
       console.log("[v0] No current user");
       return;
     }
-    if (!('Notification' in window)) {
-      console.log("[v0] Notifications not supported");
-      return;
-    }
-    if (Notification.permission !== 'granted') {
-      console.log("[v0] Requesting notification permission");
-      Notification.requestPermission();
-      return;
-    }
 
     const checkAndNotify = () => {
       const now = Date.now();
@@ -67,11 +58,29 @@ export function useReturnReminder() {
 
         console.log("[v0] Sending notification for:", item.name);
         notifiedItemsRef.current.add(key);
-        new Notification('返却の確認', {
-          body: `「${item.name}」を返却しましたか？${intervalDays}日以上持ち出し中です。`,
-          icon: '/favicon.ico',
-          tag: key,
-        });
+        
+        const title = '返却の確認';
+        const message = `「${item.name}」を返却しましたか？${intervalDays}日以上持ち出し中です。`;
+        
+        // Try Notification API first (if available and permitted)
+        if ('Notification' in window && Notification.permission === 'granted') {
+          try {
+            new Notification(title, {
+              body: message,
+              icon: '/favicon.ico',
+              tag: key,
+            });
+            console.log("[v0] Push notification sent (Notification API)");
+          } catch (e) {
+            console.log("[v0] Notification API error:", e);
+            // Fallback to alert
+            alert(`[返却リマインド]\n${message}`);
+          }
+        } else {
+          // Fallback to alert for preview/demo environments
+          console.log("[v0] Using alert (Notification API not available or permission denied)");
+          alert(`[返却リマインド]\n${message}`);
+        }
       });
 
       // Clean up keys for items that are no longer taken out
