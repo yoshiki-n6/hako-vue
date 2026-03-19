@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Search as SearchIcon, MapPin, Filter } from 'lucide-react';
+import { Search as SearchIcon, MapPin, ArrowUpDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import { useChannel } from '../contexts/ChannelContext';
 import { useAuth } from '../contexts/AuthContext';
 
-type FilterType = 'all' | 'newest' | 'taken_out' | 'stored';
+type FilterType = 'all' | 'taken_out' | 'stored';
+type SortType = 'newest' | 'oldest';
 
 export default function SearchScreen() {
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [sortOrder, setSortOrder] = useState<SortType>('newest');
   const { items, locations } = useData();
   const { currentChannel, getChannelMembers } = useChannel();
   const { currentUser } = useAuth();
@@ -53,18 +55,17 @@ export default function SearchScreen() {
     searchResults = searchResults.filter(item => item.status === 'taken_out');
   } else if (activeFilter === 'stored') {
     searchResults = searchResults.filter(item => item.status === 'stored');
-  } else if (activeFilter === 'newest') {
-    // Sort by newest (most recent first)
-    searchResults = searchResults.sort((a, b) => {
-      const aTime = a.createdAt?.toMillis?.() || 0;
-      const bTime = b.createdAt?.toMillis?.() || 0;
-      return bTime - aTime;
-    });
   }
+
+  // Apply sorting
+  searchResults = searchResults.sort((a, b) => {
+    const aTime = a.createdAt?.toMillis?.() || 0;
+    const bTime = b.createdAt?.toMillis?.() || 0;
+    return sortOrder === 'newest' ? bTime - aTime : aTime - bTime;
+  });
 
   const filterOptions = [
     { value: 'all' as FilterType, label: 'すべて' },
-    { value: 'newest' as FilterType, label: '新着順' },
     { value: 'taken_out' as FilterType, label: '持ち出し中' },
     { value: 'stored' as FilterType, label: '保管中' }
   ];
@@ -84,21 +85,33 @@ export default function SearchScreen() {
             <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           </div>
           
-          {/* Filter buttons */}
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {filterOptions.map(option => (
-              <button
-                key={option.value}
-                onClick={() => setActiveFilter(option.value)}
-                className={`px-4 py-2 rounded-full font-semibold text-sm whitespace-nowrap transition-all ${
-                  activeFilter === option.value
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
+          {/* Filter buttons and Sort button */}
+          <div className="flex gap-2 items-center overflow-x-auto pb-1">
+            <div className="flex gap-2">
+              {filterOptions.map(option => (
+                <button
+                  key={option.value}
+                  onClick={() => setActiveFilter(option.value)}
+                  className={`px-4 py-2 rounded-full font-semibold text-sm whitespace-nowrap transition-all ${
+                    activeFilter === option.value
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            
+            {/* Sort button */}
+            <button
+              onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+              className="ml-auto shrink-0 px-3 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all flex items-center gap-1"
+              title={sortOrder === 'newest' ? '新着順' : '古い順'}
+            >
+              <ArrowUpDown size={16} />
+              <span className="text-xs font-semibold">{sortOrder === 'newest' ? '新' : '古'}</span>
+            </button>
           </div>
         </div>
       </header>
@@ -107,7 +120,6 @@ export default function SearchScreen() {
         <div className="flex items-center justify-between mb-4 px-1">
           <p className="text-sm font-bold text-gray-800">
             {activeFilter === 'all' && (query ? '検索結果' : 'すべてのアイテム')}
-            {activeFilter === 'newest' && '新着順'}
             {activeFilter === 'taken_out' && '持ち出し中'}
             {activeFilter === 'stored' && '保管中'}
             <span className="ml-2 text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">{searchResults.length}</span>
