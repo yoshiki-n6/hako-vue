@@ -69,10 +69,15 @@ export function useReturnReminder() {
 
       const thresholdMs = intervalDays * 24 * 60 * 60 * 1000;
 
+      console.log('[v0] Check at', new Date(now).toLocaleTimeString(), '| Threshold:', Math.round(thresholdMs / 1000), 'sec');
+
       const overdue = items.filter(item => {
         if (item.status !== 'taken_out') return false;
         if (item.takenOutBy !== currentUser.uid) return false;
         const takenOutAt = item.updatedAt?.toMillis?.() || item.createdAt?.toMillis?.() || 0;
+        const elapsedSec = Math.round((now - takenOutAt) / 1000);
+        const takenOutTime = new Date(takenOutAt).toLocaleTimeString();
+        console.log(`[v0]   "${item.name}" | taken at ${takenOutTime} | elapsed ${elapsedSec}sec | overdue: ${elapsedSec >= Math.round(thresholdMs / 1000)}`);
         return (now - takenOutAt) >= thresholdMs;
       });
 
