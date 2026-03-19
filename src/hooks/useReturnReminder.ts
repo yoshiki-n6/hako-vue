@@ -4,8 +4,8 @@ import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 
 // デバッグ用: 30秒ごとにチェック
-// デバッグオプション: process.env.REACT_APP_DEBUG_REMINDER = 'true' で5秒に短縮
-const CHECK_INTERVAL_MS = process.env.REACT_APP_DEBUG_REMINDER === 'true' ? 5 * 1000 : 30 * 1000;
+// デバッグオプション: window.__DEBUG_REMINDER__ = true でコンソールログ有効化、3秒に短縮
+const CHECK_INTERVAL_MS = (window as any).__DEBUG_REMINDER__ === true ? 3 * 1000 : 30 * 1000;
 
 export function useReturnReminder() {
   const { settings } = useAppSettings();
