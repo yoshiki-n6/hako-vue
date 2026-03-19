@@ -1,45 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, LogOut, Code, ChevronRight, User as UserIcon, Plus, KeyRound, Star, Copy, Check, RefreshCw, Edit2, Users, X, Home, History, MoreVertical, Trash2, Pencil, AlertTriangle } from 'lucide-react';
+import { Settings, LogOut, Code, ChevronRight, User as UserIcon, Plus, KeyRound, Star, Copy, Check, RefreshCw, Edit2, Users, X, Home, History, MoreVertical, Trash2, Pencil, AlertTriangle, Upload } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useChannel } from '../contexts/ChannelContext';
 import type { Channel, ChannelMember } from '../contexts/ChannelContext';
 
-// Pre-defined avatar icons using DiceBear API
-const AVATAR_OPTIONS = [
-  { id: 'adventurer-1', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix' },
-  { id: 'adventurer-2', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Aneka' },
-  { id: 'adventurer-3', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Leo' },
-  { id: 'adventurer-4', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Mia' },
-  { id: 'avataaars-1', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sasha' },
-  { id: 'avataaars-2', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Nala' },
-  { id: 'avataaars-3', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Toby' },
-  { id: 'avataaars-4', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lily' },
-  { id: 'bottts-1', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Robot1' },
-  { id: 'bottts-2', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Robot2' },
-  { id: 'bottts-3', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Robot3' },
-  { id: 'bottts-4', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Robot4' },
-  { id: 'lorelei-1', url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Sophie' },
-  { id: 'lorelei-2', url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Max' },
-  { id: 'lorelei-3', url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Emma' },
-  { id: 'lorelei-4', url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Jack' },
-  { id: 'fun-emoji-1', url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Happy' },
-  { id: 'fun-emoji-2', url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Cool' },
-  { id: 'fun-emoji-3', url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Star' },
-  { id: 'fun-emoji-4', url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Heart' },
-];
+// Pre-defined avatar icons using DiceBear API - 削除（写真アップロードのみにする）
 
 export default function ProfileScreen() {
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
   const { channels, currentChannel, userProfile, switchChannel, setDefaultChannel, updateProfile, getChannelMembers, leaveChannel, updateChannelName } = useChannel();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [settingDefault, setSettingDefault] = useState<string | null>(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [nickname, setNickname] = useState('');
   const [photoURL, setPhotoURL] = useState('');
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string>('');
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   
   // Member modal state
   const [showMembersModal, setShowMembersModal] = useState(false);
@@ -59,6 +41,7 @@ export default function ProfileScreen() {
     if (userProfile) {
       setNickname(userProfile.nickname || currentUser?.displayName || '');
       setPhotoURL(userProfile.photoURL || currentUser?.photoURL || '');
+      setPhotoPreview(userProfile.photoURL || currentUser?.photoURL || '');
     }
   }, [userProfile, currentUser]);
 
@@ -92,13 +75,43 @@ export default function ProfileScreen() {
     await switchChannel(channel.id);
   };
 
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('ファイルサイズは5MB以下にしてください');
+        return;
+      }
+      
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        alert('画像ファイルのみアップロード可能です');
+        return;
+      }
+
+      setPhotoFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
-      await updateProfile(nickname, photoURL);
+      // photoFileがある場合、それをアップロード、なければ既存のPhotoURLを使用
+      const finalPhotoURL = photoFile ? photoPreview : photoURL;
+      await updateProfile(nickname, finalPhotoURL);
+      setPhotoFile(null);
       setIsEditingProfile(false);
     } catch (error) {
       console.error('Failed to save profile:', error);
+      alert('プロフィールの保存に失敗しました');
     } finally {
       setSaving(false);
     }
@@ -208,43 +221,52 @@ export default function ProfileScreen() {
               {/* Current Avatar Preview */}
               <div className="flex justify-center mb-4">
                 <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-400 flex items-center justify-center text-white text-2xl font-bold overflow-hidden ring-4 ring-blue-100">
-                  {photoURL ? (
-                    <img src={photoURL} alt="" className="w-full h-full object-cover" />
+                  {photoPreview ? (
+                    <img src={photoPreview} alt="" className="w-full h-full object-cover" />
                   ) : (
                     getInitials(nickname)
                   )}
                 </div>
               </div>
               
-              {/* Avatar Selection Grid */}
+              {/* Photo Upload Section */}
               <div className="mb-5">
-                <label className="block text-sm font-bold text-gray-700 mb-3">アイコンを選択</label>
-                <div className="grid grid-cols-5 gap-2 max-h-48 overflow-y-auto p-1">
-                  {AVATAR_OPTIONS.map((avatar) => (
-                    <button
-                      key={avatar.id}
-                      type="button"
-                      onClick={() => setPhotoURL(avatar.url)}
-                      className={`w-12 h-12 rounded-full overflow-hidden border-2 transition-all hover:scale-110 ${
-                        photoURL === avatar.url
-                          ? 'border-blue-500 ring-2 ring-blue-200'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <img src={avatar.url} alt="" className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
+                <label className="block text-sm font-bold text-gray-700 mb-3">アイコン画像</label>
+                <input 
+                  ref={fileInputRef}
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
                 <button
                   type="button"
-                  onClick={() => setPhotoURL('')}
-                  className={`mt-2 text-xs font-medium px-3 py-1 rounded-full transition-colors ${
-                    !photoURL
-                      ? 'bg-blue-100 text-blue-600'
-                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                  }`}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full px-4 py-3 border-2 border-dashed border-blue-300 rounded-xl bg-blue-50 hover:bg-blue-100 transition-colors flex items-center justify-center gap-2 text-blue-600 font-semibold"
                 >
-                  アイコンなし（イニシャル表示）
+                  <Upload size={18} />
+                  画像を選択
+                </button>
+                <p className="text-xs text-gray-500 mt-2">JPG、PNG など最大5MBまで</p>
+                {photoFile && (
+                  <p className="text-xs text-green-600 font-medium mt-1">
+                    ✓ {photoFile.name} を選択
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPhotoFile(null);
+                    setPhotoPreview('');
+                  }}
+                  className={`mt-2 text-xs font-medium px-3 py-1 rounded-full transition-colors ${
+                    photoPreview
+                      ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  }`}
+                  disabled={!photoPreview}
+                >
+                  画像をリセット
                 </button>
               </div>
               

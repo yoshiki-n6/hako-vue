@@ -8,14 +8,14 @@ import { useState, useEffect } from 'react';
 export default function Home() {
   const { currentUser } = useAuth();
   const { items, locations, updateItemStatus, getUserFavoriteItems } = useData();
-  const { currentChannel, getChannelMembers } = useChannel();
-  const [channelMembers, setChannelMembers] = useState<{ userId: string; nickname: string }[]>([]);
+  const { currentChannel, getChannelMembers, userProfile } = useChannel();
+  const [channelMembers, setChannelMembers] = useState<{ userId: string; nickname: string; photoURL?: string }[]>([]);
   
   // Load channel members
   useEffect(() => {
     if (currentChannel && currentChannel.type === 'shared') {
       getChannelMembers(currentChannel.id).then(members => {
-        setChannelMembers(members.map(m => ({ userId: m.userId, nickname: m.nickname })));
+        setChannelMembers(members.map(m => ({ userId: m.userId, nickname: m.nickname, photoURL: m.photoURL })));
       }).catch(err => console.error('Failed to load channel members:', err));
     }
   }, [currentChannel]);
@@ -51,6 +51,16 @@ export default function Home() {
     return member?.nickname || '不明なユーザー';
   };
 
+  // Get user initials
+  const getInitials = (name?: string) => {
+    if (!name) return 'U';
+    return name.charAt(0).toUpperCase();
+  };
+
+  // Firestore のuserProfile画像を表示する
+  const displayPhoto = userProfile?.photoURL || currentUser?.photoURL || '';
+  const displayName = userProfile?.nickname || currentUser?.displayName || 'User';
+
   return (
     <div className="max-w-md mx-auto p-5 pb-20">
       <header className="mb-6 pt-6 flex justify-between items-center">
@@ -80,11 +90,11 @@ export default function Home() {
             <QrCode size={20} />
           </Link>
           <Link to="/profile">
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shadow-sm overflow-hidden border-2 border-white">
-              {currentUser?.photoURL ? (
-                <img src={currentUser.photoURL} alt="User profile" className="w-full h-full object-cover" />
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-400 flex items-center justify-center shadow-sm overflow-hidden border-2 border-white text-white text-sm font-bold">
+              {displayPhoto ? (
+                <img src={displayPhoto} alt="User profile" className="w-full h-full object-cover" />
               ) : (
-                <span className="text-blue-600 font-bold">{currentUser?.displayName?.charAt(0) || 'U'}</span>
+                getInitials(displayName)
               )}
             </div>
           </Link>
