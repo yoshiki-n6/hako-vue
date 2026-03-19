@@ -586,7 +586,7 @@ export default function ProfileScreen() {
           </div>
 
           {/* Channel Actions */}
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <button onClick={() => navigate('/channel/create')}
               className="flex-1 bg-blue-600 text-white font-bold text-sm py-3 px-4 rounded-xl shadow-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
               <Plus size={16} />チャンネルを作成
