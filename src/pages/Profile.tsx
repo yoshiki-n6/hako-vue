@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, LogOut, Code, ChevronRight, User as UserIcon, Plus, KeyRound, Star, Copy, Check, RefreshCw, Edit2, Users, X, Home, History, MoreVertical, Trash2, Pencil, AlertTriangle, Upload, Moon, Bell, BellOff } from 'lucide-react';
+import { LogOut, User as UserIcon, Plus, KeyRound, Star, Copy, Check, RefreshCw, Edit2, Users, X, Home, History, MoreVertical, Trash2, Pencil, AlertTriangle, Upload, Moon, Bell, BellOff, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useChannel } from '../contexts/ChannelContext';
 import type { Channel, ChannelMember } from '../contexts/ChannelContext';
@@ -366,7 +366,7 @@ export default function ProfileScreen() {
         <h3 className={`text-lg font-bold text-center mb-2 ${text}`}>チャンネルを脱退</h3>
         <p className={`text-sm text-center mb-2 ${subtext}`}>「{showLeaveConfirm.name}」から脱退しますか？</p>
         {showLeaveConfirm.memberIds.length === 1 && (
-          <p className="text-xs text-red-500 bg-red-50 p-3 rounded-xl text-center mb-2">あなたが最後のメンバーです。脱退するとチャンネルは削除されます。</p>
+          <p className="text-xs text-red-500 bg-red-50 p-3 rounded-xl text-center mb-2">あなたが最後のメンバーです。脱退するとチャンネ���は削除されます。</p>
         )}
         {channels.length === 1 && (
           <p className="text-xs text-amber-600 bg-amber-50 p-3 rounded-xl text-center mb-4">これが最後のチャンネルです。脱退後は新しいチャンネルを作成または参加してください。</p>
@@ -606,23 +606,12 @@ export default function ProfileScreen() {
 
           <div className={`rounded-3xl overflow-hidden shadow-sm border divide-y ${dark ? 'bg-slate-800 border-slate-700 divide-slate-700' : 'bg-white border-gray-100 divide-gray-50'}`}>
             <button onClick={() => setShowAppSettings(true)} className={`w-full p-4 flex items-center justify-between transition-colors group ${hover}`}>
-              <div className={`flex items-center gap-3 text-sm font-bold group-hover:text-blue-500 transition-colors ${dark ? 'text-slate-300' : 'text-gray-700'}`}>
+              <div className={`flex items-center gap-3 text-sm font-bold ${dark ? 'text-slate-100' : 'text-gray-900'}`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-100 transition-colors ${dark ? 'bg-slate-700' : 'bg-gray-100'}`}>
                   <Settings size={16} />
                 </div>
                 アプリ設定
               </div>
-              <ChevronRight size={18} className={dark ? 'text-slate-500 group-hover:text-blue-400' : 'text-gray-400 group-hover:text-blue-500'} />
-            </button>
-
-            <button className={`w-full p-4 flex items-center justify-between transition-colors group ${hover}`}>
-              <div className={`flex items-center gap-3 text-sm font-bold group-hover:text-blue-500 transition-colors ${dark ? 'text-slate-300' : 'text-gray-700'}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-100 transition-colors ${dark ? 'bg-slate-700' : 'bg-gray-100'}`}>
-                  <Code size={16} />
-                </div>
-                開発者情報
-              </div>
-              <ChevronRight size={18} className={dark ? 'text-slate-500 group-hover:text-blue-400' : 'text-gray-400 group-hover:text-blue-500'} />
             </button>
 
             <button onClick={handleLogout} className={`w-full p-4 flex items-center justify-between transition-colors group ${hover}`}>
@@ -643,15 +632,14 @@ export default function ProfileScreen() {
 
       {/* App Settings Modal */}
       {showAppSettings && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center sm:items-center p-4">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center sm:items-center p-4 pb-24">
           <div className={`rounded-3xl w-full max-w-sm shadow-2xl ${dark ? 'bg-slate-800' : 'bg-white'}`}>
             <div className={`flex items-center justify-between px-6 py-5 border-b ${dark ? 'border-slate-700' : 'border-gray-100'}`}>
               <h3 className={`text-lg font-bold ${text}`}>アプリ設定</h3>
-              <button onClick={() => setShowAppSettings(false)} className={`p-1.5 rounded-full transition-colors ${dark ? 'hover:bg-slate-700' : 'hover:bg-gray-100'}`}>
-                <X size={20} className={dark ? 'text-slate-400' : 'text-gray-500'} />
+              <button onClick={() => setShowAppSettings(false)} className={`p-1.5 rounded-full transition-colors ${dark ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-gray-100 text-gray-500'}`}>
+                <X size={20} />
               </button>
             </div>
-
             <div className="p-5 space-y-2">
               {/* Dark Mode */}
               <div className={`flex items-center justify-between p-4 rounded-2xl ${dark ? 'bg-slate-700' : 'bg-gray-50'}`}>
@@ -735,15 +723,6 @@ export default function ProfileScreen() {
                   </div>
                 </div>
               )}
-            </div>
-
-            <div className="px-5 pb-5">
-              <button
-                onClick={() => setShowAppSettings(false)}
-                className={`w-full py-3 font-bold rounded-2xl transition-colors ${dark ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' : 'bg-gray-900 text-white hover:bg-gray-700'}`}
-              >
-                閉じる
-              </button>
             </div>
           </div>
         </div>
