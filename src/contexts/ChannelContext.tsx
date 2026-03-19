@@ -36,6 +36,7 @@ export interface UserProfile {
   createdAt: any;
   nickname?: string;
   photoURL?: string;
+  defaultAvatarURL?: string;
 }
 
 export interface ChannelMember {
@@ -250,6 +251,7 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
         createdAt: serverTimestamp(),
         nickname: currentUser.displayName || 'User',
         photoURL: avatarDataURL,
+        defaultAvatarURL: avatarDataURL,
       };
       await setDoc(profileRef, newProfile);
       
@@ -261,6 +263,7 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
         channelIds: [channelRef.id],
         nickname: currentUser.displayName || 'User',
         photoURL: avatarDataURL,
+        defaultAvatarURL: avatarDataURL,
       } as UserProfile);
       setNeedsOnboarding(false);
       console.log('[v0] createChannel: new profile created with avatar');
@@ -339,13 +342,16 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
       } : null);
     } else {
       // Create new profile with Google account info
+      const avatarColor = getRandomAvatarColor();
+      const avatarDataURL = generateDefaultAvatarDataURL(avatarColor);
       const newProfile = {
         defaultChannelId: channelDoc.id,
         channelIds: [channelDoc.id],
         migrated: false,
         createdAt: serverTimestamp(),
-        ...(currentUser.displayName ? { nickname: currentUser.displayName } : {}),
-        ...(currentUser.photoURL ? { photoURL: currentUser.photoURL } : {}),
+        nickname: currentUser.displayName || 'User',
+        photoURL: avatarDataURL,
+        defaultAvatarURL: avatarDataURL,
       };
       await setDoc(profileRef, newProfile);
       
@@ -355,8 +361,9 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
         userId: currentUser.uid,
         defaultChannelId: channelDoc.id,
         channelIds: [channelDoc.id],
-        nickname: currentUser.displayName || undefined,
-        photoURL: currentUser.photoURL || undefined,
+        nickname: currentUser.displayName || 'User',
+        photoURL: avatarDataURL,
+        defaultAvatarURL: avatarDataURL,
       } as UserProfile);
       setNeedsOnboarding(false);
     }

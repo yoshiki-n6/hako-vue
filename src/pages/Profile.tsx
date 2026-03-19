@@ -250,8 +250,8 @@ export default function ProfileScreen() {
                   type="button"
                   onClick={() => {
                     setPhotoFile(null);
-                    setPhotoPreview(initialPhotoURL);
-                    // inputのvalueをリセットして再選択できるようにする
+                    const defaultAvatar = userProfile?.defaultAvatarURL || initialPhotoURL;
+                    setPhotoPreview(defaultAvatar);
                     if (fileInputRef.current) fileInputRef.current.value = '';
                   }}
                   className="mt-2 text-xs font-medium px-3 py-1 rounded-full transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200"
