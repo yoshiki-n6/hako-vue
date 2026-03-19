@@ -165,26 +165,32 @@ export default function ProfileScreen() {
   const displayName = userProfile?.nickname || 'User';
   const defaultAvatarColor = currentUser?.uid ? getAvatarColorFromUserId(currentUser.uid) : '#45B7D1';
   const displayPhoto = userProfile?.photoURL || generateDefaultAvatarDataURL(defaultAvatarColor);
+  const dark = settings.darkMode;
+  const card = dark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-100';
+  const text = dark ? 'text-slate-100' : 'text-gray-900';
+  const subtext = dark ? 'text-slate-400' : 'text-gray-500';
+  const hover = dark ? 'hover:bg-slate-700' : 'hover:bg-gray-50';
+  const inputCls = dark ? 'bg-slate-700 border-slate-600 text-slate-100 focus:ring-blue-400' : 'bg-gray-50 border-gray-200 text-gray-900 focus:ring-blue-500';
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 max-w-md mx-auto pb-24">
-      <header className="bg-white/95 backdrop-blur-md px-4 py-6 sticky top-0 z-10 border-b border-gray-100 mb-4">
-        <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">マイページ</h1>
+    <div className={`flex flex-col min-h-screen max-w-md mx-auto pb-24 ${dark ? 'bg-slate-900' : 'bg-gray-50'}`}>
+      <header className={`backdrop-blur-md px-4 py-6 sticky top-0 z-10 border-b mb-4 ${dark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-100'}`}>
+        <h1 className={`text-xl font-extrabold tracking-tight ${text}`}>マイページ</h1>
       </header>
 
       <main className="px-5 space-y-6">
         {/* User Card */}
-        <section className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+        <section className={`rounded-3xl p-6 shadow-sm border ${card}`}>
           <div className="flex items-center gap-5">
             <div className="w-16 h-16 rounded-full shadow-md shrink-0 overflow-hidden">
               <img src={displayPhoto} alt="" className="w-full h-full object-cover" />
             </div>
             <div className="min-w-0 flex-1">
-              <h2 className="text-xl font-extrabold text-gray-900 mb-1 truncate">
+              <h2 className={`text-xl font-extrabold mb-1 truncate ${text}`}>
                 {displayName}
               </h2>
-              <p className="text-sm font-medium text-gray-500 flex items-center gap-1.5 truncate">
-                <UserIcon size={14} className="shrink-0" /> 
+              <p className={`text-sm font-medium flex items-center gap-1.5 truncate ${subtext}`}>
+                <UserIcon size={14} className="shrink-0" />
                 {currentUser?.email || 'user@example.com'}
               </p>
             </div>
@@ -195,96 +201,72 @@ export default function ProfileScreen() {
                 if (fileInputRef.current) fileInputRef.current.value = '';
                 setIsEditingProfile(true);
               }}
-              className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+              className={`p-2 rounded-full transition-colors ${dark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-gray-100 hover:bg-gray-200'}`}
             >
-              <Edit2 size={18} className="text-gray-600" />
+              <Edit2 size={18} className={dark ? 'text-slate-300' : 'text-gray-600'} />
             </button>
           </div>
         </section>
-
         {/* Edit Profile Modal */}
         {isEditingProfile && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl p-6 w-full max-w-sm">
+            <div className={`rounded-3xl p-6 w-full max-w-sm ${dark ? 'bg-slate-800' : 'bg-white'}`}>
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-gray-900">プロフィール編集</h3>
+                <h3 className={`text-lg font-bold ${text}`}>プロフィール編集</h3>
                 <button onClick={() => setIsEditingProfile(false)} className="p-1">
-                  <X size={20} className="text-gray-500" />
+                  <X size={20} className={dark ? 'text-slate-400' : 'text-gray-500'} />
                 </button>
               </div>
-              
-              {/* Current Avatar Preview */}
+
               <div className="flex justify-center mb-4">
                 <div className="w-20 h-20 rounded-full overflow-hidden ring-4 ring-blue-100 shadow-md">
                   <img src={photoPreview || generateDefaultAvatarDataURL(defaultAvatarColor)} alt="" className="w-full h-full object-cover" />
                 </div>
               </div>
-              
-              {/* Photo Upload Section */}
+
               <div className="mb-5">
-                <label className="block text-sm font-bold text-gray-700 mb-3">アイコン画像</label>
-                <input 
-                  ref={fileInputRef}
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handlePhotoUpload}
-                  className="hidden"
-                />
+                <label className={`block text-sm font-bold mb-3 ${dark ? 'text-slate-300' : 'text-gray-700'}`}>アイコン画像</label>
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full px-4 py-3 border-2 border-dashed border-blue-300 rounded-xl bg-blue-50 hover:bg-blue-100 transition-colors flex items-center justify-center gap-2 text-blue-600 font-semibold"
+                  className={`w-full px-4 py-3 border-2 border-dashed rounded-xl transition-colors flex items-center justify-center gap-2 font-semibold ${dark ? 'border-blue-500/50 bg-blue-900/20 hover:bg-blue-900/40 text-blue-400' : 'border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-600'}`}
                 >
-                  <Upload size={18} />
-                  画像を選択
+                  <Upload size={18} />画像を選択
                 </button>
-                <p className="text-xs text-gray-500 mt-2">JPG、PNG など最大5MBまで</p>
-                {photoFile && (
-                  <p className="text-xs text-green-600 font-medium mt-1">
-                    ✓ {photoFile.name} を選択
-                  </p>
-                )}
+                <p className={`text-xs mt-2 ${subtext}`}>JPG、PNG など最大5MBまで</p>
+                {photoFile && <p className="text-xs text-green-500 font-medium mt-1">✓ {photoFile.name} を選択</p>}
                 <button
                   type="button"
                   onClick={() => {
-                    const color = currentUser?.uid
-                      ? getAvatarColorFromUserId(currentUser.uid)
-                      : '#45B7D1';
+                    const color = currentUser?.uid ? getAvatarColorFromUserId(currentUser.uid) : '#45B7D1';
                     setPhotoFile(null);
                     setPhotoPreview(generateDefaultAvatarDataURL(color));
                     if (fileInputRef.current) fileInputRef.current.value = '';
                   }}
-                  className="mt-2 text-xs font-medium px-3 py-1 rounded-full transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  className={`mt-2 text-xs font-medium px-3 py-1 rounded-full transition-colors ${dark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                 >
                   デフォルトアバターに戻す
                 </button>
               </div>
-              
-              {/* Nickname Input */}
+
               <div className="mb-6">
-                <label className="block text-sm font-bold text-gray-700 mb-2">ニックネーム</label>
+                <label className={`block text-sm font-bold mb-2 ${dark ? 'text-slate-300' : 'text-gray-700'}`}>ニックネーム</label>
                 <input
                   type="text"
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                   placeholder="ニックネームを入力"
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-transparent ${inputCls}`}
                 />
               </div>
-              
+
               <button
                 onClick={handleSaveProfile}
                 disabled={saving || !nickname.trim()}
                 className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {saving ? (
-                  <>
-                    <RefreshCw size={16} className="animate-spin" />
-                    保存中...
-                  </>
-                ) : (
-                  '保存する'
-                )}
+                {saving ? <><RefreshCw size={16} className="animate-spin" />保存中...</> : '保存する'}
               </button>
             </div>
           </div>
@@ -293,14 +275,14 @@ export default function ProfileScreen() {
         {/* Members Modal */}
         {showMembersModal && selectedChannel && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl p-6 w-full max-w-sm max-h-[80vh] overflow-auto">
+            <div className={`rounded-3xl p-6 w-full max-w-sm max-h-[80vh] overflow-auto ${dark ? 'bg-slate-800' : 'bg-white'}`}>
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-gray-900">{selectedChannel.name} のメンバー</h3>
+                <h3 className={`text-lg font-bold ${text}`}>{selectedChannel.name} のメンバー</h3>
                 <button onClick={() => setShowMembersModal(false)} className="p-1">
-                  <X size={20} className="text-gray-500" />
+                  <X size={20} className={dark ? 'text-slate-400' : 'text-gray-500'} />
                 </button>
               </div>
-              
+
               {loadingMembers ? (
                 <div className="flex justify-center py-8">
                   <RefreshCw size={24} className="animate-spin text-gray-400" />
@@ -308,15 +290,11 @@ export default function ProfileScreen() {
               ) : (
                 <div className="space-y-3">
                   {members.map((member) => (
-                    <div key={member.userId} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                    <div key={member.userId} className={`flex items-center gap-3 p-3 rounded-xl ${dark ? 'bg-slate-700' : 'bg-gray-50'}`}>
                       <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
-                        <img
-                          src={member.photoURL || generateDefaultAvatarDataURL('#45B7D1')}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={member.photoURL || generateDefaultAvatarDataURL('#45B7D1')} alt="" className="w-full h-full object-cover" />
                       </div>
-                      <span className="font-bold text-gray-900">{member.nickname}</span>
+                      <span className={`font-bold ${text}`}>{member.nickname}</span>
                     </div>
                   ))}
                 </div>
@@ -352,103 +330,84 @@ export default function ProfileScreen() {
                         <Pencil size={18} className="text-gray-400" />
                         名前を編集
                       </button>
-                      <button
-                        onClick={() => {
-                          setShowLeaveConfirm(channel);
-                          setShowChannelMenu(null);
-                        }}
-                        className="w-full px-4 py-3 text-left text-sm font-medium text-red-600 hover:bg-red-50 flex items-center gap-3"
-                      >
-                        <Trash2 size={18} className="text-red-400" />
-                        脱退する
-                      </button>
-                    </>
-                  );
-                })()}
                 <button
-                  onClick={() => setShowChannelMenu(null)}
-                  className="w-full px-4 py-3 text-center text-sm font-bold text-gray-500 hover:bg-gray-50 border-t border-gray-100"
+                  onClick={() => {
+                    setShowLeaveConfirm(channel);
+                    setShowChannelMenu(null);
+                  }}
+                  className={`w-full px-4 py-3 text-left text-sm font-medium text-red-600 flex items-center gap-3 ${dark ? 'hover:bg-red-900/20' : 'hover:bg-red-50'}`}
                 >
-                  キャンセル
+                  <Trash2 size={18} className="text-red-400" />
+                  脱退する
                 </button>
-              </div>
-            </div>
-          </div>
-        )}
+              </>
+            );
+          })()}
+          <button
+            onClick={() => setShowChannelMenu(null)}
+            className={`w-full px-4 py-3 text-center text-sm font-bold border-t ${dark ? 'text-slate-400 hover:bg-slate-700 border-slate-700' : 'text-gray-500 hover:bg-gray-50 border-gray-100'}`}
+          >
+            キャンセル
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
 
-        {/* Leave Channel Confirmation Modal */}
-        {showLeaveConfirm && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl p-6 w-full max-w-sm">
-              <div className="flex items-center justify-center mb-4">
-                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
-                  <AlertTriangle size={32} className="text-red-500" />
-                </div>
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 text-center mb-2">チャンネルを脱退</h3>
-              <p className="text-sm text-gray-500 text-center mb-2">
-                「{showLeaveConfirm.name}」から脱退しますか？
-              </p>
-              {showLeaveConfirm.memberIds.length === 1 && (
-                <p className="text-xs text-red-500 bg-red-50 p-3 rounded-xl text-center mb-2">
-                  あなたが最後のメンバーです。脱退するとチャンネルは削除されます。
-                </p>
-              )}
-              {channels.length === 1 && (
-                <p className="text-xs text-amber-600 bg-amber-50 p-3 rounded-xl text-center mb-4">
-                  これが最後のチャンネルです。脱退後は新しいチャンネルを作成または参加してください。
-                </p>
-              )}
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={() => setShowLeaveConfirm(null)}
-                  className="flex-1 bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200 transition-colors"
-                >
-                  キャンセル
-                </button>
-                <button
-                  onClick={handleLeaveChannel}
-                  disabled={leavingChannel}
-                  className="flex-1 bg-red-500 text-white font-bold py-3 rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {leavingChannel ? (
-                    <>
-                      <RefreshCw size={16} className="animate-spin" />
-                      処理中...
-                    </>
-                  ) : (
-                    '脱退する'
-                  )}
-                </button>
-              </div>
-            </div>
+  {/* Leave Channel Confirmation Modal */}
+  {showLeaveConfirm && (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className={`rounded-3xl p-6 w-full max-w-sm ${dark ? 'bg-slate-800' : 'bg-white'}`}>
+        <div className="flex items-center justify-center mb-4">
+          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+            <AlertTriangle size={32} className="text-red-500" />
           </div>
+        </div>
+        <h3 className={`text-lg font-bold text-center mb-2 ${text}`}>チャンネルを脱退</h3>
+        <p className={`text-sm text-center mb-2 ${subtext}`}>「{showLeaveConfirm.name}」から脱退しますか？</p>
+        {showLeaveConfirm.memberIds.length === 1 && (
+          <p className="text-xs text-red-500 bg-red-50 p-3 rounded-xl text-center mb-2">あなたが最後のメンバーです。脱退するとチャンネルは削除されます。</p>
         )}
+        {channels.length === 1 && (
+          <p className="text-xs text-amber-600 bg-amber-50 p-3 rounded-xl text-center mb-4">これが最後のチャンネルです。脱退後は新しいチャンネルを作成または参加してください。</p>
+        )}
+        <div className="flex gap-3 mt-6">
+          <button onClick={() => setShowLeaveConfirm(null)} className={`flex-1 font-bold py-3 rounded-xl transition-colors ${dark ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+            キャンセル
+          </button>
+          <button onClick={handleLeaveChannel} disabled={leavingChannel}
+            className="flex-1 bg-red-500 text-white font-bold py-3 rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+            {leavingChannel ? <><RefreshCw size={16} className="animate-spin" />処理中...</> : '脱退する'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
 
-        {/* Edit Channel Name Modal */}
-        {showEditChannelModal && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl p-6 w-full max-w-sm">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-gray-900">チャンネル名を編集</h3>
-                <button onClick={() => setShowEditChannelModal(null)} className="p-1">
-                  <X size={20} className="text-gray-500" />
-                </button>
-              </div>
-              
-              <div className="mb-6">
-                <label className="block text-sm font-bold text-gray-700 mb-2">チャンネル名</label>
-                <input
-                  type="text"
-                  value={editingChannelName}
-                  onChange={(e) => setEditingChannelName(e.target.value)}
-                  placeholder="チャンネル名を入力"
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              
-              <button
-                onClick={handleSaveChannelName}
+  {/* Edit Channel Name Modal */}
+  {showEditChannelModal && (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className={`rounded-3xl p-6 w-full max-w-sm ${dark ? 'bg-slate-800' : 'bg-white'}`}>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className={`text-lg font-bold ${text}`}>チャンネル名を編集</h3>
+          <button onClick={() => setShowEditChannelModal(null)} className="p-1">
+            <X size={20} className={dark ? 'text-slate-400' : 'text-gray-500'} />
+          </button>
+        </div>
+
+        <div className="mb-6">
+          <label className={`block text-sm font-bold mb-2 ${dark ? 'text-slate-300' : 'text-gray-700'}`}>チャンネル名</label>
+          <input
+            type="text"
+            value={editingChannelName}
+            onChange={(e) => setEditingChannelName(e.target.value)}
+            placeholder="チャンネル名を入力"
+            className={`w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-transparent ${inputCls}`}
+          />
+        </div>
+
+        <button
+          onClick={handleSaveChannelName}
                 disabled={savingChannelName || !editingChannelName.trim()}
                 className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
@@ -612,26 +571,17 @@ export default function ProfileScreen() {
                 </div>
                 {/* 共有用チャンネルのみ招待コードを表示 */}
                 {channel.type === 'shared' ? (
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <div className={`flex items-center gap-2 text-xs ${dark ? 'text-slate-400' : 'text-gray-500'}`}>
                     <span>招待コード:</span>
-                    <code className="bg-gray-50 px-1.5 py-0.5 rounded font-mono font-bold">
+                    <code className={`px-1.5 py-0.5 rounded font-mono font-bold ${dark ? 'bg-slate-700' : 'bg-gray-50'}`}>
                       {channel.inviteCode}
                     </code>
-                    <button
-                      onClick={() => handleCopyCode(channel.inviteCode)}
-                      className="text-gray-400 hover:text-blue-600"
-                    >
-                      {copiedCode === channel.inviteCode ? (
-                        <Check size={14} />
-                      ) : (
-                        <Copy size={14} />
-                      )}
+                    <button onClick={() => handleCopyCode(channel.inviteCode)} className={dark ? 'text-slate-500 hover:text-blue-400' : 'text-gray-400 hover:text-blue-600'}>
+                      {copiedCode === channel.inviteCode ? <Check size={14} /> : <Copy size={14} />}
                     </button>
                   </div>
                 ) : (
-                  <div className="text-xs text-purple-500">
-                    一人暮らし用チャンネル
-                  </div>
+                  <div className="text-xs text-purple-500">一人暮らし用チャンネル</div>
                 )}
               </div>
             ))}
@@ -639,94 +589,79 @@ export default function ProfileScreen() {
 
           {/* Channel Actions */}
           <div className="flex gap-3">
-            <button
-              onClick={() => navigate('/channel/create')}
-              className="flex-1 bg-blue-600 text-white font-bold text-sm py-3 px-4 rounded-xl shadow-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-            >
-              <Plus size={16} />
-              チャンネルを作成
+            <button onClick={() => navigate('/channel/create')}
+              className="flex-1 bg-blue-600 text-white font-bold text-sm py-3 px-4 rounded-xl shadow-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+              <Plus size={16} />チャンネルを作成
             </button>
-            <button
-              onClick={() => navigate('/channel/join')}
-              className="flex-1 bg-white text-blue-600 border-2 border-blue-200 font-bold text-sm py-3 px-4 rounded-xl hover:border-blue-400 transition-colors flex items-center justify-center gap-2"
-            >
-              <KeyRound size={16} />
-              招待コードで参加
+            <button onClick={() => navigate('/channel/join')}
+              className={`flex-1 border-2 font-bold text-sm py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2 ${dark ? 'bg-slate-800 text-blue-400 border-blue-500/50 hover:border-blue-400' : 'bg-white text-blue-600 border-blue-200 hover:border-blue-400'}`}>
+              <KeyRound size={16} />招待コードで参加
             </button>
           </div>
         </section>
 
         {/* Settings Menu */}
         <section className="space-y-3">
-          <h3 className="text-sm font-bold text-gray-900 px-1 pt-2">設定・その他</h3>
-          
-          <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 divide-y divide-gray-50">
-             <button
-               onClick={() => setShowAppSettings(true)}
-               className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors group">
-               <div className="flex items-center gap-3 text-gray-700 text-sm font-bold group-hover:text-blue-600 transition-colors">
-                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                     <Settings size={16} />
-                  </div>
-                  アプリ設定
-               </div>
-               <ChevronRight size={18} className="text-gray-400 group-hover:text-blue-500" />
-             </button>
+          <h3 className={`text-sm font-bold px-1 pt-2 ${text}`}>設定・その他</h3>
 
-             <button className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors group">
-               <div className="flex items-center gap-3 text-gray-700 text-sm font-bold group-hover:text-blue-600 transition-colors">
-                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                     <Code size={16} />
-                  </div>
-                  開発者情報
-               </div>
-               <ChevronRight size={18} className="text-gray-400 group-hover:text-blue-500" />
-             </button>
+          <div className={`rounded-3xl overflow-hidden shadow-sm border divide-y ${dark ? 'bg-slate-800 border-slate-700 divide-slate-700' : 'bg-white border-gray-100 divide-gray-50'}`}>
+            <button onClick={() => setShowAppSettings(true)} className={`w-full p-4 flex items-center justify-between transition-colors group ${hover}`}>
+              <div className={`flex items-center gap-3 text-sm font-bold group-hover:text-blue-500 transition-colors ${dark ? 'text-slate-300' : 'text-gray-700'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-100 transition-colors ${dark ? 'bg-slate-700' : 'bg-gray-100'}`}>
+                  <Settings size={16} />
+                </div>
+                アプリ設定
+              </div>
+              <ChevronRight size={18} className={dark ? 'text-slate-500 group-hover:text-blue-400' : 'text-gray-400 group-hover:text-blue-500'} />
+            </button>
 
-             <button 
-               onClick={handleLogout}
-               className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors group"
-             >
-               <div className="flex items-center gap-3 text-red-600 text-sm font-bold">
-                  <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center">
-                     <LogOut size={16} />
-                  </div>
-                  ログアウト
-               </div>
-             </button>
+            <button className={`w-full p-4 flex items-center justify-between transition-colors group ${hover}`}>
+              <div className={`flex items-center gap-3 text-sm font-bold group-hover:text-blue-500 transition-colors ${dark ? 'text-slate-300' : 'text-gray-700'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-100 transition-colors ${dark ? 'bg-slate-700' : 'bg-gray-100'}`}>
+                  <Code size={16} />
+                </div>
+                開発者情報
+              </div>
+              <ChevronRight size={18} className={dark ? 'text-slate-500 group-hover:text-blue-400' : 'text-gray-400 group-hover:text-blue-500'} />
+            </button>
+
+            <button onClick={handleLogout} className={`w-full p-4 flex items-center justify-between transition-colors group ${hover}`}>
+              <div className="flex items-center gap-3 text-red-500 text-sm font-bold">
+                <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center">
+                  <LogOut size={16} />
+                </div>
+                ログアウト
+              </div>
+            </button>
           </div>
         </section>
 
         <div className="text-center pt-8 pb-4">
-          <p className="text-[10px] font-bold text-gray-400 tracking-wider">HAKO-VUE PROTOTYPE v1.2</p>
+          <p className={`text-[10px] font-bold tracking-wider ${dark ? 'text-slate-600' : 'text-gray-400'}`}>HAKO-VUE PROTOTYPE v1.2</p>
         </div>
       </main>
 
       {/* App Settings Modal */}
       {showAppSettings && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center sm:items-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl">
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-              <h3 className="text-lg font-bold text-gray-900">アプリ設定</h3>
-              <button
-                onClick={() => setShowAppSettings(false)}
-                className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
-              >
-                <X size={20} className="text-gray-500" />
+          <div className={`rounded-3xl w-full max-w-sm shadow-2xl ${dark ? 'bg-slate-800' : 'bg-white'}`}>
+            <div className={`flex items-center justify-between px-6 py-5 border-b ${dark ? 'border-slate-700' : 'border-gray-100'}`}>
+              <h3 className={`text-lg font-bold ${text}`}>アプリ設定</h3>
+              <button onClick={() => setShowAppSettings(false)} className={`p-1.5 rounded-full transition-colors ${dark ? 'hover:bg-slate-700' : 'hover:bg-gray-100'}`}>
+                <X size={20} className={dark ? 'text-slate-400' : 'text-gray-500'} />
               </button>
             </div>
 
             <div className="p-5 space-y-2">
               {/* Dark Mode */}
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50">
+              <div className={`flex items-center justify-between p-4 rounded-2xl ${dark ? 'bg-slate-700' : 'bg-gray-50'}`}>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center">
                     <Moon size={18} className="text-indigo-600" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-900">ダークモード</p>
-                    <p className="text-xs text-gray-500 mt-0.5">画面を暗くして目への負担を軽減</p>
+                    <p className={`text-sm font-bold ${text}`}>ダークモード</p>
+                    <p className={`text-xs mt-0.5 ${subtext}`}>画面を暗くして目への負担を軽減</p>
                   </div>
                 </div>
                 <button
@@ -744,17 +679,17 @@ export default function ProfileScreen() {
               </div>
 
               {/* Notifications */}
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50">
+              <div className={`flex items-center justify-between p-4 rounded-2xl ${dark ? 'bg-slate-700' : 'bg-gray-50'}`}>
                 <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center ${settings.notificationsEnabled ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center ${settings.notificationsEnabled ? 'bg-blue-100' : dark ? 'bg-slate-600' : 'bg-gray-100'}`}>
                     {settings.notificationsEnabled
                       ? <Bell size={18} className="text-blue-600" />
-                      : <BellOff size={18} className="text-gray-400" />
+                      : <BellOff size={18} className={dark ? 'text-slate-400' : 'text-gray-400'} />
                     }
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-900">返却リマインド通知</p>
-                    <p className="text-xs text-gray-500 mt-0.5">持ち出し中アイテムの返却を通知</p>
+                    <p className={`text-sm font-bold ${text}`}>返却リマインド通知</p>
+                    <p className={`text-xs mt-0.5 ${subtext}`}>持ち出し中アイテムの返却を通知</p>
                   </div>
                 </div>
                 <button
@@ -763,19 +698,15 @@ export default function ProfileScreen() {
                     settings.notificationsEnabled ? 'bg-blue-600' : 'bg-gray-300'
                   }`}
                 >
-                  <span
-                    className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${
-                      settings.notificationsEnabled ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
+                  <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${settings.notificationsEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                 </button>
               </div>
 
-              {/* Notification Interval (only shown when notifications are on) */}
+              {/* Notification Interval */}
               {settings.notificationsEnabled && (
-                <div className="p-4 rounded-2xl bg-gray-50">
-                  <p className="text-sm font-bold text-gray-900 mb-3">通知タイミング</p>
-                  <p className="text-xs text-gray-500 mb-3">持ち出してから何日後に通知するか</p>
+                <div className={`p-4 rounded-2xl ${dark ? 'bg-slate-700' : 'bg-gray-50'}`}>
+                  <p className={`text-sm font-bold mb-3 ${text}`}>通知タイミング</p>
+                  <p className={`text-xs mb-3 ${subtext}`}>持ち出してから何日後に通知するか</p>
                   <div className="flex gap-2">
                     {([1, 3, 7] as NotificationInterval[]).map((days) => (
                       <button
@@ -784,7 +715,7 @@ export default function ProfileScreen() {
                         className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
                           settings.notificationIntervalDays === days
                             ? 'bg-blue-600 text-white shadow-md'
-                            : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300'
+                            : dark ? 'bg-slate-600 text-slate-300 border border-slate-500 hover:border-blue-400' : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300'
                         }`}
                       >
                         {days === 1 ? '1日後' : days === 3 ? '3日後' : '1週間後'}
@@ -798,7 +729,7 @@ export default function ProfileScreen() {
             <div className="px-5 pb-5">
               <button
                 onClick={() => setShowAppSettings(false)}
-                className="w-full py-3 bg-gray-900 text-white font-bold rounded-2xl hover:bg-gray-700 transition-colors"
+                className={`w-full py-3 font-bold rounded-2xl transition-colors ${dark ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' : 'bg-gray-900 text-white hover:bg-gray-700'}`}
               >
                 閉じる
               </button>

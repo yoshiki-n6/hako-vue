@@ -3,8 +3,8 @@ import { useAppSettings } from '../contexts/AppSettingsContext';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 
-// Check interval: every 30 minutes
-const CHECK_INTERVAL_MS = 30 * 60 * 1000;
+// デバッグ用: 30秒ごとにチェック
+const CHECK_INTERVAL_MS = 30 * 1000;
 
 export function useReturnReminder() {
   const { settings } = useAppSettings();
@@ -30,7 +30,8 @@ export function useReturnReminder() {
 
     const checkAndNotify = () => {
       const now = Date.now();
-      const thresholdMs = settings.notificationIntervalDays * 24 * 60 * 60 * 1000;
+      // デバッグ用: 閾値を0にして持ち出し中のアイテムはすべて通知
+      const thresholdMs = 0;
 
       const overdue = items.filter(item => {
         if (item.status !== 'taken_out') return false;
