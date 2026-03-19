@@ -33,6 +33,14 @@ export function useReturnReminder() {
   const notifiedItemsRef = useRef<Set<string>>(new Set());
   const lastCheckTimeRef = useRef<{ [key: string]: number }>({});
 
+  // 最新のitems/settings/currentUserをrefで参照（タイマーを再起動せずに最新値を使う）
+  const itemsRef = useRef(items);
+  const settingsRef = useRef(settings);
+  const currentUserRef = useRef(currentUser);
+  useEffect(() => { itemsRef.current = items; }, [items]);
+  useEffect(() => { settingsRef.current = settings; }, [settings]);
+  useEffect(() => { currentUserRef.current = currentUser; }, [currentUser]);
+
   // Service Worker登録 & 通知権限リクエスト
   useEffect(() => {
     registerSW();
@@ -41,31 +49,31 @@ export function useReturnReminder() {
     }
   }, []);
 
+  // タイマーは一度だけ起動（依存配列を空にしてitemの変化で再起動させない）
   useEffect(() => {
-    if (!settings.notificationsEnabled) return;
-    if (!currentUser) return;
-
     const checkAndNotify = () => {
+      const items = itemsRef.current;
+      const settings = settingsRef.current;
+      const currentUser = currentUserRef.current;
+
+      if (!settings.notificationsEnabled) return;
+      if (!currentUser) return;
+
       const now = Date.now();
       let intervalDays = settings.notificationIntervalDays;
 
-      // デバッグ: 30秒後ボタン（0.000347日または旧値0.0347）が選ばれた場合、30秒で判定
       const isDebugMode = intervalDays === 0.000347 || intervalDays === 0.0347;
       if (isDebugMode) {
-        intervalDays = 30 / (24 * 60 * 60); // 正確に30秒
+        intervalDays = 30 / (24 * 60 * 60);
       }
 
       const thresholdMs = intervalDays * 24 * 60 * 60 * 1000;
-
-      console.log('[v0] Checking. Threshold:', Math.floor(thresholdMs / 1000), 'sec, DEBUG:', isDebugMode);
 
       const overdue = items.filter(item => {
         if (item.status !== 'taken_out') return false;
         if (item.takenOutBy !== currentUser.uid) return false;
         const takenOutAt = item.updatedAt?.toMillis?.() || item.createdAt?.toMillis?.() || 0;
-        const elapsedMs = now - takenOutAt;
-        console.log('[v0] Item:', item.name, 'elapsed:', Math.floor(elapsedMs / 1000), 'sec, isOverdue:', elapsedMs >= thresholdMs);
-        return elapsedMs >= thresholdMs;
+        return (now - takenOutAt) >= thresholdMs;
       });
 
       overdue.forEach(item => {
@@ -83,10 +91,8 @@ export function useReturnReminder() {
           days: settings.notificationIntervalDays,
         };
 
-        // アプリ内トースト通知
         window.dispatchEvent(new CustomEvent('return-reminder-notification', { detail: notification }));
 
-        // バックグラウンド対応: Service Worker経由でプッシュ通知
         const title = '返却の確認';
         const body = `「${item.name}」を返却しましたか？`;
         sendNotificationViaSW(title, body, key).then(sent => {
@@ -94,8 +100,6 @@ export function useReturnReminder() {
             new Notification(title, { body, icon: '/favicon.ico', tag: key });
           }
         });
-
-        console.log('[v0] Notification dispatched for:', item.name);
       });
 
       // 返却済みアイテムのキーをクリーンアップ
@@ -112,9 +116,9 @@ export function useReturnReminder() {
       });
     };
 
-    checkAndNotify();
     const timer = setInterval(checkAndNotify, CHECK_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, [settings.notificationsEnabled, settings.notificationIntervalDays, items, currentUser]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 空の依存配列: タイマーはマウント時に一度だけ起動
 }
 
