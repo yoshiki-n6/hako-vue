@@ -211,10 +211,10 @@ export function NotificationBell() {
                 </div>
               ) : (
                 history.map(n => (
-                  <button
+                  <div
                     key={`${n.id}_${n.receivedAt}`}
                     onClick={() => handleItemClick(n.itemId)}
-                    className={`w-full px-4 py-3 border-b last:border-b-0 flex items-center gap-3 transition-colors ${dark ? 'border-slate-700 hover:bg-slate-700' : 'border-gray-50 hover:bg-gray-50'}`}
+                    className={`w-full px-4 py-3 border-b last:border-b-0 flex items-center gap-3 transition-colors cursor-pointer ${dark ? 'border-slate-700 hover:bg-slate-700' : 'border-gray-50 hover:bg-gray-50'}`}
                   >
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${dark ? 'bg-amber-900/40' : 'bg-amber-50'}`}>
                       <AlertCircle size={16} className={dark ? 'text-amber-400' : 'text-amber-600'} />
@@ -232,7 +232,7 @@ export function NotificationBell() {
                     >
                       <X size={14} />
                     </button>
-                  </button>
+                  </div>
                 ))
               )}
             </div>
