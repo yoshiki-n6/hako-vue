@@ -120,13 +120,17 @@ export function useReturnReminder() {
 
         window.dispatchEvent(new CustomEvent('return-reminder-notification', { detail: notification }));
 
-        const title = '返却の確認';
-        const body = `「${item.name}」を返却しましたか？`;
-        sendNotificationViaSW(title, body, key, item.id).then(sent => {
-          if (!sent && 'Notification' in window && Notification.permission === 'granted') {
-            new Notification(title, { body, icon: '/pwa-192x192.jpg', tag: key });
-          }
-        });
+        // アプリを開いている状態（フォアグラウンド）ではアプリ内通知（トースト）のみとし、
+        // ネイティブプッシュ通知は送らないようにする（バックグラウンドのタブでタイマーが発火した時のみ送る）
+        if (document.visibilityState === 'hidden') {
+          const title = '返却の確認';
+          const body = `「${item.name}」を返却しましたか？`;
+          sendNotificationViaSW(title, body, key, item.id).then(sent => {
+            if (!sent && 'Notification' in window && Notification.permission === 'granted') {
+              new Notification(title, { body, icon: '/pwa-192x192.jpg', tag: key });
+            }
+          });
+        }
       });
 
       // SWにデータを同期（バックグラウンドチェック用）
