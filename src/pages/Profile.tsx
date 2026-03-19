@@ -679,28 +679,41 @@ export default function ProfileScreen() {
                 <button
                   onClick={async () => {
                     if (!settings.notificationsEnabled) {
-                      // 通知をONにする場合、まず許可を取得
+                      // 通知をONにする場合
+                      let granted = false;
                       if ('Notification' in window) {
                         if (Notification.permission === 'default') {
                           const permission = await Notification.requestPermission();
-                          if (permission !== 'granted') return;
+                          if (permission === 'granted') {
+                            granted = true;
+                          }
+                        } else if (Notification.permission === 'granted') {
+                          granted = true;
                         } else if (Notification.permission === 'denied') {
                           alert('通知が拒否されています。ブラウザの設定から通知を許可してください。');
                           return;
                         }
 
-                        // 許可された場合（すでにgrantedの場合も含む）、即座にトークンを取得して保存
-                        if (currentUser && Notification.permission === 'granted') {
-                          await requestAndSaveFCMToken(currentUser);
+                        if (granted) {
+                          // iOS SafariではrequestPermission直後にgetTokenをawaitすると永久にフリーズするバグがあるため、
+                          // UI操作を止めないようにバックグラウンドで実行（awaitしない）
+                          if (currentUser) {
+                            requestAndSaveFCMToken(currentUser).catch(e => console.error('[v0] Background token error:', e));
+                          }
+                          toggleNotifications();
                         }
+                      } else {
+                        // Web Pushをサポートしていない環境
+                        toggleNotifications();
                       }
                     } else {
-                      // 通知をOFFにする場合、Firestoreから現在のトークンを削除する
+                      // 通知をOFFにする場合
                       if (currentUser) {
-                        await removeFCMToken(currentUser);
+                        // 削除もバックグラウンドで処理
+                        removeFCMToken(currentUser).catch(e => console.error(e));
                       }
+                      toggleNotifications();
                     }
-                    toggleNotifications();
                   }}
                   className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 ${settings.notificationsEnabled ? 'bg-blue-600' : 'bg-gray-300'
                     }`}
