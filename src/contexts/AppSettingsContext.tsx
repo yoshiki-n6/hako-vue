@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-export type NotificationInterval = 1 | 3 | 7; // days
+export type NotificationInterval = 1 | 3 | 7 | 0.0347; // days (0.0347 = 30 seconds for debug)
 
 export interface AppSettings {
   darkMode: boolean;
