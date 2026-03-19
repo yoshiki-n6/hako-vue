@@ -104,9 +104,8 @@ export default function ProfileScreen() {
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
-      // photoFileがある場合、それをアップロード、なければ既存のPhotoURLを使用
-      const finalPhotoURL = photoFile ? photoPreview : photoURL;
-      await updateProfile(nickname, finalPhotoURL);
+      // photoPreviewを使用（リセット時は空文字列になる）
+      await updateProfile(nickname, photoPreview);
       setPhotoFile(null);
       setIsEditingProfile(false);
     } catch (error) {
