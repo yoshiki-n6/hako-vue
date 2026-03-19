@@ -4,6 +4,7 @@ import { ChannelProvider, useChannel } from './contexts/ChannelContext';
 import { DataProvider } from './contexts/DataContext';
 import { AppSettingsProvider } from './contexts/AppSettingsContext';
 import { useReturnReminder } from './hooks/useReturnReminder';
+import { useFCM } from './hooks/useFCM';
 import { ReturnNotificationContainer } from './components/ReturnNotification';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -48,6 +49,7 @@ function OnboardingCheck({ children }: { children: React.ReactNode }) {
 // Activates return reminder notifications globally
 function NotificationRunner() {
   useReturnReminder();
+  useFCM();
   return null;
 }
 
