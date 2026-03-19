@@ -4,7 +4,7 @@ import { Settings, LogOut, Code, ChevronRight, User as UserIcon, Plus, KeyRound,
 import { useAuth } from '../contexts/AuthContext';
 import { useChannel } from '../contexts/ChannelContext';
 import type { Channel, ChannelMember } from '../contexts/ChannelContext';
-import { generateDefaultAvatarDataURL, getRandomAvatarColor } from '../utils/avatarUtils';
+import { generateDefaultAvatarDataURL } from '../utils/avatarUtils';
 
 export default function ProfileScreen() {
   const navigate = useNavigate();
@@ -18,6 +18,7 @@ export default function ProfileScreen() {
   const [nickname, setNickname] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string>('');
+  const [initialPhotoURL, setInitialPhotoURL] = useState<string>('');
   const [saving, setSaving] = useState(false);
   
   // Member modal state
@@ -37,7 +38,9 @@ export default function ProfileScreen() {
   useEffect(() => {
     if (userProfile) {
       setNickname(userProfile.nickname || '');
-      setPhotoPreview(userProfile.photoURL || '');
+      const photo = userProfile.photoURL || '';
+      setPhotoPreview(photo);
+      setInitialPhotoURL(photo);
     }
   }, [userProfile]);
 
@@ -238,8 +241,7 @@ export default function ProfileScreen() {
                   type="button"
                   onClick={() => {
                     setPhotoFile(null);
-                    const defaultAvatar = generateDefaultAvatarDataURL(getRandomAvatarColor());
-                    setPhotoPreview(defaultAvatar);
+                    setPhotoPreview(initialPhotoURL);
                   }}
                   className="mt-2 text-xs font-medium px-3 py-1 rounded-full transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200"
                 >
