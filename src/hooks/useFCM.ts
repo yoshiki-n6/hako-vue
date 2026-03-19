@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import { getMessaging, getToken } from 'firebase/messaging';
 import { useAuth } from '../contexts/AuthContext';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -123,57 +123,31 @@ export function useFCM() {
           return;
         }
 
-        const messaging = getMessaging();
-
         // 起動時にトークン取得＆保存を実行
         await requestAndSaveFCMToken(currentUser);
 
-        // Listen for foreground messages (when app is open)
-        const unsubscribe = onMessage(messaging, async (payload) => {
-          console.log('[v0] Foreground FCM message received:', payload);
+        // Listen for messages manually broadcasted by our custom sw.js
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          if (event.data?.type === 'FCM_PUSH_RECEIVED') {
+            const payload = event.data.payload;
+            console.log('[v0] Foreground FCM message received via sw.js:', payload);
 
-          if (payload.notification) {
-            // ブラウザネイティブ通知 (モバイル対応のため serviceWorker.showNotification を使用)
-            try {
-              const registration = await navigator.serviceWorker.ready;
-              await registration.showNotification(payload.notification.title || '通知', {
-                body: payload.notification.body,
-                icon: payload.notification.icon || '/pwa-192x192.jpg',
-                data: payload.data,
-              });
-            } catch (e) {
-              console.error('[v0] Error showing notification:', e);
-              // フォールバック
-              try {
-                if (Notification.permission === 'granted') {
-                  new Notification(payload.notification.title || '通知', {
-                    body: payload.notification.body,
-                    icon: payload.notification.icon || '/pwa-192x192.jpg',
-                    data: payload.data,
-                  });
-                }
-              } catch (e2) {
-                console.error('[v0] Fallback notification failed:', e2);
-              }
-            }
+            // アプリ内トースト通知としてもディスパッチ
+            const itemId = payload.data?.itemId || '';
+            window.dispatchEvent(
+              new CustomEvent('return-reminder-notification', {
+                detail: {
+                  id: payload.messageId || Date.now().toString(),
+                  itemId,
+                  itemName: payload.notification?.title || '返却リマインド',
+                  days: 1,
+                  receivedAt: Date.now(),
+                },
+              })
+            );
           }
-
-          // アプリ内トースト通知としてもディスパッチ
-          const itemId = payload.data?.itemId || '';
-          window.dispatchEvent(
-            new CustomEvent('return-reminder-notification', {
-              detail: {
-                id: payload.messageId || Date.now().toString(),
-                itemId,
-                itemName: payload.notification?.title || '返却リマインド',
-                days: 1,
-                receivedAt: Date.now(),
-              },
-            })
-          );
         });
 
-        return unsubscribe;
       } catch (error) {
         console.error('[v0] FCM initialization error:', error);
       }
