@@ -18,12 +18,36 @@ async function registerSW() {
 }
 
 // Service Worker経由で通知を送る（バックグラウンド対応）
-async function sendNotificationViaSW(title: string, body: string, tag: string) {
+async function sendNotificationViaSW(title: string, body: string, tag: string, itemId: string) {
   if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-    navigator.serviceWorker.controller.postMessage({ type: 'SHOW_NOTIFICATION', title, body, tag });
+    navigator.serviceWorker.controller.postMessage({ type: 'SHOW_NOTIFICATION', title, body, tag, itemId });
     return true;
   }
   return false;
+}
+
+// SWにリマインダーデータを同期（アプリが閉じた後のバックグラウンドチェック用）
+async function syncDataToSW(payload: object) {
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({ type: 'SYNC_DATA', payload });
+  }
+}
+
+// Periodic Background Sync を登録（Chrome Android対応）
+async function registerPeriodicSync() {
+  if ('serviceWorker' in navigator && 'periodicSync' in ServiceWorkerRegistration.prototype) {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const status = await (navigator.permissions as any).query({ name: 'periodic-background-sync' });
+      if (status.state === 'granted') {
+        await (registration as any).periodicSync.register('hako-reminder-check', {
+          minInterval: 30 * 60 * 1000, // 最短30分
+        });
+      }
+    } catch (e) {
+      // Periodic Sync非対応ブラウザはignore
+    }
+  }
 }
 
 export function useReturnReminder() {
@@ -41,12 +65,9 @@ export function useReturnReminder() {
   useEffect(() => { settingsRef.current = settings; }, [settings]);
   useEffect(() => { currentUserRef.current = currentUser; }, [currentUser]);
 
-  // Service Worker登録 & 通知権限リクエスト
+  // Service Worker登録 & Periodic Sync登録
   useEffect(() => {
-    registerSW();
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
+    registerSW().then(() => registerPeriodicSync());
   }, []);
 
   // タイマーは一度だけ起動（依存配列を空にしてitemの変化で再起動させない）
@@ -101,12 +122,30 @@ export function useReturnReminder() {
 
         const title = '返却の確認';
         const body = `「${item.name}」を返却しましたか？`;
-        sendNotificationViaSW(title, body, key).then(sent => {
+        sendNotificationViaSW(title, body, key, item.id).then(sent => {
           if (!sent && 'Notification' in window && Notification.permission === 'granted') {
-            new Notification(title, { body, icon: '/favicon.ico', tag: key });
+            new Notification(title, { body, icon: '/pwa-192x192.jpg', tag: key });
           }
         });
       });
+
+      // SWにデータを同期（バックグラウンドチェック用）
+      if (currentUser) {
+        syncDataToSW({
+          items: items
+            .filter(i => i.status === 'taken_out' && i.takenOutBy === currentUser.uid)
+            .map(i => ({
+              id: i.id,
+              name: i.name,
+              status: i.status,
+              takenOutBy: i.takenOutBy,
+              takenOutAt: i.updatedAt?.toMillis?.() || i.createdAt?.toMillis?.() || 0,
+            })),
+          intervalDays: settings.notificationIntervalDays,
+          currentUserId: currentUser.uid,
+          notifiedKeys: Array.from(notifiedItemsRef.current),
+        });
+      }
 
       // 返却済みアイテムのキーをクリーンアップ
       const currentTakenOutIds = new Set(

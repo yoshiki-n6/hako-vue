@@ -681,7 +681,19 @@ export default function ProfileScreen() {
                   </div>
                 </div>
                 <button
-                  onClick={toggleNotifications}
+                  onClick={async () => {
+                    // 通知をONにする場合、まず許可を取得
+                    if (!settings.notificationsEnabled && 'Notification' in window) {
+                      if (Notification.permission === 'default') {
+                        const permission = await Notification.requestPermission();
+                        if (permission !== 'granted') return;
+                      } else if (Notification.permission === 'denied') {
+                        alert('通知が拒否されています。ブラウザの設定から通知を許可してください。');
+                        return;
+                      }
+                    }
+                    toggleNotifications();
+                  }}
                   className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 ${
                     settings.notificationsEnabled ? 'bg-blue-600' : 'bg-gray-300'
                   }`}
