@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Search as SearchIcon, MapPin } from 'lucide-react';
+import { Search as SearchIcon, MapPin, Filter } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import { useChannel } from '../contexts/ChannelContext';
 import { useAuth } from '../contexts/AuthContext';
 
+type FilterType = 'all' | 'newest' | 'taken_out' | 'stored';
+
 export default function SearchScreen() {
   const [query, setQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const { items, locations } = useData();
   const { currentChannel, getChannelMembers } = useChannel();
   const { currentUser } = useAuth();
@@ -32,7 +35,7 @@ export default function SearchScreen() {
   };
 
   // Combine items with their location data and filter by query
-  const searchResults = items.map(item => {
+  let searchResults = items.map(item => {
     const loc = locations.find(l => l.id === item.locationId);
     return {
       ...item,
@@ -45,25 +48,68 @@ export default function SearchScreen() {
     item.locationName.toLowerCase().includes(query.toLowerCase())
   );
 
+  // Apply filter based on activeFilter
+  if (activeFilter === 'taken_out') {
+    searchResults = searchResults.filter(item => item.status === 'taken_out');
+  } else if (activeFilter === 'stored') {
+    searchResults = searchResults.filter(item => item.status === 'stored');
+  } else if (activeFilter === 'newest') {
+    // Sort by newest (most recent first)
+    searchResults = searchResults.sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || 0;
+      const bTime = b.createdAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+  }
+
+  const filterOptions = [
+    { value: 'all' as FilterType, label: 'すべて' },
+    { value: 'newest' as FilterType, label: '新着順' },
+    { value: 'taken_out' as FilterType, label: '持ち出し中' },
+    { value: 'stored' as FilterType, label: '保管中' }
+  ];
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 max-w-md mx-auto pb-20">
       <header className="bg-white/95 backdrop-blur-md px-4 py-5 sticky top-0 z-10 border-b border-gray-100">
-        <div className="relative">
-          <input 
-            type="text" 
-            placeholder="アイテム名、場所で検索..." 
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full bg-gray-100 text-gray-900 rounded-2xl py-3.5 pl-11 pr-4 outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white transition-all font-medium text-base border border-transparent focus:border-blue-200"
-          />
-          <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+        <div className="space-y-3">
+          <div className="relative">
+            <input 
+              type="text" 
+              placeholder="アイテム名、場所で検索..." 
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full bg-gray-100 text-gray-900 rounded-2xl py-3.5 pl-11 pr-4 outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white transition-all font-medium text-base border border-transparent focus:border-blue-200"
+            />
+            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          </div>
+          
+          {/* Filter buttons */}
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {filterOptions.map(option => (
+              <button
+                key={option.value}
+                onClick={() => setActiveFilter(option.value)}
+                className={`px-4 py-2 rounded-full font-semibold text-sm whitespace-nowrap transition-all ${
+                  activeFilter === option.value
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
       <main className="flex-1 p-4 pt-6">
         <div className="flex items-center justify-between mb-4 px-1">
           <p className="text-sm font-bold text-gray-800">
-            {query ? '検索結果' : 'すべてのアイテム'}
+            {activeFilter === 'all' && (query ? '検索結果' : 'すべてのアイテム')}
+            {activeFilter === 'newest' && '新着順'}
+            {activeFilter === 'taken_out' && '持ち出し中'}
+            {activeFilter === 'stored' && '保管中'}
             <span className="ml-2 text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">{searchResults.length}</span>
           </p>
         </div>
