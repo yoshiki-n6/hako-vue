@@ -103,9 +103,9 @@ export default function ProfileScreen() {
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
-      // photoPreviewを使用（リセット時は空文字列になる）
       await updateProfile(nickname, photoPreview);
       setPhotoFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
       setIsEditingProfile(false);
     } catch (error) {
       console.error('Failed to save profile:', error);
@@ -242,6 +242,8 @@ export default function ProfileScreen() {
                   onClick={() => {
                     setPhotoFile(null);
                     setPhotoPreview(initialPhotoURL);
+                    // inputのvalueをリセットして再選択できるようにする
+                    if (fileInputRef.current) fileInputRef.current.value = '';
                   }}
                   className="mt-2 text-xs font-medium px-3 py-1 rounded-full transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200"
                 >
