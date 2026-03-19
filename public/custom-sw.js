@@ -20,7 +20,7 @@ self.addEventListener('push', (event) => {
       .then((clients) => {
         let isFocused = false;
         for (const client of clients) {
-          if (client.focused) {
+          if (client.visibilityState === 'visible') {
             isFocused = true;
             break;
           }
