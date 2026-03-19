@@ -605,26 +605,6 @@ export default function ProfileScreen() {
           <h3 className={`text-sm font-bold px-1 pt-2 ${text}`}>設定・その他</h3>
 
           <div className={`rounded-3xl overflow-hidden shadow-sm border divide-y ${dark ? 'bg-slate-800 border-slate-700 divide-slate-700' : 'bg-white border-gray-100 divide-gray-50'}`}>
-            <button onClick={() => setShowAppSettings(true)} className={`w-full p-4 flex items-center justify-between transition-colors group ${hover}`}>
-              <div className={`flex items-center gap-3 text-sm font-bold group-hover:text-blue-500 transition-colors ${dark ? 'text-slate-300' : 'text-gray-700'}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-100 transition-colors ${dark ? 'bg-slate-700' : 'bg-gray-100'}`}>
-                  <Settings size={16} />
-                </div>
-                アプリ設定
-              </div>
-              <ChevronRight size={18} className={dark ? 'text-slate-500 group-hover:text-blue-400' : 'text-gray-400 group-hover:text-blue-500'} />
-            </button>
-
-            <button className={`w-full p-4 flex items-center justify-between transition-colors group ${hover}`}>
-              <div className={`flex items-center gap-3 text-sm font-bold group-hover:text-blue-500 transition-colors ${dark ? 'text-slate-300' : 'text-gray-700'}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-100 transition-colors ${dark ? 'bg-slate-700' : 'bg-gray-100'}`}>
-                  <Code size={16} />
-                </div>
-                開発者情報
-              </div>
-              <ChevronRight size={18} className={dark ? 'text-slate-500 group-hover:text-blue-400' : 'text-gray-400 group-hover:text-blue-500'} />
-            </button>
-
             <button onClick={handleLogout} className={`w-full p-4 flex items-center justify-between transition-colors group ${hover}`}>
               <div className="flex items-center gap-3 text-red-500 text-sm font-bold">
                 <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center">
