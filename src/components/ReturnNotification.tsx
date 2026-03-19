@@ -42,9 +42,8 @@ export function ReturnNotification({ notification, onDismiss, index }: ReturnNot
 
   return (
     <div
-      className={`transform transition-all duration-300 ease-out ${
-        isVisible ? 'translate-y-0 opacity-100 scale-100' : '-translate-y-4 opacity-0 scale-95'
-      }`}
+      className={`transform transition-all duration-300 ease-out ${isVisible ? 'translate-y-0 opacity-100 scale-100' : '-translate-y-4 opacity-0 scale-95'
+        }`}
     >
       <div className={`rounded-2xl shadow-xl border overflow-hidden ${dark ? 'bg-slate-800 border-slate-600' : 'bg-white border-gray-100'}`}>
         {/* Top color bar */}
@@ -188,7 +187,7 @@ export function NotificationBell() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className={`absolute right-0 top-full mt-2 w-72 rounded-2xl shadow-2xl border z-50 overflow-hidden ${dark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-100'}`}>
+          <div className={`absolute -right-24 sm:right-0 top-full mt-2 w-72 rounded-2xl shadow-2xl border z-50 overflow-hidden origin-top-right ${dark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-100'}`}>
             <div className={`px-4 py-3 border-b flex items-center justify-between ${dark ? 'border-slate-700' : 'border-gray-100'}`}>
               <div className="flex items-center gap-2">
                 <Bell size={16} className={dark ? 'text-slate-400' : 'text-gray-500'} />
