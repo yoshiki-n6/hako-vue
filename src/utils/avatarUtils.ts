@@ -23,6 +23,15 @@ export function getRandomAvatarColor(): string {
   return AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
 }
 
+// Generate deterministic color from userId (same user always gets same color)
+export function getAvatarColorFromUserId(userId: string): string {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) {
+    hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
 // Generate avatar SVG with box character and color
 export function generateDefaultAvatarSVG(color: string): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">

@@ -4,7 +4,7 @@ import { useData } from '../contexts/DataContext';
 import { useChannel } from '../contexts/ChannelContext';
 import { MapPin, QrCode, Box, ChevronRight, Home as HomeIcon, Users, RotateCcw, History, ArrowUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { generateDefaultAvatarDataURL } from '../utils/avatarUtils';
+import { generateDefaultAvatarDataURL, getAvatarColorFromUserId } from '../utils/avatarUtils';
 
 export default function Home() {
   const { currentUser } = useAuth();
@@ -48,8 +48,9 @@ export default function Home() {
     return member?.nickname || '不明なユーザー';
   };
 
-  // Firestoreのプロフィール画像を使用。なければデフォルトアバター
-  const displayPhoto = userProfile?.photoURL || generateDefaultAvatarDataURL('#45B7D1');
+  // userIdから確定的に同じ色でデフォルトアバターを生成
+  const defaultAvatarColor = currentUser?.uid ? getAvatarColorFromUserId(currentUser.uid) : '#45B7D1';
+  const displayPhoto = userProfile?.photoURL || generateDefaultAvatarDataURL(defaultAvatarColor);
 
   return (
     <div className="max-w-md mx-auto p-5 pb-20">

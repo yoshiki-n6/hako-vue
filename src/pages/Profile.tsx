@@ -4,7 +4,7 @@ import { Settings, LogOut, Code, ChevronRight, User as UserIcon, Plus, KeyRound,
 import { useAuth } from '../contexts/AuthContext';
 import { useChannel } from '../contexts/ChannelContext';
 import type { Channel, ChannelMember } from '../contexts/ChannelContext';
-import { generateDefaultAvatarDataURL } from '../utils/avatarUtils';
+import { generateDefaultAvatarDataURL, getAvatarColorFromUserId } from '../utils/avatarUtils';
 
 export default function ProfileScreen() {
   const navigate = useNavigate();
@@ -18,7 +18,6 @@ export default function ProfileScreen() {
   const [nickname, setNickname] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string>('');
-  const [initialPhotoURL, setInitialPhotoURL] = useState<string>('');
   const [saving, setSaving] = useState(false);
   
   // Member modal state
@@ -38,12 +37,7 @@ export default function ProfileScreen() {
   useEffect(() => {
     if (userProfile) {
       setNickname(userProfile.nickname || '');
-      const photo = userProfile.photoURL || '';
-      setPhotoPreview(photo);
-      // initialPhotoURLはdefaultAvatarURLを優先。なければ初回のみ設定
-      setInitialPhotoURL(prev => prev || userProfile.defaultAvatarURL || photo);
-      console.log('[v0] userProfile.defaultAvatarURL:', userProfile.defaultAvatarURL?.slice(0, 80));
-      console.log('[v0] userProfile.photoURL:', userProfile.photoURL?.slice(0, 80));
+      setPhotoPreview(userProfile.photoURL || '');
     }
   }, [userProfile]);
 
@@ -109,8 +103,6 @@ export default function ProfileScreen() {
       await updateProfile(nickname, photoPreview);
       setPhotoFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
-      // 保存後はinitialPhotoURLも最新化して次回リセット時に正しく戻れるようにする
-      setInitialPhotoURL(photoPreview);
       setIsEditingProfile(false);
     } catch (error) {
       console.error('Failed to save profile:', error);
@@ -167,7 +159,8 @@ export default function ProfileScreen() {
   };
 
   const displayName = userProfile?.nickname || 'User';
-  const displayPhoto = userProfile?.photoURL || generateDefaultAvatarDataURL('#45B7D1');
+  const defaultAvatarColor = currentUser?.uid ? getAvatarColorFromUserId(currentUser.uid) : '#45B7D1';
+  const displayPhoto = userProfile?.photoURL || generateDefaultAvatarDataURL(defaultAvatarColor);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 max-w-md mx-auto pb-24">
@@ -193,9 +186,7 @@ export default function ProfileScreen() {
             </div>
             <button
               onClick={() => {
-                const currentPhoto = userProfile?.photoURL || '';
-                setPhotoPreview(currentPhoto);
-                setInitialPhotoURL(currentPhoto);
+                setPhotoPreview(userProfile?.photoURL || '');
                 setPhotoFile(null);
                 if (fileInputRef.current) fileInputRef.current.value = '';
                 setIsEditingProfile(true);
@@ -221,7 +212,7 @@ export default function ProfileScreen() {
               {/* Current Avatar Preview */}
               <div className="flex justify-center mb-4">
                 <div className="w-20 h-20 rounded-full overflow-hidden ring-4 ring-blue-100 shadow-md">
-                  <img src={photoPreview || generateDefaultAvatarDataURL('#45B7D1')} alt="" className="w-full h-full object-cover" />
+                  <img src={photoPreview || generateDefaultAvatarDataURL(defaultAvatarColor)} alt="" className="w-full h-full object-cover" />
                 </div>
               </div>
               
@@ -252,11 +243,11 @@ export default function ProfileScreen() {
                 <button
                   type="button"
                   onClick={() => {
+                    const color = currentUser?.uid
+                      ? getAvatarColorFromUserId(currentUser.uid)
+                      : '#45B7D1';
                     setPhotoFile(null);
-                    const defaultAvatar = userProfile?.defaultAvatarURL || initialPhotoURL;
-                    console.log('[v0] reset - defaultAvatarURL:', defaultAvatar?.slice(0, 80));
-                    console.log('[v0] reset - initialPhotoURL:', initialPhotoURL?.slice(0, 80));
-                    setPhotoPreview(defaultAvatar);
+                    setPhotoPreview(generateDefaultAvatarDataURL(color));
                     if (fileInputRef.current) fileInputRef.current.value = '';
                   }}
                   className="mt-2 text-xs font-medium px-3 py-1 rounded-full transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200"
