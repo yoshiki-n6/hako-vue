@@ -4,6 +4,7 @@ import { ChannelProvider, useChannel } from './contexts/ChannelContext';
 import { DataProvider } from './contexts/DataContext';
 import { AppSettingsProvider } from './contexts/AppSettingsContext';
 import { useReturnReminder } from './hooks/useReturnReminder';
+import { ReturnNotificationContainer } from './components/ReturnNotification';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import Home from './pages/Home';
@@ -75,6 +76,7 @@ function App() {
         <ChannelProvider>
           <DataProvider>
             <NotificationRunner />
+            <ReturnNotificationContainer />
             <BrowserRouter>
             <Routes>
               <Route path="/login" element={<LoginScreen />} />

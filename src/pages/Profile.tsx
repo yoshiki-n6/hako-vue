@@ -722,9 +722,9 @@ export default function ProfileScreen() {
                       </button>
                     ))}
                     <button
-                      onClick={() => setNotificationInterval(0.0347)}
+                      onClick={() => setNotificationInterval(0.000347)}
                       className={`flex-1 min-w-[60px] py-2.5 rounded-xl text-[11px] font-bold transition-all ${
-                        settings.notificationIntervalDays === 0.0347
+                        settings.notificationIntervalDays === 0.000347
                           ? 'bg-amber-600 text-white shadow-md'
                           : dark ? 'bg-amber-900/40 text-amber-400 border border-amber-700 hover:bg-amber-900/60' : 'bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100'
                       }`}
