@@ -168,8 +168,8 @@ export default function ProfileScreen() {
     return name.charAt(0).toUpperCase();
   };
 
-  const displayName = userProfile?.nickname || currentUser?.displayName || 'User';
-  const displayPhoto = userProfile ? (userProfile.photoURL || '') : (currentUser?.photoURL || '');
+  const displayName = userProfile?.nickname || 'User';
+  const displayPhoto = userProfile?.photoURL || '';
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 max-w-md mx-auto pb-24">
@@ -185,7 +185,7 @@ export default function ProfileScreen() {
               {displayPhoto ? (
                 <img src={displayPhoto} alt="" className="w-full h-full object-cover" />
               ) : (
-                getInitials(displayName)
+                '?'
               )}
             </div>
             <div className="min-w-0 flex-1">
@@ -223,7 +223,11 @@ export default function ProfileScreen() {
                   {photoPreview ? (
                     <img src={photoPreview} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    getInitials(nickname)
+                    displayPhoto ? (
+                      <img src={displayPhoto} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      '?'
+                    )
                   )}
                 </div>
               </div>

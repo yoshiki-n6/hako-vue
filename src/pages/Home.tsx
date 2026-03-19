@@ -58,9 +58,8 @@ export default function Home() {
   };
 
   // Firestore のuserProfile画像を表示する
-  // userProfileが存在する場合、photoURLの値を尊重する（空文字列を含む）
-  const displayPhoto = userProfile ? (userProfile.photoURL || '') : (currentUser?.photoURL || '');
-  const displayName = userProfile?.nickname || currentUser?.displayName || 'User';
+  const displayPhoto = userProfile?.photoURL || '';
+  const displayName = userProfile?.nickname || 'User';
 
   return (
     <div className="max-w-md mx-auto p-5 pb-20">
@@ -95,7 +94,7 @@ export default function Home() {
               {displayPhoto ? (
                 <img src={displayPhoto} alt="User profile" className="w-full h-full object-cover" />
               ) : (
-                getInitials(displayName)
+                '?'
               )}
             </div>
           </Link>

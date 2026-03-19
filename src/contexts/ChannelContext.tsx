@@ -15,6 +15,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from './AuthContext';
+import { getRandomAvatarColor, generateDefaultAvatarDataURL } from '../utils/avatarUtils';
 
 // Types
 export interface Channel {
@@ -237,15 +238,18 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
       } : null);
       console.log('[v0] createChannel: local state updated');
     } else {
-      // Create new profile with Google account info
-      console.log('[v0] createChannel: creating new profile');
+      // Create new profile with initial avatar (not Google account info)
+      console.log('[v0] createChannel: creating new profile with initial avatar');
+      const avatarColor = getRandomAvatarColor();
+      const avatarDataURL = generateDefaultAvatarDataURL(avatarColor);
+      
       const newProfile = {
         defaultChannelId: channelRef.id,
         channelIds: [channelRef.id],
         migrated: false,
         createdAt: serverTimestamp(),
-        ...(currentUser.displayName ? { nickname: currentUser.displayName } : {}),
-        ...(currentUser.photoURL ? { photoURL: currentUser.photoURL } : {}),
+        nickname: currentUser.displayName || 'User',
+        photoURL: avatarDataURL,
       };
       await setDoc(profileRef, newProfile);
       
@@ -255,11 +259,11 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
         userId: currentUser.uid,
         defaultChannelId: channelRef.id,
         channelIds: [channelRef.id],
-        nickname: currentUser.displayName || undefined,
-        photoURL: currentUser.photoURL || undefined,
+        nickname: currentUser.displayName || 'User',
+        photoURL: avatarDataURL,
       } as UserProfile);
       setNeedsOnboarding(false);
-      console.log('[v0] createChannel: new profile created');
+      console.log('[v0] createChannel: new profile created with avatar');
     }
 
     console.log('[v0] createChannel: completed successfully');
