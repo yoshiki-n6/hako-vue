@@ -58,7 +58,8 @@ export default function Home() {
   };
 
   // Firestore のuserProfile画像を表示する
-  const displayPhoto = userProfile?.photoURL || currentUser?.photoURL || '';
+  // userProfileが存在する場合、photoURLの値を尊重する（空文字列を含む）
+  const displayPhoto = userProfile ? (userProfile.photoURL || '') : (currentUser?.photoURL || '');
   const displayName = userProfile?.nickname || currentUser?.displayName || 'User';
 
   return (

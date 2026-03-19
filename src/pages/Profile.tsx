@@ -169,7 +169,7 @@ export default function ProfileScreen() {
   };
 
   const displayName = userProfile?.nickname || currentUser?.displayName || 'User';
-  const displayPhoto = userProfile?.photoURL || currentUser?.photoURL || '';
+  const displayPhoto = userProfile ? (userProfile.photoURL || '') : (currentUser?.photoURL || '');
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 max-w-md mx-auto pb-24">
