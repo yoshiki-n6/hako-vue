@@ -129,16 +129,33 @@ export function useFCM() {
         await requestAndSaveFCMToken(currentUser);
 
         // Listen for foreground messages (when app is open)
-        const unsubscribe = onMessage(messaging, (payload) => {
+        const unsubscribe = onMessage(messaging, async (payload) => {
           console.log('[v0] Foreground FCM message received:', payload);
 
           if (payload.notification) {
-            // ブラウザネイティブ通知
-            new Notification(payload.notification.title || '通知', {
-              body: payload.notification.body,
-              icon: payload.notification.icon || '/pwa-192x192.jpg',
-              data: payload.data,
-            });
+            // ブラウザネイティブ通知 (モバイル対応のため serviceWorker.showNotification を使用)
+            try {
+              const registration = await navigator.serviceWorker.ready;
+              await registration.showNotification(payload.notification.title || '通知', {
+                body: payload.notification.body,
+                icon: payload.notification.icon || '/pwa-192x192.jpg',
+                data: payload.data,
+              });
+            } catch (e) {
+              console.error('[v0] Error showing notification:', e);
+              // フォールバック
+              try {
+                if (Notification.permission === 'granted') {
+                  new Notification(payload.notification.title || '通知', {
+                    body: payload.notification.body,
+                    icon: payload.notification.icon || '/pwa-192x192.jpg',
+                    data: payload.data,
+                  });
+                }
+              } catch (e2) {
+                console.error('[v0] Fallback notification failed:', e2);
+              }
+            }
           }
 
           // アプリ内トースト通知としてもディスパッチ
