@@ -17,15 +17,6 @@ async function registerSW() {
   }
 }
 
-// Service Worker経由で通知を送る（バックグラウンド対応）
-async function sendNotificationViaSW(title: string, body: string, tag: string, itemId: string) {
-  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-    navigator.serviceWorker.controller.postMessage({ type: 'SHOW_NOTIFICATION', title, body, tag, itemId });
-    return true;
-  }
-  return false;
-}
-
 // SWにリマインダーデータを同期（アプリが閉じた後のバックグラウンドチェック用）
 async function syncDataToSW(payload: object) {
   if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
@@ -119,18 +110,6 @@ export function useReturnReminder() {
         };
 
         window.dispatchEvent(new CustomEvent('return-reminder-notification', { detail: notification }));
-
-        // アプリを開いている状態（フォアグラウンド）ではアプリ内通知（トースト）のみとし、
-        // ネイティブプッシュ通知は送らないようにする（バックグラウンドのタブでタイマーが発火した時のみ送る）
-        if (document.visibilityState === 'hidden') {
-          const title = '返却の確認';
-          const body = `「${item.name}」を返却しましたか？`;
-          sendNotificationViaSW(title, body, key, item.id).then(sent => {
-            if (!sent && 'Notification' in window && Notification.permission === 'granted') {
-              new Notification(title, { body, icon: '/pwa-192x192.jpg', tag: key });
-            }
-          });
-        }
       });
 
       // SWにデータを同期（バックグラウンドチェック用）
