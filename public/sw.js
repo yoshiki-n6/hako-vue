@@ -16,33 +16,29 @@ self.addEventListener('push', (event) => {
     // OSの通知センターでまとめられてポップアップが出なくなるのを防ぐため、必ずユニークなタグにする
     const tag = payload.notification?.tag || payload.messageId || String(Date.now());
 
-    // 1. フォアグラウンドの画面（Reactアプリ）へ通知内容を送信してトーストを表示させる
-    event.waitUntil(
-      self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
-        for (const client of clients) {
-          client.postMessage({
-            type: 'FCM_PUSH_RECEIVED',
-            payload: payload
-          });
-        }
-      }).catch(e => console.error('[sw] Error in postMessage:', e))
-    );
+    // iOS Web Push (PWA) の非常に厳格な仕様対策：
+    // 1つの event.waitUntil 内で、一番最初に showNotification を呼び出してPromiseチェーンとしてつなぎます。
+    const promiseChain = self.registration.showNotification(title, {
+      body,
+      icon,
+      badge: icon,
+      tag,
+      data,
+    }).then(() => {
+      // ブラウザの通知表示に成功した後、フォアグラウンドのReactアプリにデータを送信 (トースト用)
+      return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    }).then((clients) => {
+      for (const client of clients) {
+        client.postMessage({
+          type: 'FCM_PUSH_RECEIVED',
+          payload: payload
+        });
+      }
+    }).catch((e) => {
+      console.error('[sw] Error in push handling chain:', e);
+    });
 
-    // 2. ブラウザのネイティブ通知を表示
-    event.waitUntil(
-      self.registration.showNotification(title, {
-        body,
-        icon,
-        badge: icon,
-        tag,
-        data,
-        requireInteraction: false,
-      }).then(() => {
-        console.log('[sw] showNotification succeeded');
-      }).catch(e => {
-        console.error('[sw] showNotification failed:', e);
-      })
-    );
+    event.waitUntil(promiseChain);
   } catch (e) {
     console.error('[sw] Error parsing push message:', e);
   }
