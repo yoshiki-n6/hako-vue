@@ -1,9 +1,11 @@
-import { AlertCircle, Bell, X, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, Bell, X, CheckCircle2, ChevronRight } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppSettings } from '../contexts/AppSettingsContext';
 
 export interface ReturnNotificationData {
   id: string;
+  itemId: string;
   itemName: string;
   days: number;
   receivedAt?: number;
@@ -127,6 +129,7 @@ export function NotificationBell() {
   const [history, setHistory] = useState<ReturnNotificationData[]>([]);
   const [open, setOpen] = useState(false);
   const { settings } = useAppSettings();
+  const navigate = useNavigate();
   const dark = settings.darkMode;
 
   useEffect(() => {
@@ -142,6 +145,11 @@ export function NotificationBell() {
   }, []);
 
   const unreadCount = history.length;
+
+  const handleItemClick = (itemId: string) => {
+    navigate(`/items/${itemId}`);
+    setOpen(false);
+  };
 
   return (
     <div className="relative">
@@ -183,23 +191,28 @@ export function NotificationBell() {
                 </div>
               ) : (
                 history.map(n => (
-                  <div key={`${n.id}_${n.receivedAt}`} className={`px-4 py-3 border-b last:border-b-0 flex items-center gap-3 ${dark ? 'border-slate-700' : 'border-gray-50'}`}>
+                  <button
+                    key={`${n.id}_${n.receivedAt}`}
+                    onClick={() => handleItemClick(n.itemId)}
+                    className={`w-full px-4 py-3 border-b last:border-b-0 flex items-center gap-3 transition-colors ${dark ? 'border-slate-700 hover:bg-slate-700' : 'border-gray-50 hover:bg-gray-50'}`}
+                  >
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${dark ? 'bg-amber-900/40' : 'bg-amber-50'}`}>
                       <AlertCircle size={16} className={dark ? 'text-amber-400' : 'text-amber-600'} />
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 text-left">
                       <p className={`text-sm font-bold truncate ${dark ? 'text-slate-100' : 'text-gray-900'}`}>{n.itemName}</p>
                       <p className={`text-xs ${dark ? 'text-slate-500' : 'text-gray-400'}`}>
                         {n.receivedAt ? new Date(n.receivedAt).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : ''}
                       </p>
                     </div>
+                    <ChevronRight size={16} className={dark ? 'text-slate-600' : 'text-gray-300'} />
                     <button
-                      onClick={() => setHistory(prev => prev.filter(p => !(p.id === n.id && p.receivedAt === n.receivedAt)))}
+                      onClick={(e) => { e.stopPropagation(); setHistory(prev => prev.filter(p => !(p.id === n.id && p.receivedAt === n.receivedAt))); }}
                       className={`p-1 rounded-full transition-colors ${dark ? 'text-slate-600 hover:text-slate-400' : 'text-gray-300 hover:text-gray-500'}`}
                     >
                       <X size={14} />
                     </button>
-                  </div>
+                  </button>
                 ))
               )}
             </div>

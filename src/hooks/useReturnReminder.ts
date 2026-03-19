@@ -92,6 +92,7 @@ export function useReturnReminder() {
 
         const notification: ReturnNotificationData = {
           id: key,
+          itemId: item.id,
           itemName: item.name,
           days: settings.notificationIntervalDays,
         };
