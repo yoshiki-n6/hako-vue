@@ -39,7 +39,7 @@ export const sendReturnReminders = onSchedule({
     // 返却期限超過のアイテムを抽出
     itemsSnapshot.forEach((doc) => {
       const item = doc.data();
-      
+
       // ★ここで「持ち出し中」以外のデータをスキップ（ここで絞り込みを行う）
       if (item.status !== 'taken_out') return;
 
@@ -50,7 +50,7 @@ export const sendReturnReminders = onSchedule({
       const elapsedDays = (now - takenOutAt) / (24 * 60 * 60 * 1000);
 
       // 【テスト用】ステータスがtaken_outなら、経過時間に関係なく全て送る！
-      const intervalDays = 0; 
+      const intervalDays = 0;
       if (elapsedDays >= 0) {
         const key = `${userId}_${intervalDays}`;
         if (!notificationsToSend[key]) {
@@ -91,6 +91,7 @@ export const sendReturnReminders = onSchedule({
               },
               data: {
                 itemId: item.id,
+                itemName: item.name,
                 userId: data.userId,
               },
             });

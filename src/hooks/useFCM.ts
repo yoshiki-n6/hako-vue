@@ -134,12 +134,18 @@ export function useFCM() {
 
             // アプリ内トースト通知としてもディスパッチ
             const itemId = payload.data?.itemId || '';
+
+            // functions側で `data.itemName` を送るように対応するまでのフォールバックとして、
+            // body（「○○」を返却しましたか？）からアイテム名を正規表現で抽出します。
+            const extractedItemName = payload.notification?.body?.match(/「(.*?)」/)?.[1];
+            const itemNameText = payload.data?.itemName || extractedItemName || 'アイテム';
+
             window.dispatchEvent(
               new CustomEvent('return-reminder-notification', {
                 detail: {
                   id: payload.messageId || Date.now().toString(),
                   itemId,
-                  itemName: payload.notification?.title || '返却リマインド',
+                  itemName: itemNameText,
                   days: 1,
                   receivedAt: Date.now(),
                 },
