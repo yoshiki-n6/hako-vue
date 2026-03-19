@@ -128,26 +128,29 @@ export function ReturnNotificationContainer() {
 export function NotificationBell() {
   const [history, setHistory] = useState<ReturnNotificationData[]>([]);
   const [open, setOpen] = useState(false);
+  const [initialized, setInitialized] = useState(false);
   const { settings } = useAppSettings();
   const navigate = useNavigate();
   const dark = settings.darkMode;
 
-  // localStorageから初期化
+  // localStorageから初期化（マウント時のみ）
   useEffect(() => {
     const saved = localStorage.getItem('hako-notification-history');
     if (saved) {
       try {
         setHistory(JSON.parse(saved));
       } catch (e) {
-        console.log('[v0] Failed to load notification history:', e);
+        // ignore
       }
     }
+    setInitialized(true);
   }, []);
 
-  // 履歴をlocalStorageに保存（変更検知）
+  // 初期化完了後のみlocalStorageに保存（空での上書きを防ぐ）
   useEffect(() => {
+    if (!initialized) return;
     localStorage.setItem('hako-notification-history', JSON.stringify(history));
-  }, [history]);
+  }, [history, initialized]);
 
   useEffect(() => {
     const handler = (event: CustomEvent<ReturnNotificationData>) => {

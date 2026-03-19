@@ -647,9 +647,6 @@ export default function ProfileScreen() {
           <div className={`rounded-3xl w-full max-w-sm shadow-2xl ${dark ? 'bg-slate-800' : 'bg-white'}`}>
             <div className={`flex items-center justify-between px-6 py-5 border-b ${dark ? 'border-slate-700' : 'border-gray-100'}`}>
               <h3 className={`text-lg font-bold ${text}`}>アプリ設定</h3>
-              <button onClick={() => setShowAppSettings(false)} className={`p-1.5 rounded-full transition-colors ${dark ? 'hover:bg-slate-700' : 'hover:bg-gray-100'}`}>
-                <X size={20} className={dark ? 'text-slate-400' : 'text-gray-500'} />
-              </button>
             </div>
             <div className="p-5 space-y-2">
               {/* Dark Mode */}
