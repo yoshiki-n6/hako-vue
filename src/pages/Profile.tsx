@@ -651,8 +651,6 @@ export default function ProfileScreen() {
                 <X size={20} className={dark ? 'text-slate-400' : 'text-gray-500'} />
               </button>
             </div>
-
-            <div className="p-5 space-y-2">
               {/* Dark Mode */}
               <div className={`flex items-center justify-between p-4 rounded-2xl ${dark ? 'bg-slate-700' : 'bg-gray-50'}`}>
                 <div className="flex items-center gap-3">

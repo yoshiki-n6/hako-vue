@@ -132,6 +132,23 @@ export function NotificationBell() {
   const navigate = useNavigate();
   const dark = settings.darkMode;
 
+  // localStorageから初期化
+  useEffect(() => {
+    const saved = localStorage.getItem('hako-notification-history');
+    if (saved) {
+      try {
+        setHistory(JSON.parse(saved));
+      } catch (e) {
+        console.log('[v0] Failed to load notification history:', e);
+      }
+    }
+  }, []);
+
+  // 履歴をlocalStorageに保存（変更検知）
+  useEffect(() => {
+    localStorage.setItem('hako-notification-history', JSON.stringify(history));
+  }, [history]);
+
   useEffect(() => {
     const handler = (event: CustomEvent<ReturnNotificationData>) => {
       const n = { ...event.detail, receivedAt: Date.now() };
