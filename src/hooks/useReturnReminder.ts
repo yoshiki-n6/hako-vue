@@ -34,10 +34,17 @@ export function useReturnReminder() {
 
     const checkAndNotify = () => {
       const now = Date.now();
-      const intervalDays = settings.notificationIntervalDays;
+      let intervalDays = settings.notificationIntervalDays;
+      
+      // デバッグ: 30秒後ボタン（0.000347日）が選ばれた場合、30秒で判定
+      const isDebugMode = intervalDays === 0.000347;
+      if (isDebugMode) {
+        intervalDays = 30 / (24 * 60 * 60); // 30秒をミリ秒→日に変換
+      }
+      
       const thresholdMs = intervalDays * 24 * 60 * 60 * 1000;
 
-      console.log("[v0] Checking for overdue items. Time:", new Date(now).toLocaleTimeString(), "Threshold:", thresholdMs / 1000, "seconds");
+      console.log("[v0] Checking for overdue items. Time:", new Date(now).toLocaleTimeString(), "Threshold:", Math.floor(thresholdMs / 1000), "seconds (DEBUG MODE:", isDebugMode, ")");
 
       const overdue = items.filter(item => {
         if (item.status !== 'taken_out') return false;
@@ -55,7 +62,7 @@ export function useReturnReminder() {
       console.log("[v0] Overdue items found:", overdue.length);
 
       overdue.forEach(item => {
-        const key = `${item.id}_${intervalDays}`;
+        const key = `${item.id}_${settings.notificationIntervalDays}`;
         
         // 既に通知済みかチェック
         if (notifiedItemsRef.current.has(key)) {
@@ -77,7 +84,7 @@ export function useReturnReminder() {
         const notification: ReturnNotificationData = {
           id: key,
           itemName: item.name,
-          days: intervalDays,
+          days: settings.notificationIntervalDays,
         };
 
         // Dispatch custom event to ReturnNotificationContainer
@@ -92,7 +99,7 @@ export function useReturnReminder() {
       const currentTakenOutIds = new Set(
         items
           .filter(item => item.status === 'taken_out' && item.takenOutBy === currentUser.uid)
-          .map(i => `${i.id}_${intervalDays}`)
+          .map(i => `${i.id}_${settings.notificationIntervalDays}`)
       );
       
       const keysToDelete: string[] = [];
