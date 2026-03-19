@@ -10,9 +10,9 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.jpg', 'pwa-192x192.jpg', 'pwa-512x512.jpg'],
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,jpg,svg,woff2}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api/],
         runtimeCaching: [
@@ -41,21 +41,21 @@ export default defineConfig({
         lang: 'ja',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'pwa-192x192.jpg',
             sizes: '192x192',
-            type: 'image/png',
+            type: 'image/jpeg',
             purpose: 'any'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'pwa-512x512.jpg',
             sizes: '512x512',
-            type: 'image/png',
+            type: 'image/jpeg',
             purpose: 'any maskable'
           },
           {
-            src: 'apple-touch-icon.png',
+            src: 'apple-touch-icon.jpg',
             sizes: '180x180',
-            type: 'image/png',
+            type: 'image/jpeg',
             purpose: 'apple touch icon'
           }
         ]
