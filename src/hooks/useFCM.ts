@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { useAuth } from '../contexts/AuthContext';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 
 export function useFCM() {
@@ -21,21 +21,30 @@ export function useFCM() {
         }
 
         const messaging = getMessaging();
-        
+
         // Request notification permission if not already granted
         if (Notification.permission === 'granted') {
           try {
+            // Service Worker が準備完了するのを待つ
+            const registration = await navigator.serviceWorker.ready;
+
             const token = await getToken(messaging, {
               vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+              serviceWorkerRegistration: registration,
             });
 
             if (token) {
-              console.log('[v0] FCM Token obtained:', token);
-              
-              // Save token to Firestore user document
-              await updateDoc(doc(db, 'users', currentUser.uid), {
-                fcmToken: token,
-                fcmTokenUpdatedAt: serverTimestamp(),
+              console.log('[v0] FCM Token obtained:', token.substring(0, 20) + '...');
+
+              // Save token to Firestore user document - fcmTokens 配列に追加
+              const userRef = doc(db, 'users', currentUser.uid);
+              await updateDoc(userRef, {
+                fcmTokens: arrayUnion({
+                  token,
+                  createdAt: new Date().toISOString(),
+                  userAgent: navigator.userAgent,
+                }),
+                lastFCMTokenUpdate: serverTimestamp(),
               });
 
               console.log('[v0] FCM Token saved to Firestore');
@@ -47,18 +56,29 @@ export function useFCM() {
 
         // Listen for foreground messages (when app is open)
         const unsubscribe = onMessage(messaging, (payload) => {
-          console.log('[v0] Foreground message received:', payload);
-          
+          console.log('[v0] Foreground FCM message received:', payload);
+
           if (payload.notification) {
-            new Notification(payload.notification.title || 'Notification', {
+            // ブラウザネイティブ通知
+            new Notification(payload.notification.title || '通知', {
               body: payload.notification.body,
               icon: payload.notification.icon || '/pwa-192x192.jpg',
+              data: payload.data,
             });
           }
 
-          // Also dispatch custom event for app-level handling
+          // アプリ内トースト通知としてもディスパッチ
+          const itemId = payload.data?.itemId || '';
           window.dispatchEvent(
-            new CustomEvent('fcm-message', { detail: payload })
+            new CustomEvent('return-reminder-notification', {
+              detail: {
+                id: payload.messageId || Date.now().toString(),
+                itemId,
+                itemName: payload.notification?.title || '返却リマインド',
+                days: 1,
+                receivedAt: Date.now(),
+              },
+            })
           );
         });
 
