@@ -1,8 +1,31 @@
-/* hako Service Worker - バックグラウンド通知対応 */
+/* hako Service Worker - FCM & バックグラウンド通知対応 */
 const CACHE_NAME = 'hako-sw-v1';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+
+// FCM: バックグラウンド通知受信
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  try {
+    const payload = event.data.json();
+    const { title = '通知', body = '', icon = '/pwa-192x192.jpg', tag = 'hako-notification', data = {} } = payload.notification || {};
+
+    event.waitUntil(
+      self.registration.showNotification(title, {
+        body,
+        icon,
+        badge: icon,
+        tag,
+        data,
+        requireInteraction: false,
+      })
+    );
+  } catch (e) {
+    console.error('[sw] Error parsing push message:', e);
+  }
+});
 
 // アプリからのメッセージで通知（フォアグラウンド時）
 self.addEventListener('message', (event) => {
