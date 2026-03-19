@@ -4,9 +4,27 @@ import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import type { ReturnNotificationData } from '../components/ReturnNotification';
 
-// デバッグ用: 30秒ごとにチェック
-// デバッグオプション: window.__DEBUG_REMINDER__ = true でコンソールログ有効化、3秒に短縮
-const CHECK_INTERVAL_MS = (window as any).__DEBUG_REMINDER__ === true ? 3 * 1000 : 30 * 1000;
+const CHECK_INTERVAL_MS = 30 * 1000;
+
+// Service Worker登録
+async function registerSW() {
+  if ('serviceWorker' in navigator) {
+    try {
+      await navigator.serviceWorker.register('/sw.js');
+    } catch (e) {
+      console.log('[v0] SW registration failed:', e);
+    }
+  }
+}
+
+// Service Worker経由で通知を送る（バックグラウンド対応）
+async function sendNotificationViaSW(title: string, body: string, tag: string) {
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({ type: 'SHOW_NOTIFICATION', title, body, tag });
+    return true;
+  }
+  return false;
+}
 
 export function useReturnReminder() {
   const { settings } = useAppSettings();
@@ -15,114 +33,88 @@ export function useReturnReminder() {
   const notifiedItemsRef = useRef<Set<string>>(new Set());
   const lastCheckTimeRef = useRef<{ [key: string]: number }>({});
 
-  // Request notification permission on mount
+  // Service Worker登録 & 通知権限リクエスト
   useEffect(() => {
+    registerSW();
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
   }, []);
 
   useEffect(() => {
-    if (!settings.notificationsEnabled) {
-      console.log("[v0] Notifications disabled");
-      return;
-    }
-    if (!currentUser) {
-      console.log("[v0] No current user");
-      return;
-    }
+    if (!settings.notificationsEnabled) return;
+    if (!currentUser) return;
 
     const checkAndNotify = () => {
       const now = Date.now();
       let intervalDays = settings.notificationIntervalDays;
-      
-      // デバッグ: 30秒後ボタン（0.000347日）が選ばれた場合、30秒で判定
-      const isDebugMode = intervalDays === 0.000347;
+
+      // デバッグ: 30秒後ボタン（0.000347日または旧値0.0347）が選ばれた場合、30秒で判定
+      const isDebugMode = intervalDays === 0.000347 || intervalDays === 0.0347;
       if (isDebugMode) {
-        intervalDays = 30 / (24 * 60 * 60); // 30秒をミリ秒→日に変換
+        intervalDays = 30 / (24 * 60 * 60); // 正確に30秒
       }
-      
+
       const thresholdMs = intervalDays * 24 * 60 * 60 * 1000;
 
-      console.log("[v0] Checking for overdue items. Time:", new Date(now).toLocaleTimeString(), "Threshold:", Math.floor(thresholdMs / 1000), "seconds (DEBUG MODE:", isDebugMode, ")");
+      console.log('[v0] Checking. Threshold:', Math.floor(thresholdMs / 1000), 'sec, DEBUG:', isDebugMode);
 
       const overdue = items.filter(item => {
         if (item.status !== 'taken_out') return false;
         if (item.takenOutBy !== currentUser.uid) return false;
-        
-        // 最新の日時を使用（更新時刻を優先）
         const takenOutAt = item.updatedAt?.toMillis?.() || item.createdAt?.toMillis?.() || 0;
         const elapsedMs = now - takenOutAt;
-        const isOverdue = elapsedMs >= thresholdMs;
-        
-        console.log("[v0] Item:", item.name, "elapsed:", Math.floor(elapsedMs / 1000), "sec, threshold:", Math.floor(thresholdMs / 1000), "sec, isOverdue:", isOverdue);
-        return isOverdue;
+        console.log('[v0] Item:', item.name, 'elapsed:', Math.floor(elapsedMs / 1000), 'sec, isOverdue:', elapsedMs >= thresholdMs);
+        return elapsedMs >= thresholdMs;
       });
-
-      console.log("[v0] Overdue items found:", overdue.length);
 
       overdue.forEach(item => {
         const key = `${item.id}_${settings.notificationIntervalDays}`;
-        
-        // 既に通知済みかチェック
-        if (notifiedItemsRef.current.has(key)) {
-          console.log("[v0] Item already notified:", item.name);
-          return;
-        }
-
-        // 重複通知を防ぐため、5秒以内の再通知は無視
+        if (notifiedItemsRef.current.has(key)) return;
         const lastNotifyTime = lastCheckTimeRef.current[key] || 0;
-        if (now - lastNotifyTime < 5000) {
-          console.log("[v0] Item notification throttled (too soon):", item.name);
-          return;
-        }
+        if (now - lastNotifyTime < 5000) return;
 
-        console.log("[v0] Sending notification for:", item.name);
         notifiedItemsRef.current.add(key);
         lastCheckTimeRef.current[key] = now;
-        
+
         const notification: ReturnNotificationData = {
           id: key,
           itemName: item.name,
           days: settings.notificationIntervalDays,
         };
 
-        // Dispatch custom event to ReturnNotificationContainer
-        console.log("[v0] Dispatching event with data:", notification);
-        window.dispatchEvent(
-          new CustomEvent('return-reminder-notification', { detail: notification })
-        );
-        console.log("[v0] Event dispatched");
+        // アプリ内トースト通知
+        window.dispatchEvent(new CustomEvent('return-reminder-notification', { detail: notification }));
+
+        // バックグラウンド対応: Service Worker経由でプッシュ通知
+        const title = '返却の確認';
+        const body = `「${item.name}」を返却しましたか？`;
+        sendNotificationViaSW(title, body, key).then(sent => {
+          if (!sent && 'Notification' in window && Notification.permission === 'granted') {
+            new Notification(title, { body, icon: '/favicon.ico', tag: key });
+          }
+        });
+
+        console.log('[v0] Notification dispatched for:', item.name);
       });
 
-      // Clean up keys for items that are no longer taken out
+      // 返却済みアイテムのキーをクリーンアップ
       const currentTakenOutIds = new Set(
         items
           .filter(item => item.status === 'taken_out' && item.takenOutBy === currentUser.uid)
           .map(i => `${i.id}_${settings.notificationIntervalDays}`)
       );
-      
-      const keysToDelete: string[] = [];
       notifiedItemsRef.current.forEach(key => {
         if (!currentTakenOutIds.has(key)) {
-          console.log("[v0] Cleaning up notification key (item returned):", key);
-          keysToDelete.push(key);
+          notifiedItemsRef.current.delete(key);
+          delete lastCheckTimeRef.current[key];
         }
-      });
-      
-      keysToDelete.forEach(key => {
-        notifiedItemsRef.current.delete(key);
-        delete lastCheckTimeRef.current[key];
       });
     };
 
-    // Run immediately, then on interval
-    console.log("[v0] Return reminder started. Check interval:", CHECK_INTERVAL_MS / 1000, "seconds");
     checkAndNotify();
     const timer = setInterval(checkAndNotify, CHECK_INTERVAL_MS);
-    return () => {
-      console.log("[v0] Return reminder stopped");
-      clearInterval(timer);
-    };
+    return () => clearInterval(timer);
   }, [settings.notificationsEnabled, settings.notificationIntervalDays, items, currentUser]);
 }
+

@@ -6,6 +6,7 @@ import { useAppSettings } from '../contexts/AppSettingsContext';
 import { MapPin, QrCode, Box, ChevronRight, Home as HomeIcon, Users, RotateCcw, History, ArrowUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { generateDefaultAvatarDataURL, getAvatarColorFromUserId } from '../utils/avatarUtils';
+import { NotificationBell } from '../components/ReturnNotification';
 
 export default function Home() {
   const { currentUser } = useAuth();
@@ -79,6 +80,7 @@ export default function Home() {
           )}
         </div>
         <div className="flex items-center gap-3">
+          <NotificationBell />
           <Link to="/scan" className={`w-10 h-10 rounded-full shadow-sm border flex items-center justify-center transition-colors ${dark ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-blue-400' : 'bg-white border-gray-100 text-gray-600 hover:text-blue-600 hover:border-blue-200'}`}>
             <QrCode size={20} />
           </Link>
