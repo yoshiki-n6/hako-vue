@@ -40,7 +40,10 @@ export default function ProfileScreen() {
       setNickname(userProfile.nickname || '');
       const photo = userProfile.photoURL || '';
       setPhotoPreview(photo);
-      setInitialPhotoURL(photo);
+      // initialPhotoURLはdefaultAvatarURLを優先。なければ初回のみ設定
+      setInitialPhotoURL(prev => prev || userProfile.defaultAvatarURL || photo);
+      console.log('[v0] userProfile.defaultAvatarURL:', userProfile.defaultAvatarURL?.slice(0, 80));
+      console.log('[v0] userProfile.photoURL:', userProfile.photoURL?.slice(0, 80));
     }
   }, [userProfile]);
 
@@ -251,6 +254,8 @@ export default function ProfileScreen() {
                   onClick={() => {
                     setPhotoFile(null);
                     const defaultAvatar = userProfile?.defaultAvatarURL || initialPhotoURL;
+                    console.log('[v0] reset - defaultAvatarURL:', defaultAvatar?.slice(0, 80));
+                    console.log('[v0] reset - initialPhotoURL:', initialPhotoURL?.slice(0, 80));
                     setPhotoPreview(defaultAvatar);
                     if (fileInputRef.current) fileInputRef.current.value = '';
                   }}
