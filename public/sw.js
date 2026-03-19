@@ -1,5 +1,5 @@
 /* hako Service Worker - FCM & バックグラウンド通知対応 */
-const CACHE_NAME = 'hako-sw-v3';
+const CACHE_NAME = 'hako-sw-v4';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
@@ -13,31 +13,27 @@ self.addEventListener('push', (event) => {
     console.log('[sw] Push payload received:', payload);
 
     const { title = '通知', body = '', icon = '/pwa-192x192.jpg', data = {} } = payload.notification || {};
-    // OSの通知センターでまとめられてポップアップが出なくなるのを防ぐため、必ずユニークなタグにする
     const tag = payload.notification?.tag || payload.messageId || String(Date.now());
 
-    // iOS Web Push (PWA) の非常に厳格な仕様対策：
-    // 1つの event.waitUntil 内で、一番最初に showNotification を呼び出してPromiseチェーンとしてつなぎます。
     const promiseChain = self.registration.showNotification(title, {
       body,
       icon,
-      badge: icon,
       tag,
       data,
     }).catch((e) => {
       console.error('[sw] showNotification failed on iOS:', e);
-    }).then(() => {
-      // ブラウザの通知表示に成功した後、フォアグラウンドのReactアプリにデータを送信 (トースト用)
-      return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    }).then((clients) => {
-      for (const client of clients) {
-        client.postMessage({
+    }).finally(() => {
+      // プラウザの通知表示に関わらず BroadcastChannel を使って全画面に一斉送信
+      try {
+        const channel = new BroadcastChannel('fcm-push-channel');
+        channel.postMessage({
           type: 'FCM_PUSH_RECEIVED',
           payload: payload
         });
+        channel.close();
+      } catch (e) {
+        console.error('[sw] BroadcastChannel error:', e);
       }
-    }).catch((e) => {
-      console.error('[sw] Error in push handling chain:', e);
     });
 
     event.waitUntil(promiseChain);

@@ -126,33 +126,36 @@ export function useFCM() {
         // 起動時にトークン取得＆保存を実行
         await requestAndSaveFCMToken(currentUser);
 
-        // Listen for messages manually broadcasted by our custom sw.js
-        navigator.serviceWorker.addEventListener('message', (event) => {
-          if (event.data?.type === 'FCM_PUSH_RECEIVED') {
-            const payload = event.data.payload;
-            console.log('[v0] Foreground FCM message received via sw.js:', payload);
+        // Listen for messages manually broadcasted by our custom sw.js via BroadcastChannel
+        if ('BroadcastChannel' in window) {
+          const channel = new BroadcastChannel('fcm-push-channel');
+          channel.onmessage = (event) => {
+            if (event.data?.type === 'FCM_PUSH_RECEIVED') {
+              const payload = event.data.payload;
+              console.log('[v0] Foreground FCM message received via BroadcastChannel:', payload);
 
-            // アプリ内トースト通知としてもディスパッチ
-            const itemId = payload.data?.itemId || '';
+              // アプリ内トースト通知としてもディスパッチ
+              const itemId = payload.data?.itemId || '';
 
-            // functions側で `data.itemName` を送るように対応するまでのフォールバックとして、
-            // body（「○○」を返却しましたか？）からアイテム名を正規表現で抽出します。
-            const extractedItemName = payload.notification?.body?.match(/「(.*?)」/)?.[1];
-            const itemNameText = payload.data?.itemName || extractedItemName || 'アイテム';
+              // functions側で `data.itemName` を送るように対応するまでのフォールバックとして、
+              // body（「○○」を返却しましたか？）からアイテム名を正規表現で抽出します。
+              const extractedItemName = payload.notification?.body?.match(/「(.*?)」/)?.[1];
+              const itemNameText = payload.data?.itemName || extractedItemName || 'アイテム';
 
-            window.dispatchEvent(
-              new CustomEvent('return-reminder-notification', {
-                detail: {
-                  id: payload.messageId || Date.now().toString(),
-                  itemId,
-                  itemName: itemNameText,
-                  days: 1,
-                  receivedAt: Date.now(),
-                },
-              })
-            );
-          }
-        });
+              window.dispatchEvent(
+                new CustomEvent('return-reminder-notification', {
+                  detail: {
+                    id: payload.messageId || Date.now().toString(),
+                    itemId,
+                    itemName: itemNameText,
+                    days: 1,
+                    receivedAt: Date.now(),
+                  },
+                })
+              );
+            }
+          };
+        }
 
       } catch (error) {
         console.error('[v0] FCM initialization error:', error);
