@@ -4,6 +4,7 @@ import { useData } from '../contexts/DataContext';
 import { useChannel } from '../contexts/ChannelContext';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useAppSettings } from '../contexts/AppSettingsContext';
 
 export default function ItemDetailScreen() {
   const navigate = useNavigate();
@@ -11,6 +12,8 @@ export default function ItemDetailScreen() {
   const { items, locations, updateItemStatus, updateItem, deleteItem, toggleItemFavorite, isItemFavorite } = useData();
   const { currentChannel, getChannelMembers } = useChannel();
   const { currentUser } = useAuth();
+  const { settings } = useAppSettings();
+  const dark = settings.darkMode;
   
   // 一人暮らし用チャンネルかどうか
   const isSoloChannel = currentChannel?.type === 'solo';
@@ -38,7 +41,7 @@ export default function ItemDetailScreen() {
   const locationData = itemData ? locations.find(l => l.id === itemData.locationId) : null;
 
   if (!itemData || !locationData) {
-    return <div className="p-8 text-center text-gray-500">アイテムが見つかりません</div>;
+    return <div className={`p-8 text-center ${dark ? 'bg-slate-900 text-slate-400' : 'text-gray-500'}`}>アイテムが見つかりません</div>;
   }
 
   const item = {
@@ -91,7 +94,7 @@ export default function ItemDetailScreen() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 max-w-md mx-auto pb-24 relative">
+    <div className={`flex flex-col min-h-screen max-w-md mx-auto pb-24 relative ${dark ? 'bg-slate-900' : 'bg-gray-50'}`}>
       {/* Back button */}
       <button onClick={() => navigate(-1)} className="absolute top-4 left-4 z-20 p-2.5 bg-black/40 backdrop-blur-md text-white rounded-full hover:bg-black/60 transition-colors">
         <ArrowLeft size={20} strokeWidth={3} />
@@ -108,16 +111,16 @@ export default function ItemDetailScreen() {
         {showMenu && (
           <>
             <div className="fixed inset-0 z-20" onClick={() => setShowMenu(false)} />
-            <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-30 min-w-[140px]">
+            <div className={`absolute right-0 top-full mt-1 rounded-xl shadow-lg border py-1 z-30 min-w-[140px] ${dark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-100'}`}>
               <button 
                 onClick={handleOpenEdit}
-                className="w-full px-4 py-2.5 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                className={`w-full px-4 py-2.5 text-left text-sm font-medium flex items-center gap-2 transition-colors ${dark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-50'}`}
               >
                 <Edit2 size={16} /> 編集
               </button>
               <button 
                 onClick={() => { setShowMenu(false); setShowDeleteConfirm(true); }}
-                className="w-full px-4 py-2.5 text-left text-sm font-medium text-red-600 hover:bg-red-50 flex items-center gap-2"
+                className={`w-full px-4 py-2.5 text-left text-sm font-medium text-red-500 flex items-center gap-2 transition-colors ${dark ? 'hover:bg-red-900/20' : 'hover:bg-red-50'}`}
               >
                 <Trash2 size={16} /> 削除
               </button>
@@ -150,20 +153,20 @@ export default function ItemDetailScreen() {
           </div>
         )}
 
-        <div className="absolute bottom-5 left-5 right-5 text-white">
-          <h1 className="text-3xl font-extrabold tracking-tight drop-shadow-md">{item.name}</h1>
+        <div className="absolute bottom-5 left-5 right-5 text-white min-w-0">
+          <h1 className="text-3xl font-extrabold tracking-tight drop-shadow-md line-clamp-2">{item.name}</h1>
         </div>
       </div>
 
-      <main className="flex-1 p-5 -mt-4 relative z-10 bg-gray-50 rounded-t-3xl border-t border-gray-100">
+      <main className={`flex-1 p-5 -mt-4 relative z-10 rounded-t-3xl border-t ${dark ? 'bg-slate-900 border-slate-700' : 'bg-gray-50 border-gray-100'}`}>
         {/* Context Location Card */}
         <section className="mb-6">
-           <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+           <h2 className={`text-xs font-bold uppercase tracking-widest mb-3 flex items-center gap-1.5 ${dark ? 'text-slate-500' : 'text-gray-400'}`}>
              <MapPin size={14} /> 収納場所の風景
            </h2>
            <div 
              onClick={() => navigate(`/locations/${item.locationId}`)}
-             className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 group cursor-pointer active:scale-[0.98] transition-transform"
+             className={`rounded-2xl overflow-hidden shadow-sm border group cursor-pointer active:scale-[0.98] transition-transform ${dark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-100'}`}
            >
               <div className="relative h-40 w-full bg-gray-200">
                  <img src={item.landscapePhoto} alt="場所の風景" className="w-full h-full object-cover" />
@@ -175,28 +178,28 @@ export default function ItemDetailScreen() {
                    </p>
                  </div>
               </div>
-              <div className="p-4 flex justify-between items-center bg-white relative z-20">
-                 <h3 className="font-bold text-gray-900 text-base">{item.locationName}</h3>
-                 <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full hover:bg-blue-100 transition-colors shadow-sm cursor-pointer active:scale-95">場所を見る</span>
+              <div className={`p-4 flex justify-between items-center relative z-20 min-w-0 ${dark ? 'bg-slate-800' : 'bg-white'}`}>
+                 <h3 className={`font-bold text-base truncate ${dark ? 'text-slate-100' : 'text-gray-900'}`}>{item.locationName}</h3>
+                 <span className={`text-xs font-bold px-3 py-1.5 rounded-full shadow-sm cursor-pointer active:scale-95 transition-colors ${dark ? 'text-blue-400 bg-blue-900/40 hover:bg-blue-900/60' : 'text-blue-600 bg-blue-50 hover:bg-blue-100'}`}>場所を見る</span>
               </div>
            </div>
         </section>
 
         {/* Info Grid */}
         <section className="grid grid-cols-2 gap-3 mb-8">
-           <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-              <div className="flex items-center gap-1.5 text-gray-400 mb-2">
+           <div className={`p-4 rounded-2xl shadow-sm border ${dark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-100'}`}>
+              <div className={`flex items-center gap-1.5 mb-2 ${dark ? 'text-slate-500' : 'text-gray-400'}`}>
                 <User size={14} />
                 <span className="text-xs font-bold uppercase tracking-wider">登録者</span>
               </div>
-              <p className="font-bold text-gray-800">{item.registeredBy}</p>
+              <p className={`font-bold ${dark ? 'text-slate-100' : 'text-gray-800'}`}>{item.registeredBy}</p>
            </div>
-           <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-              <div className="flex items-center gap-1.5 text-gray-400 mb-2">
+           <div className={`p-4 rounded-2xl shadow-sm border ${dark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-100'}`}>
+              <div className={`flex items-center gap-1.5 mb-2 ${dark ? 'text-slate-500' : 'text-gray-400'}`}>
                 <Clock size={14} />
                 <span className="text-xs font-bold uppercase tracking-wider">登録日</span>
               </div>
-              <p className="font-bold text-gray-800 text-sm">{item.registeredAt}</p>
+              <p className={`font-bold text-sm ${dark ? 'text-slate-100' : 'text-gray-800'}`}>{item.registeredAt}</p>
            </div>
         </section>
       </main>
@@ -213,8 +216,8 @@ export default function ItemDetailScreen() {
           }}
           className={`w-full font-bold text-sm py-3.5 rounded-xl shadow-sm transition-all flex justify-center items-center gap-2 border-2 ${
             isItemFavorite(itemData.id)
-              ? 'bg-yellow-50 text-yellow-600 border-yellow-200 hover:bg-yellow-100 active:scale-95'
-              : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 active:scale-95'
+              ? dark ? 'bg-yellow-900/40 text-yellow-400 border-yellow-700 hover:bg-yellow-900/60' : 'bg-yellow-50 text-yellow-600 border-yellow-200 hover:bg-yellow-100 active:scale-95'
+              : dark ? 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 active:scale-95'
           }`}
         >
           <Star size={18} fill={isItemFavorite(itemData.id) ? 'currentColor' : 'none'} />
@@ -224,16 +227,16 @@ export default function ItemDetailScreen() {
 
       {/* Floating Action Bar - 共有用チャンネルのみ表示 */}
       {!isSoloChannel && (
-        <div className="fixed bottom-0 inset-x-0 w-full max-w-md mx-auto p-4 bg-white/90 backdrop-blur-md border-t border-gray-100 z-20 pb-8 flex justify-center gap-3">
+        <div className={`fixed bottom-0 inset-x-0 w-full max-w-md mx-auto p-4 z-20 pb-8 flex justify-center gap-3 border-t backdrop-blur-md ${dark ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-100'}`}>
           <button 
             onClick={handleStatusToggle}
             disabled={item.status === 'taken_out' && item.takenOutBy !== currentUser?.uid}
             className={`flex-1 font-bold text-sm py-3.5 rounded-xl shadow-sm transition-all flex justify-center items-center gap-2 border-2 ${
               item.status === 'stored' 
-                ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100 active:scale-95' 
+                ? dark ? 'bg-amber-900/40 text-amber-400 border-amber-700 hover:bg-amber-900/60' : 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100 active:scale-95' 
                 : item.takenOutBy && item.takenOutBy === currentUser?.uid
-                ? 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 active:scale-95'
-                : 'bg-red-50 text-red-600 border-red-200 cursor-not-allowed'
+                ? dark ? 'bg-emerald-900/40 text-emerald-400 border-emerald-700 hover:bg-emerald-900/60' : 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 active:scale-95'
+                : dark ? 'bg-red-900/40 text-red-400 border-red-700 cursor-not-allowed' : 'bg-red-50 text-red-600 border-red-200 cursor-not-allowed'
             }`}
           >
             {item.status === 'stored' ? (
@@ -251,39 +254,39 @@ export default function ItemDetailScreen() {
       {showEditModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setShowEditModal(false)}></div>
-          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto">
+          <div className={`rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto ${dark ? 'bg-slate-800' : 'bg-white'}`}>
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-extrabold text-gray-900">アイテムを編集</h2>
-                <button onClick={() => setShowEditModal(false)} className="p-2 hover:bg-gray-100 rounded-full">
-                  <X size={20} className="text-gray-500" />
+                <h2 className={`text-lg font-extrabold ${dark ? 'text-slate-100' : 'text-gray-900'}`}>アイテムを編集</h2>
+                <button onClick={() => setShowEditModal(false)} className={`p-2 rounded-full transition-colors ${dark ? 'hover:bg-slate-700' : 'hover:bg-gray-100'}`}>
+                  <X size={20} className={dark ? 'text-slate-400' : 'text-gray-500'} />
                 </button>
               </div>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">名前</label>
+                  <label className={`block text-sm font-bold mb-2 ${dark ? 'text-slate-300' : 'text-gray-700'}`}>名前</label>
                   <input
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 border ${dark ? 'bg-slate-700 border-slate-600 text-slate-100' : 'bg-gray-50 border-gray-200'}`}
                     placeholder="例: ドライバーセット"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">保管場所</label>
+                  <label className={`block text-sm font-bold mb-2 ${dark ? 'text-slate-300' : 'text-gray-700'}`}>保管場所</label>
                   <div className="relative">
                     <select
                       value={editLocationId}
                       onChange={(e) => setEditLocationId(e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                      className={`w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none border ${dark ? 'bg-slate-700 border-slate-600 text-slate-100' : 'bg-gray-50 border-gray-200'}`}
                     >
                       {locations.map(loc => (
                         <option key={loc.id} value={loc.id}>{loc.name}</option>
                       ))}
                     </select>
-                    <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    <ChevronDown size={16} className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none ${dark ? 'text-slate-500' : 'text-gray-400'}`} />
                   </div>
                 </div>
               </div>
@@ -291,7 +294,7 @@ export default function ItemDetailScreen() {
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => setShowEditModal(false)}
-                  className="flex-1 py-3 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+                  className={`flex-1 py-3 rounded-xl font-bold transition-colors ${dark ? 'text-slate-200 bg-slate-700 hover:bg-slate-600' : 'text-gray-600 bg-gray-100 hover:bg-gray-200'}`}
                 >
                   キャンセル
                 </button>
@@ -312,20 +315,20 @@ export default function ItemDetailScreen() {
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)}></div>
-          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative z-10">
+          <div className={`rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative z-10 ${dark ? 'bg-slate-800' : 'bg-white'}`}>
             <div className="p-6 text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Trash2 size={32} className="text-red-600" />
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${dark ? 'bg-red-900/40' : 'bg-red-100'}`}>
+                <Trash2 size={32} className={dark ? 'text-red-400' : 'text-red-600'} />
               </div>
-              <h2 className="text-lg font-extrabold text-gray-900 mb-2">このアイテムを削除しますか？</h2>
-              <p className="text-sm text-gray-500 mb-6">
+              <h2 className={`text-lg font-extrabold mb-2 ${dark ? 'text-slate-100' : 'text-gray-900'}`}>このアイテムを削除しますか？</h2>
+              <p className={`text-sm mb-6 ${dark ? 'text-slate-400' : 'text-gray-500'}`}>
                 この操作は取り消せません。
               </p>
               
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="flex-1 py-3 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+                  className={`flex-1 py-3 rounded-xl font-bold transition-colors ${dark ? 'text-slate-200 bg-slate-700 hover:bg-slate-600' : 'text-gray-600 bg-gray-100 hover:bg-gray-200'}`}
                 >
                   キャンセル
                 </button>

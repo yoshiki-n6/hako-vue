@@ -2,10 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Loader2, KeyRound, Check } from 'lucide-react';
 import { useChannel } from '../contexts/ChannelContext';
+import { useAppSettings } from '../contexts/AppSettingsContext';
 
 export default function ChannelJoinScreen() {
   const navigate = useNavigate();
   const { joinChannelByCode } = useChannel();
+  const { settings } = useAppSettings();
+  const dark = settings.darkMode;
   
   const [inviteCode, setInviteCode] = useState('');
   const [error, setError] = useState('');
@@ -35,9 +38,9 @@ export default function ChannelJoinScreen() {
   // Show success screen
   if (success) {
     return (
-      <div className="flex flex-col min-h-screen bg-white max-w-md mx-auto">
-        <header className="bg-white/95 backdrop-blur-md px-4 py-4 sticky top-0 z-10 border-b border-gray-100">
-          <button onClick={() => navigate('/profile')} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium">
+      <div className={`flex flex-col min-h-screen max-w-md mx-auto ${dark ? 'bg-slate-900' : 'bg-white'}`}>
+        <header className={`backdrop-blur-md px-4 py-4 sticky top-0 z-10 border-b ${dark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-100'}`}>
+          <button onClick={() => navigate('/profile')} className={`flex items-center gap-2 font-medium transition-colors ${dark ? 'text-slate-300 hover:text-slate-100' : 'text-gray-600 hover:text-gray-900'}`}>
             <ArrowLeft size={20} />
             マイページに戻る
           </button>
@@ -48,15 +51,15 @@ export default function ChannelJoinScreen() {
             <Check size={40} />
           </div>
           
-          <h1 className="text-2xl font-black text-gray-900 mb-2">参加しました</h1>
-          <p className="text-gray-500 text-center mb-8">
+          <h1 className={`text-2xl font-black mb-2 ${dark ? 'text-slate-100' : 'text-gray-900'}`}>参加しました</h1>
+          <p className={`text-center mb-8 ${dark ? 'text-slate-400' : 'text-gray-500'}`}>
             「{joinedChannelName}」に参加しました。<br />
             マイページからチャンネルを切り替えられます。
           </p>
 
           <button
             onClick={() => navigate('/profile')}
-            className="w-full max-w-xs bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+            className={`w-full max-w-xs font-bold py-4 rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2 ${dark ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
           >
             完了
             <ArrowRight size={18} />
@@ -67,9 +70,9 @@ export default function ChannelJoinScreen() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-white max-w-md mx-auto">
-      <header className="bg-white/95 backdrop-blur-md px-4 py-4 sticky top-0 z-10 border-b border-gray-100">
-        <button onClick={() => navigate('/profile')} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium">
+    <div className={`flex flex-col min-h-screen max-w-md mx-auto ${dark ? 'bg-slate-900' : 'bg-white'}`}>
+      <header className={`backdrop-blur-md px-4 py-4 sticky top-0 z-10 border-b ${dark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-100'}`}>
+        <button onClick={() => navigate('/profile')} className={`flex items-center gap-2 font-medium transition-colors ${dark ? 'text-slate-300 hover:text-slate-100' : 'text-gray-600 hover:text-gray-900'}`}>
           <ArrowLeft size={20} />
           戻る
         </button>
@@ -80,8 +83,8 @@ export default function ChannelJoinScreen() {
           <KeyRound size={32} />
         </div>
         
-        <h1 className="text-2xl font-black text-gray-900 mb-2">チャンネルに参加</h1>
-        <p className="text-gray-500 text-center mb-8">6桁の招待コードを入力</p>
+        <h1 className={`text-2xl font-black mb-2 ${dark ? 'text-slate-100' : 'text-gray-900'}`}>チャンネルに参加</h1>
+        <p className={`text-center mb-8 ${dark ? 'text-slate-400' : 'text-gray-500'}`}>6桁の招待コードを入力</p>
 
         <div className="w-full max-w-sm space-y-4">
           <input
@@ -90,7 +93,7 @@ export default function ChannelJoinScreen() {
             onChange={(e) => setInviteCode(e.target.value.toUpperCase().slice(0, 6))}
             placeholder="ABC123"
             maxLength={6}
-            className="w-full bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-4 text-center text-2xl font-bold tracking-widest text-gray-900 focus:border-blue-500 focus:outline-none transition-colors uppercase"
+            className={`w-full border-2 rounded-xl px-4 py-4 text-center text-2xl font-bold tracking-widest uppercase outline-none transition-colors focus:ring-2 focus:ring-blue-500/50 ${dark ? 'bg-slate-800 border-slate-600 text-slate-100 placeholder:text-slate-500 focus:border-blue-500' : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-blue-500'}`}
           />
 
           {error && (

@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera as CameraIcon, X, Zap } from 'lucide-react';
 import { analyzeItemImage } from '../utils/gemini';
+import { useAppSettings } from '../contexts/AppSettingsContext';
 
 export default function CameraScreen() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -9,6 +10,8 @@ export default function CameraScreen() {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const navigate = useNavigate();
+  const { settings } = useAppSettings();
+  const dark = settings.darkMode;
 
   useEffect(() => {
     let stream: MediaStream | null = null;
@@ -87,14 +90,14 @@ export default function CameraScreen() {
 
   if (hasPermission === false) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-black text-white p-6 max-w-md mx-auto relative">
-        <CameraIcon size={48} className="mb-4 text-gray-500" />
-        <h2 className="text-xl font-bold mb-2">カメラアクセスが必要です</h2>
-        <p className="text-center text-sm text-gray-400 mb-6">アイテムを撮影するために、カメラへのアクセスを許可してください。</p>
+      <div className={`flex flex-col items-center justify-center h-screen ${dark ? 'bg-slate-900 text-slate-100' : 'bg-black text-white'} p-6 max-w-md mx-auto relative`}>
+        <CameraIcon size={48} className={`mb-4 ${dark ? 'text-slate-600' : 'text-gray-500'}`} />
+        <h2 className={`text-xl font-bold mb-2 ${dark ? 'text-slate-100' : 'text-white'}`}>カメラアクセスが必要です</h2>
+        <p className={`text-center text-sm mb-6 ${dark ? 'text-slate-400' : 'text-gray-400'}`}>アイテムを撮影するために、カメラへのアクセスを許可してください。</p>
         <button className="bg-primary-500 text-white px-6 py-3 rounded-xl font-bold w-full max-w-xs" onClick={() => window.location.reload()}>
           再試行
         </button>
-        <button className="mt-4 text-white p-2" onClick={() => navigate(-1)}>
+        <button className={`mt-4 p-2 transition-colors ${dark ? 'text-slate-300 hover:text-slate-100' : 'text-white hover:text-gray-200'}`} onClick={() => navigate(-1)}>
           戻る
         </button>
       </div>

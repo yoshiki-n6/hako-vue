@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ChannelProvider, useChannel } from './contexts/ChannelContext';
 import { DataProvider } from './contexts/DataContext';
+import { AppSettingsProvider } from './contexts/AppSettingsContext';
+import { useReturnReminder } from './hooks/useReturnReminder';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import Home from './pages/Home';
@@ -41,6 +43,12 @@ function OnboardingCheck({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// Activates return reminder notifications globally
+function NotificationRunner() {
+  useReturnReminder();
+  return null;
+}
+
 // Wrapper to prevent onboarding access if already completed
 function OnboardingRoute() {
   const { needsOnboarding, loading } = useChannel();
@@ -62,10 +70,12 @@ function OnboardingRoute() {
 
 function App() {
   return (
-    <AuthProvider>
-      <ChannelProvider>
-        <DataProvider>
-          <BrowserRouter>
+    <AppSettingsProvider>
+      <AuthProvider>
+        <ChannelProvider>
+          <DataProvider>
+            <NotificationRunner />
+            <BrowserRouter>
             <Routes>
               <Route path="/login" element={<LoginScreen />} />
               <Route path="/onboarding" element={<ProtectedRoute><OnboardingRoute /></ProtectedRoute>} />
@@ -158,9 +168,10 @@ function App() {
               </Route>
             </Routes>
           </BrowserRouter>
-        </DataProvider>
-      </ChannelProvider>
-    </AuthProvider>
+          </DataProvider>
+        </ChannelProvider>
+      </AuthProvider>
+    </AppSettingsProvider>
   );
 }
 

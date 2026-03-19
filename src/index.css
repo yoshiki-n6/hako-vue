@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary-500: #3b82f6; 
+  --color-primary-500: #3b82f6;
 }
 
 body {
@@ -9,6 +9,10 @@ body {
   display: flex;
   min-height: 100vh;
   background-color: #f9fafb;
+}
+
+.dark body {
+  background-color: #0f172a;
 }
 
 #root {

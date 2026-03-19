@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Plus, QrCode, ChevronDown, ChevronUp } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useAppSettings } from '../contexts/AppSettingsContext';
 import { uploadImage } from '../utils/storage';
 
 export default function LocationSelectScreen() {
@@ -12,6 +13,8 @@ export default function LocationSelectScreen() {
   
   const { locations, items, addItem, loading } = useData();
   const { currentUser } = useAuth();
+  const { settings } = useAppSettings();
+  const dark = settings.darkMode;
   const [isSaving, setIsSaving] = useState(false);
   const [showExistingLocations, setShowExistingLocations] = useState(false);
 
@@ -22,30 +25,30 @@ export default function LocationSelectScreen() {
   }));
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 max-w-md mx-auto relative">
-      <header className="bg-white/90 backdrop-blur-md px-4 py-4 flex items-center justify-between border-b border-gray-100 sticky top-0 z-10">
+    <div className={`flex flex-col min-h-screen max-w-md mx-auto relative ${dark ? 'bg-slate-900' : 'bg-gray-50'}`}>
+      <header className={`px-4 py-4 flex items-center justify-between border-b sticky top-0 z-10 ${dark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/90 border-gray-100 backdrop-blur-md'}`}>
         <div className="flex items-center">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-800 hover:bg-gray-100 rounded-full">
+          <button onClick={() => navigate(-1)} className={`p-2 -ml-2 rounded-full transition-colors ${dark ? 'text-slate-300 hover:bg-slate-700' : 'text-gray-800 hover:bg-gray-100'}`}>
             <ArrowLeft size={24} />
           </button>
-          <h1 className="text-lg font-bold ml-2 text-gray-900">場所の選択</h1>
+          <h1 className={`text-lg font-bold ml-2 ${dark ? 'text-slate-100' : 'text-gray-900'}`}>場所の選択</h1>
         </div>
-        <div className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+        <div className={`text-xs font-bold px-3 py-1 rounded-full ${dark ? 'text-blue-400 bg-blue-900/30' : 'text-blue-600 bg-blue-50'}`}>
           ステップ 2/2
         </div>
       </header>
 
       <main className="flex-1 p-5 pb-20">
-        <div className="mb-6 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+        <div className={`mb-6 p-4 rounded-2xl border shadow-sm flex items-center justify-between ${dark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-100'}`}>
           <div className="flex flex-col">
-             <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">しまうアイテム</h2>
-             <p className="text-base font-extrabold text-gray-800">{itemName}</p>
+             <h2 className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${dark ? 'text-slate-500' : 'text-gray-400'}`}>しまうアイテム</h2>
+             <p className={`text-base font-extrabold ${dark ? 'text-slate-100' : 'text-gray-800'}`}>{itemName}</p>
           </div>
-          <div className="w-12 h-12 bg-gray-100 rounded-xl overflow-hidden shrink-0 border border-gray-200 flex justify-center items-center">
+          <div className={`w-12 h-12 rounded-xl overflow-hidden shrink-0 border flex justify-center items-center ${dark ? 'bg-slate-700 border-slate-600' : 'bg-gray-100 border-gray-200'}`}>
              {itemPhotoUrl ? (
                <img src={itemPhotoUrl} className="w-full h-full object-cover" alt="thumb" />
              ) : (
-               <span className="text-[10px] text-gray-400 font-bold">No Image</span>
+               <span className={`text-[10px] font-bold ${dark ? 'text-slate-500' : 'text-gray-400'}`}>No Image</span>
              )}
           </div>
         </div>
@@ -72,14 +75,14 @@ export default function LocationSelectScreen() {
         <div className="mb-4">
           <button 
             onClick={() => navigate('/location-new', { state: { itemName, itemPhotoUrl } })}
-            className="w-full bg-white border-2 border-dashed border-gray-300 p-4 rounded-2xl flex items-center gap-4 hover:border-blue-400 hover:bg-blue-50/50 transition-all text-left group active:scale-[0.98]"
+            className={`w-full border-2 border-dashed p-4 rounded-2xl flex items-center gap-4 transition-all text-left group active:scale-[0.98] ${dark ? 'border-slate-600 hover:border-blue-400 hover:bg-blue-900/10' : 'border-gray-300 bg-white hover:border-blue-400 hover:bg-blue-50/50'}`}
           >
-            <div className="w-14 h-14 bg-gray-50 group-hover:bg-blue-100 rounded-full flex items-center justify-center transition-colors">
-              <Plus size={28} className="group-hover:text-blue-600 text-gray-400" strokeWidth={2.5} />
+            <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${dark ? 'bg-slate-700 group-hover:bg-blue-900/40' : 'bg-gray-50 group-hover:bg-blue-100'}`}>
+              <Plus size={28} className={`${dark ? 'text-slate-500 group-hover:text-blue-400' : 'text-gray-400 group-hover:text-blue-600'}`} strokeWidth={2.5} />
             </div>
             <div className="flex-1">
-              <h4 className="font-bold text-gray-800 text-base">新しい場所を登録する</h4>
-              <p className="text-xs font-medium text-gray-500 mt-1">
+              <h4 className={`font-bold text-base ${dark ? 'text-slate-200' : 'text-gray-800'}`}>新しい場所を登録する</h4>
+              <p className={`text-xs font-medium mt-1 ${dark ? 'text-slate-400' : 'text-gray-500'}`}>
                 風景写真と一緒に場所を分かりやすく記録
               </p>
             </div>
@@ -90,32 +93,32 @@ export default function LocationSelectScreen() {
         <div className="mt-6">
           <button 
             onClick={() => setShowExistingLocations(!showExistingLocations)}
-            className="w-full bg-white p-4 rounded-2xl border border-gray-200 flex items-center justify-between shadow-sm hover:bg-gray-50 transition-colors"
+            className={`w-full p-4 rounded-2xl border flex items-center justify-between shadow-sm transition-colors ${dark ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                <MapPin size={20} className="text-gray-500" />
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${dark ? 'bg-slate-700' : 'bg-gray-100'}`}>
+                <MapPin size={20} className={dark ? 'text-slate-500' : 'text-gray-500'} />
               </div>
               <div className="text-left">
-                <h4 className="font-bold text-gray-800 text-sm">既存の場所から選ぶ</h4>
-                <p className="text-xs text-gray-400">{locations.length}件の場所が登録済み</p>
+                <h4 className={`font-bold text-sm ${dark ? 'text-slate-100' : 'text-gray-800'}`}>既存の場所から選ぶ</h4>
+                <p className={`text-xs ${dark ? 'text-slate-500' : 'text-gray-400'}`}>{locations.length}件の場所が登録済み</p>
               </div>
             </div>
             {showExistingLocations ? (
-              <ChevronUp size={20} className="text-gray-400" />
+              <ChevronUp size={20} className={dark ? 'text-slate-500' : 'text-gray-400'} />
             ) : (
-              <ChevronDown size={20} className="text-gray-400" />
+              <ChevronDown size={20} className={dark ? 'text-slate-500' : 'text-gray-400'} />
             )}
           </button>
 
           {showExistingLocations && (
             <div className="mt-3 space-y-2">
               {loading ? (
-                <div className="text-center p-8 text-gray-500 font-bold text-sm">読み込み中...</div>
+                <div className={`text-center p-8 font-bold text-sm ${dark ? 'text-slate-400' : 'text-gray-500'}`}>読み込み中...</div>
               ) : locations.length === 0 ? (
-                <div className="bg-white border border-gray-100 rounded-2xl p-6 text-center shadow-sm">
-                  <p className="text-sm font-bold text-gray-600 mb-1">場所が登録されていません</p>
-                  <p className="text-xs text-gray-400">上のボタンから新しい場所を登録してください</p>
+                <div className={`border rounded-2xl p-6 text-center shadow-sm ${dark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-100'}`}>
+                  <p className={`text-sm font-bold mb-1 ${dark ? 'text-slate-300' : 'text-gray-600'}`}>場所が登録されていません</p>
+                  <p className={`text-xs ${dark ? 'text-slate-500' : 'text-gray-400'}`}>上のボタンから新しい場所を登録してください</p>
                 </div>
               ) : (
                 locationsWithCounts.map((loc) => (
@@ -143,21 +146,21 @@ export default function LocationSelectScreen() {
                       }
                     }}
                     disabled={isSaving}
-                    className={`w-full bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 transition-all text-left group active:scale-[0.98] ${
+                    className={`w-full p-4 rounded-xl border shadow-sm flex items-center gap-4 transition-all text-left group active:scale-[0.98] ${
                       isSaving 
                         ? 'opacity-60 cursor-not-allowed' 
-                        : 'hover:border-blue-300 hover:bg-blue-50/30'
+                        : dark ? 'bg-slate-800 border-slate-700 hover:border-blue-500/40 hover:bg-slate-700' : 'bg-white border-gray-100 hover:border-blue-300 hover:bg-blue-50/30'
                     }`}
                   >
-                    <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors ${dark ? 'bg-blue-900/40 text-blue-400 group-hover:bg-blue-600 group-hover:text-white' : 'bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white'}`}>
                       <MapPin size={20} strokeWidth={2.5} />
                     </div>
                     <div className="flex-1">
                       <div className="flex justify-between items-center">
-                        <h4 className="font-bold text-gray-900 text-sm">{loc.name}</h4>
-                        <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{loc.itemsCount}個</span>
+                        <h4 className={`font-bold text-sm ${dark ? 'text-slate-100' : 'text-gray-900'}`}>{loc.name}</h4>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${dark ? 'text-slate-400 bg-slate-700' : 'text-gray-400 bg-gray-100'}`}>{loc.itemsCount}個</span>
                       </div>
-                      <p className="text-xs font-medium text-gray-500 mt-1">
+                      <p className={`text-xs font-medium mt-1 ${dark ? 'text-slate-500' : 'text-gray-500'}`}>
                         目印: {loc.markerText || '未設定'}
                       </p>
                     </div>

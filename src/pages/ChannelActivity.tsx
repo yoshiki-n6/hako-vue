@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Box, CheckCircle2, UserPlus, UserMinus, Package, RefreshCw, Search, X } from 'lucide-react';
 import { useChannel } from '../contexts/ChannelContext';
+import { useAppSettings } from '../contexts/AppSettingsContext';
 
 // Define ActivityLog type locally to avoid export issues
 interface ActivityLog {
@@ -19,6 +20,8 @@ export default function ChannelActivityScreen() {
   const navigate = useNavigate();
   const { id: channelId } = useParams<{ id: string }>();
   const { channels, getActivityLogs } = useChannel();
+  const { settings } = useAppSettings();
+  const dark = settings.darkMode;
   
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -167,99 +170,116 @@ export default function ChannelActivityScreen() {
     }
   };
 
-  const getLogMessage = (log: ActivityLog) => {
+  const getLogMessage = (log: ActivityLog, dark: boolean) => {
     switch (log.type) {
       case 'item_taken_out':
         return (
           <>
-            <span className="font-bold text-gray-900">{log.userNickname}</span>
-            <span className="text-gray-600">が</span>
-            <span className="font-bold text-amber-600">{log.itemName || 'アイテム'}</span>
-            <span className="text-gray-600">を持ち出しました</span>
+            <span className={`font-bold ${dark ? 'text-slate-100' : 'text-gray-900'}`}>{log.userNickname}</span>
+            <span className={dark ? 'text-slate-400' : 'text-gray-600'}>が</span>
+            <span className={`font-bold ${dark ? 'text-amber-400' : 'text-amber-600'}`}>{log.itemName || 'アイテム'}</span>
+            <span className={dark ? 'text-slate-400' : 'text-gray-600'}>を持ち出しました</span>
           </>
         );
       case 'item_stored':
         return (
           <>
-            <span className="font-bold text-gray-900">{log.userNickname}</span>
-            <span className="text-gray-600">が</span>
-            <span className="font-bold text-emerald-600">{log.itemName || 'アイテム'}</span>
-            <span className="text-gray-600">を返却しました</span>
+            <span className={`font-bold ${dark ? 'text-slate-100' : 'text-gray-900'}`}>{log.userNickname}</span>
+            <span className={dark ? 'text-slate-400' : 'text-gray-600'}>が</span>
+            <span className={`font-bold ${dark ? 'text-emerald-400' : 'text-emerald-600'}`}>{log.itemName || 'アイテム'}</span>
+            <span className={dark ? 'text-slate-400' : 'text-gray-600'}>を返却しました</span>
           </>
         );
       case 'member_joined':
         return (
           <>
-            <span className="font-bold text-blue-600">{log.userNickname}</span>
-            <span className="text-gray-600">がチャンネルに参加しました</span>
+            <span className={`font-bold ${dark ? 'text-blue-400' : 'text-blue-600'}`}>{log.userNickname}</span>
+            <span className={dark ? 'text-slate-400' : 'text-gray-600'}>がチャンネルに参加しました</span>
           </>
         );
       case 'member_left':
         return (
           <>
-            <span className="font-bold text-red-600">{log.userNickname}</span>
-            <span className="text-gray-600">がチャンネルから脱退しました</span>
+            <span className={`font-bold ${dark ? 'text-red-400' : 'text-red-600'}`}>{log.userNickname}</span>
+            <span className={dark ? 'text-slate-400' : 'text-gray-600'}>がチャンネルから脱退しました</span>
           </>
         );
       case 'item_added':
         return (
           <>
-            <span className="font-bold text-gray-900">{log.userNickname}</span>
-            <span className="text-gray-600">が</span>
-            <span className="font-bold text-purple-600">{log.itemName || 'アイテム'}</span>
-            <span className="text-gray-600">を登録しました</span>
+            <span className={`font-bold ${dark ? 'text-slate-100' : 'text-gray-900'}`}>{log.userNickname}</span>
+            <span className={dark ? 'text-slate-400' : 'text-gray-600'}>が</span>
+            <span className={`font-bold ${dark ? 'text-purple-400' : 'text-purple-600'}`}>{log.itemName || 'アイテム'}</span>
+            <span className={dark ? 'text-slate-400' : 'text-gray-600'}>を登録しました</span>
           </>
         );
       default:
-        return <span className="text-gray-600">不明なアクティビティ</span>;
+        return <span className={dark ? 'text-slate-400' : 'text-gray-600'}>不明なアクティビティ</span>;
     }
   };
 
-  const getLogBgColor = (type: ActivityLog['type']) => {
-    switch (type) {
-      case 'item_taken_out':
-        return 'bg-amber-50 border-amber-100';
-      case 'item_stored':
-        return 'bg-emerald-50 border-emerald-100';
-      case 'member_joined':
-        return 'bg-blue-50 border-blue-100';
-      case 'member_left':
-        return 'bg-red-50 border-red-100';
-      case 'item_added':
-        return 'bg-purple-50 border-purple-100';
-      default:
-        return 'bg-gray-50 border-gray-100';
+  const getLogBgColor = (type: ActivityLog['type'], dark: boolean) => {
+    if (dark) {
+      switch (type) {
+        case 'item_taken_out':
+          return 'bg-amber-900/30 border-amber-700/50';
+        case 'item_stored':
+          return 'bg-emerald-900/30 border-emerald-700/50';
+        case 'member_joined':
+          return 'bg-blue-900/30 border-blue-700/50';
+        case 'member_left':
+          return 'bg-red-900/30 border-red-700/50';
+        case 'item_added':
+          return 'bg-purple-900/30 border-purple-700/50';
+        default:
+          return 'bg-slate-800/50 border-slate-700/50';
+      }
+    } else {
+      switch (type) {
+        case 'item_taken_out':
+          return 'bg-amber-50 border-amber-100';
+        case 'item_stored':
+          return 'bg-emerald-50 border-emerald-100';
+        case 'member_joined':
+          return 'bg-blue-50 border-blue-100';
+        case 'member_left':
+          return 'bg-red-50 border-red-100';
+        case 'item_added':
+          return 'bg-purple-50 border-purple-100';
+        default:
+          return 'bg-gray-50 border-gray-100';
+      }
     }
   };
 
   if (!channel) {
     return (
-      <div className="flex flex-col min-h-screen bg-white max-w-md mx-auto">
-        <header className="bg-white/95 backdrop-blur-md px-4 py-4 sticky top-0 z-10 border-b border-gray-100">
-          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium">
+      <div className={`flex flex-col min-h-screen max-w-md mx-auto ${dark ? 'bg-slate-900' : 'bg-white'}`}>
+        <header className={`backdrop-blur-md px-4 py-4 sticky top-0 z-10 border-b ${dark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-100'}`}>
+          <button onClick={() => navigate(-1)} className={`flex items-center gap-2 font-medium transition-colors ${dark ? 'text-slate-300 hover:text-slate-100' : 'text-gray-600 hover:text-gray-900'}`}>
             <ArrowLeft size={20} />
             戻る
           </button>
         </header>
         <main className="flex-1 flex items-center justify-center p-8">
-          <p className="text-gray-500">チャンネルが見つかりません</p>
+          <p className={dark ? 'text-slate-400' : 'text-gray-500'}>チャンネルが見つかりません</p>
         </main>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 max-w-md mx-auto">
-      <header className="bg-white/95 backdrop-blur-md px-4 py-4 sticky top-0 z-10 border-b border-gray-100">
+    <div className={`flex flex-col min-h-screen max-w-md mx-auto ${dark ? 'bg-slate-900' : 'bg-gray-50'}`}>
+      <header className={`backdrop-blur-md px-4 py-4 sticky top-0 z-10 border-b ${dark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-100'}`}>
         <div className="flex items-center justify-between">
-          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium">
+          <button onClick={() => navigate(-1)} className={`flex items-center gap-2 font-medium transition-colors ${dark ? 'text-slate-300 hover:text-slate-100' : 'text-gray-600 hover:text-gray-900'}`}>
             <ArrowLeft size={20} />
             戻る
           </button>
         </div>
         <div className="mt-3 mb-3">
-          <h1 className="text-xl font-black text-gray-900">{channel.name}</h1>
-          <p className="text-sm text-gray-500">アクティビティログ</p>
+          <h1 className={`text-xl font-black ${dark ? 'text-slate-100' : 'text-gray-900'}`}>{channel.name}</h1>
+          <p className={`text-sm ${dark ? 'text-slate-400' : 'text-gray-500'}`}>アクティビティログ</p>
         </div>
 
         {/* Date tabs */}
@@ -272,7 +292,7 @@ export default function ChannelActivityScreen() {
                 className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${
                   selectedDate === date
                     ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : dark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
                 {formatDateGroupFull(logs.find(log => formatDateGroup(log.createdAt) === date)?.createdAt)}
@@ -282,18 +302,18 @@ export default function ChannelActivityScreen() {
         )}
 
         <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <Search size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${dark ? 'text-slate-400' : 'text-gray-400'}`} />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="アイテム名・ユーザー名で検索"
-            className="w-full bg-gray-100 rounded-xl pl-9 pr-9 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors"
+            className={`w-full rounded-xl pl-9 pr-9 py-2.5 text-sm placeholder:placeholder:transition-colors outline-none focus:ring-2 focus:ring-blue-500 ${dark ? 'bg-slate-700 border border-slate-600 text-slate-100 placeholder:text-slate-400' : 'bg-gray-100 text-gray-900 placeholder:text-gray-400 focus:bg-white'}`}
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${dark ? 'text-slate-400 hover:text-slate-200' : 'text-gray-400 hover:text-gray-600'}`}
             >
               <X size={16} />
             </button>
@@ -318,18 +338,18 @@ export default function ChannelActivityScreen() {
           </div>
         ) : logs.length === 0 ? (
           <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Box size={32} className="text-gray-400" />
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${dark ? 'bg-slate-700' : 'bg-gray-100'}`}>
+              <Box size={32} className={dark ? 'text-slate-500' : 'text-gray-400'} />
             </div>
-            <p className="text-gray-500 font-medium">まだアクティビティがありません</p>
-            <p className="text-sm text-gray-400 mt-1">アイテムの持ち出しや登録がここに表示されます</p>
+            <p className={`font-medium ${dark ? 'text-slate-300' : 'text-gray-500'}`}>まだアクティビティがありません</p>
+            <p className={`text-sm mt-1 ${dark ? 'text-slate-500' : 'text-gray-400'}`}>アイテムの持ち出しや登録がここに表示されます</p>
           </div>
         ) : filteredLogs.length === 0 ? (
           <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Search size={32} className="text-gray-400" />
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${dark ? 'bg-slate-700' : 'bg-gray-100'}`}>
+              <Search size={32} className={dark ? 'text-slate-500' : 'text-gray-400'} />
             </div>
-            <p className="text-gray-500 font-medium">「{searchQuery}」の検索結果はありません</p>
+            <p className={`font-medium ${dark ? 'text-slate-300' : 'text-gray-500'}`}>「{searchQuery}」の検索結果はありません</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -342,10 +362,10 @@ export default function ChannelActivityScreen() {
               if (logsForSelectedDate.length === 0) {
                 return (
                   <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Box size={32} className="text-gray-400" />
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${dark ? 'bg-slate-700' : 'bg-gray-100'}`}>
+                      <Box size={32} className={dark ? 'text-slate-500' : 'text-gray-400'} />
                     </div>
-                    <p className="text-gray-500 font-medium">この日のアクティビティはありません</p>
+                    <p className={`font-medium ${dark ? 'text-slate-300' : 'text-gray-500'}`}>この日のアクティビティはありません</p>
                   </div>
                 );
               }
@@ -355,17 +375,17 @@ export default function ChannelActivityScreen() {
                   {logsForSelectedDate.map((log) => (
                     <div
                       key={log.id}
-                      className={`p-4 rounded-2xl border ${getLogBgColor(log.type)}`}
+                      className={`p-4 rounded-2xl border ${getLogBgColor(log.type, dark)}`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm ${dark ? 'bg-slate-700' : 'bg-white'}`}>
                           {getLogIcon(log.type)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm leading-relaxed">
-                            {getLogMessage(log)}
+                          <p className={`text-sm leading-relaxed ${dark ? 'text-slate-100' : 'text-gray-900'}`}>
+                            {getLogMessage(log, dark)}
                           </p>
-                          <p className="text-xs text-gray-400 mt-1">
+                          <p className={`text-xs mt-1 ${dark ? 'text-slate-500' : 'text-gray-400'}`}>
                             {formatTime(log.createdAt)}
                           </p>
                         </div>
