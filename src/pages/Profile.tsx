@@ -1,20 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, LogOut, Code, ChevronRight, User as UserIcon, Plus, KeyRound, Star, Copy, Check, RefreshCw, Edit2, Users, X, Home, History, MoreVertical, Trash2, Pencil, AlertTriangle, Upload } from 'lucide-react';
+import { Settings, LogOut, Code, ChevronRight, User as UserIcon, Plus, KeyRound, Star, Copy, Check, RefreshCw, Edit2, Users, X, Home, History, MoreVertical, Trash2, Pencil, AlertTriangle, Upload, Moon, Bell, BellOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useChannel } from '../contexts/ChannelContext';
 import type { Channel, ChannelMember } from '../contexts/ChannelContext';
 import { generateDefaultAvatarDataURL, getAvatarColorFromUserId } from '../utils/avatarUtils';
+import { useAppSettings } from '../contexts/AppSettingsContext';
+import type { NotificationInterval } from '../contexts/AppSettingsContext';
 
 export default function ProfileScreen() {
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
   const { channels, currentChannel, userProfile, switchChannel, setDefaultChannel, updateProfile, getChannelMembers, leaveChannel, updateChannelName } = useChannel();
+  const { settings, toggleDarkMode, toggleNotifications, setNotificationInterval } = useAppSettings();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [settingDefault, setSettingDefault] = useState<string | null>(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [showAppSettings, setShowAppSettings] = useState(false);
   const [nickname, setNickname] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string>('');
@@ -657,7 +661,9 @@ export default function ProfileScreen() {
           <h3 className="text-sm font-bold text-gray-900 px-1 pt-2">設定・その他</h3>
           
           <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 divide-y divide-gray-50">
-             <button className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors group">
+             <button
+               onClick={() => setShowAppSettings(true)}
+               className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors group">
                <div className="flex items-center gap-3 text-gray-700 text-sm font-bold group-hover:text-blue-600 transition-colors">
                   <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
                      <Settings size={16} />
@@ -695,6 +701,111 @@ export default function ProfileScreen() {
           <p className="text-[10px] font-bold text-gray-400 tracking-wider">HAKO-VUE PROTOTYPE v1.2</p>
         </div>
       </main>
+
+      {/* App Settings Modal */}
+      {showAppSettings && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center sm:items-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+              <h3 className="text-lg font-bold text-gray-900">アプリ設定</h3>
+              <button
+                onClick={() => setShowAppSettings(false)}
+                className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-2">
+              {/* Dark Mode */}
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center">
+                    <Moon size={18} className="text-indigo-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">ダークモード</p>
+                    <p className="text-xs text-gray-500 mt-0.5">画面を暗くして目への負担を軽減</p>
+                  </div>
+                </div>
+                <button
+                  onClick={toggleDarkMode}
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 ${
+                    settings.darkMode ? 'bg-indigo-600' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${
+                      settings.darkMode ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Notifications */}
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50">
+                <div className="flex items-center gap-3">
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center ${settings.notificationsEnabled ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                    {settings.notificationsEnabled
+                      ? <Bell size={18} className="text-blue-600" />
+                      : <BellOff size={18} className="text-gray-400" />
+                    }
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">返却リマインド通知</p>
+                    <p className="text-xs text-gray-500 mt-0.5">持ち出し中アイテムの返却を通知</p>
+                  </div>
+                </div>
+                <button
+                  onClick={toggleNotifications}
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 ${
+                    settings.notificationsEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${
+                      settings.notificationsEnabled ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Notification Interval (only shown when notifications are on) */}
+              {settings.notificationsEnabled && (
+                <div className="p-4 rounded-2xl bg-gray-50">
+                  <p className="text-sm font-bold text-gray-900 mb-3">通知タイミング</p>
+                  <p className="text-xs text-gray-500 mb-3">持ち出してから何日後に通知するか</p>
+                  <div className="flex gap-2">
+                    {([1, 3, 7] as NotificationInterval[]).map((days) => (
+                      <button
+                        key={days}
+                        onClick={() => setNotificationInterval(days)}
+                        className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                          settings.notificationIntervalDays === days
+                            ? 'bg-blue-600 text-white shadow-md'
+                            : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300'
+                        }`}
+                      >
+                        {days === 1 ? '1日後' : days === 3 ? '3日後' : '1週間後'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="px-5 pb-5">
+              <button
+                onClick={() => setShowAppSettings(false)}
+                className="w-full py-3 bg-gray-900 text-white font-bold rounded-2xl hover:bg-gray-700 transition-colors"
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
