@@ -15,6 +15,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,jpg,svg,woff2}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api/],
+        importScripts: ['/custom-sw.js'], // カスタムServiceWorker（FCM・通知配信用）を読み込む
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,

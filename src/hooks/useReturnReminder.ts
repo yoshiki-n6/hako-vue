@@ -6,13 +6,13 @@ import type { ReturnNotificationData } from '../components/ReturnNotification';
 
 const CHECK_INTERVAL_MS = 30 * 1000;
 
-// Service Worker登録
+// Service Worker登録 (Vite PWAプラグインが自動登録するのでここでは待機のみ)
 async function registerSW() {
   if ('serviceWorker' in navigator) {
     try {
-      await navigator.serviceWorker.register('/sw.js');
+      await navigator.serviceWorker.ready;
     } catch (e) {
-      console.log('[v0] SW registration failed:', e);
+      console.log('[v0] SW ready failed:', e);
     }
   }
 }
@@ -163,7 +163,7 @@ export function useReturnReminder() {
 
     const timer = setInterval(checkAndNotify, CHECK_INTERVAL_MS);
     return () => clearInterval(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // 空の依存配列: タイマーはマウント時に一度だけ起動
 }
 
