@@ -1,5 +1,5 @@
 /* hako Service Worker - FCM & バックグラウンド通知対応 */
-const CACHE_NAME = 'hako-sw-v1';
+const CACHE_NAME = 'hako-sw-v3';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
@@ -24,6 +24,8 @@ self.addEventListener('push', (event) => {
       badge: icon,
       tag,
       data,
+    }).catch((e) => {
+      console.error('[sw] showNotification failed on iOS:', e);
     }).then(() => {
       // ブラウザの通知表示に成功した後、フォアグラウンドのReactアプリにデータを送信 (トースト用)
       return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
