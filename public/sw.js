@@ -12,26 +12,28 @@ self.addEventListener('push', (event) => {
     const payload = event.data.json();
     const { title = '通知', body = '', icon = '/pwa-192x192.jpg', tag = 'hako-notification', data = {} } = payload.notification || {};
 
-    // フォアグラウンド（開いている画面）にメッセージを送信し、アプリ内トーストを表示させる
-    event.waitUntil((async () => {
-      const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    // 1. フォアグラウンドの画面（Reactアプリ）へ通知内容を送信してトーストを表示させる
+    const postMsgPromise = self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {
         client.postMessage({
           type: 'FCM_PUSH_RECEIVED',
           payload: payload
         });
       }
+    });
 
-      // ネイティブ通知の表示
-      return self.registration.showNotification(title, {
-        body,
-        icon,
-        badge: icon,
-        tag,
-        data,
-        requireInteraction: false,
-      });
-    })());
+    // 2. ブラウザのネイティブ通知を表示
+    const showNotifPromise = self.registration.showNotification(title, {
+      body,
+      icon,
+      badge: icon,
+      tag,
+      data,
+      requireInteraction: false,
+    });
+
+    // 確実な実行のためにPromise.allでwaitUntilに渡す
+    event.waitUntil(Promise.all([postMsgPromise, showNotifPromise]));
   } catch (e) {
     console.error('[sw] Error parsing push message:', e);
   }
