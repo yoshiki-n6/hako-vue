@@ -4,6 +4,7 @@ import { useData } from '../contexts/DataContext';
 import { useChannel } from '../contexts/ChannelContext';
 import { MapPin, QrCode, Box, ChevronRight, Home as HomeIcon, Users, RotateCcw, History, ArrowUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { generateDefaultAvatarDataURL } from '../utils/avatarUtils';
 
 export default function Home() {
   const { currentUser } = useAuth();
@@ -20,10 +21,8 @@ export default function Home() {
     }
   }, [currentChannel]);
   
-  // 一人暮らし用チャンネルかどうか
   const isSoloChannel = currentChannel?.type === 'solo';
 
-  // Get only items taken out by current user
   const myTakenOutItems = items.filter(item => item.status === 'taken_out' && item.takenOutBy === currentUser?.uid);
   const [showTakenOut, setShowTakenOut] = useState(false);
   const [returningId, setReturningId] = useState<string | null>(null);
@@ -41,25 +40,16 @@ export default function Home() {
     }
   };
 
-  // Get user's favorite items
   const favoriteItems = getUserFavoriteItems();
 
-  // Helper function to get user nickname
   const getUserNickname = (userId: string | undefined) => {
     if (!userId) return '不明なユーザー';
     const member = channelMembers.find(m => m.userId === userId);
     return member?.nickname || '不明なユーザー';
   };
 
-  // Get user initials
-  const getInitials = (name?: string) => {
-    if (!name) return 'U';
-    return name.charAt(0).toUpperCase();
-  };
-
-  // Firestore のuserProfile画像を表示する
-  const displayPhoto = userProfile?.photoURL || '';
-  const displayName = userProfile?.nickname || 'User';
+  // Firestoreのプロフィール画像を使用。なければデフォルトアバター
+  const displayPhoto = userProfile?.photoURL || generateDefaultAvatarDataURL('#45B7D1');
 
   return (
     <div className="max-w-md mx-auto p-5 pb-20">
@@ -90,12 +80,8 @@ export default function Home() {
             <QrCode size={20} />
           </Link>
           <Link to="/profile">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-400 flex items-center justify-center shadow-sm overflow-hidden border-2 border-white text-white text-sm font-bold">
-              {displayPhoto ? (
-                <img src={displayPhoto} alt="User profile" className="w-full h-full object-cover" />
-              ) : (
-                '?'
-              )}
+            <div className="w-10 h-10 rounded-full overflow-hidden shadow-sm border-2 border-white">
+              <img src={displayPhoto} alt="User profile" className="w-full h-full object-cover" />
             </div>
           </Link>
         </div>

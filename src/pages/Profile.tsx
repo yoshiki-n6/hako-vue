@@ -4,8 +4,7 @@ import { Settings, LogOut, Code, ChevronRight, User as UserIcon, Plus, KeyRound,
 import { useAuth } from '../contexts/AuthContext';
 import { useChannel } from '../contexts/ChannelContext';
 import type { Channel, ChannelMember } from '../contexts/ChannelContext';
-
-// Pre-defined avatar icons using DiceBear API - 削除（写真アップロードのみにする）
+import { generateDefaultAvatarDataURL, getRandomAvatarColor } from '../utils/avatarUtils';
 
 export default function ProfileScreen() {
   const navigate = useNavigate();
@@ -17,11 +16,9 @@ export default function ProfileScreen() {
   const [settingDefault, setSettingDefault] = useState<string | null>(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [nickname, setNickname] = useState('');
-  const [photoURL, setPhotoURL] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string>('');
   const [saving, setSaving] = useState(false);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   
   // Member modal state
   const [showMembersModal, setShowMembersModal] = useState(false);
@@ -39,11 +36,10 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     if (userProfile) {
-      setNickname(userProfile.nickname || currentUser?.displayName || '');
-      setPhotoURL(userProfile.photoURL || currentUser?.photoURL || '');
-      setPhotoPreview(userProfile.photoURL || currentUser?.photoURL || '');
+      setNickname(userProfile.nickname || '');
+      setPhotoPreview(userProfile.photoURL || '');
     }
-  }, [userProfile, currentUser]);
+  }, [userProfile]);
 
   const handleLogout = async () => {
     try {
@@ -162,14 +158,8 @@ export default function ProfileScreen() {
     }
   };
 
-  // Get user initials
-  const getInitials = (name?: string) => {
-    if (!name) return 'U';
-    return name.charAt(0).toUpperCase();
-  };
-
   const displayName = userProfile?.nickname || 'User';
-  const displayPhoto = userProfile?.photoURL || '';
+  const displayPhoto = userProfile?.photoURL || generateDefaultAvatarDataURL('#45B7D1');
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 max-w-md mx-auto pb-24">
@@ -181,12 +171,8 @@ export default function ProfileScreen() {
         {/* User Card */}
         <section className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
           <div className="flex items-center gap-5">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-400 flex items-center justify-center text-white text-2xl font-bold shadow-md shrink-0 overflow-hidden relative">
-              {displayPhoto ? (
-                <img src={displayPhoto} alt="" className="w-full h-full object-cover" />
-              ) : (
-                '?'
-              )}
+            <div className="w-16 h-16 rounded-full shadow-md shrink-0 overflow-hidden">
+              <img src={displayPhoto} alt="" className="w-full h-full object-cover" />
             </div>
             <div className="min-w-0 flex-1">
               <h2 className="text-xl font-extrabold text-gray-900 mb-1 truncate">
@@ -219,16 +205,8 @@ export default function ProfileScreen() {
               
               {/* Current Avatar Preview */}
               <div className="flex justify-center mb-4">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-400 flex items-center justify-center text-white text-2xl font-bold overflow-hidden ring-4 ring-blue-100">
-                  {photoPreview ? (
-                    <img src={photoPreview} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    displayPhoto ? (
-                      <img src={displayPhoto} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      '?'
-                    )
-                  )}
+                <div className="w-20 h-20 rounded-full overflow-hidden ring-4 ring-blue-100 shadow-md">
+                  <img src={photoPreview || generateDefaultAvatarDataURL('#45B7D1')} alt="" className="w-full h-full object-cover" />
                 </div>
               </div>
               
@@ -260,17 +238,12 @@ export default function ProfileScreen() {
                   type="button"
                   onClick={() => {
                     setPhotoFile(null);
-                    setPhotoPreview('');
-                    setPhotoURL('');
+                    const defaultAvatar = generateDefaultAvatarDataURL(getRandomAvatarColor());
+                    setPhotoPreview(defaultAvatar);
                   }}
-                  className={`mt-2 text-xs font-medium px-3 py-1 rounded-full transition-colors ${
-                    photoPreview
-                      ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  }`}
-                  disabled={!photoPreview}
+                  className="mt-2 text-xs font-medium px-3 py-1 rounded-full transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200"
                 >
-                  画像をリセット
+                  デフォルトアバターに戻す
                 </button>
               </div>
               
