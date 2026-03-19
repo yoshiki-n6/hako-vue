@@ -17,7 +17,7 @@ interface AppSettingsContextType {
 
 const DEFAULT_SETTINGS: AppSettings = {
   darkMode: false,
-  notificationsEnabled: true,
+  notificationsEnabled: false,
   notificationIntervalDays: 1,
 };
 
