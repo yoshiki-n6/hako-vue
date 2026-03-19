@@ -5,6 +5,7 @@ import { DataProvider } from './contexts/DataContext';
 import { AppSettingsProvider } from './contexts/AppSettingsContext';
 import { useReturnReminder } from './hooks/useReturnReminder';
 import { ReturnNotificationContainer } from './components/ReturnNotification';
+import { PWAInstallBanner } from './components/PWAInstallBanner';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import Home from './pages/Home';
@@ -77,6 +78,7 @@ function App() {
           <DataProvider>
             <NotificationRunner />
             <ReturnNotificationContainer />
+            <PWAInstallBanner />
             <BrowserRouter>
             <Routes>
               <Route path="/login" element={<LoginScreen />} />
