@@ -300,12 +300,12 @@ export default function ProfileScreen() {
                 <div className="space-y-3">
                   {members.map((member) => (
                     <div key={member.userId} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-400 flex items-center justify-center text-white font-bold overflow-hidden shrink-0">
-                        {member.photoURL ? (
-                          <img src={member.photoURL} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          getInitials(member.nickname)
-                        )}
+                      <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+                        <img
+                          src={member.photoURL || generateDefaultAvatarDataURL('#45B7D1')}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                       <span className="font-bold text-gray-900">{member.nickname}</span>
                     </div>
