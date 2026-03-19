@@ -707,12 +707,12 @@ export default function ProfileScreen() {
                 <div className={`p-4 rounded-2xl ${dark ? 'bg-slate-700' : 'bg-gray-50'}`}>
                   <p className={`text-sm font-bold mb-3 ${text}`}>通知タイミング</p>
                   <p className={`text-xs mb-3 ${subtext}`}>持ち出してから何日後に通知するか</p>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {([1, 3, 7] as NotificationInterval[]).map((days) => (
                       <button
                         key={days}
                         onClick={() => setNotificationInterval(days)}
-                        className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                        className={`flex-1 min-w-[60px] py-2.5 rounded-xl text-sm font-bold transition-all ${
                           settings.notificationIntervalDays === days
                             ? 'bg-blue-600 text-white shadow-md'
                             : dark ? 'bg-slate-600 text-slate-300 border border-slate-500 hover:border-blue-400' : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300'
@@ -721,6 +721,17 @@ export default function ProfileScreen() {
                         {days === 1 ? '1日後' : days === 3 ? '3日後' : '1週間後'}
                       </button>
                     ))}
+                    <button
+                      onClick={() => setNotificationInterval(0.0347)}
+                      className={`flex-1 min-w-[60px] py-2.5 rounded-xl text-[11px] font-bold transition-all ${
+                        settings.notificationIntervalDays === 0.0347
+                          ? 'bg-amber-600 text-white shadow-md'
+                          : dark ? 'bg-amber-900/40 text-amber-400 border border-amber-700 hover:bg-amber-900/60' : 'bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100'
+                      }`}
+                      title="デバッグ用: 30秒後"
+                    >
+                      30秒後<span className={`text-[9px] block ${dark ? 'text-amber-500' : 'text-amber-500'}`}>（デバッグ）</span>
+                    </button>
                   </div>
                 </div>
               )}
