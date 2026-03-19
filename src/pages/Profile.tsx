@@ -257,6 +257,7 @@ export default function ProfileScreen() {
                   onClick={() => {
                     setPhotoFile(null);
                     setPhotoPreview('');
+                    setPhotoURL('');
                   }}
                   className={`mt-2 text-xs font-medium px-3 py-1 rounded-full transition-colors ${
                     photoPreview
