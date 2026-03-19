@@ -60,8 +60,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const toggleNotifications = () =>
     setSettings(prev => ({ ...prev, notificationsEnabled: !prev.notificationsEnabled }));
 
-  const setNotificationInterval = (days: NotificationInterval) =>
+  const setNotificationInterval = async (days: NotificationInterval) => {
     setSettings(prev => ({ ...prev, notificationIntervalDays: days }));
+  };
 
   return (
     <AppSettingsContext.Provider value={{ settings, toggleDarkMode, toggleNotifications, setNotificationInterval }}>

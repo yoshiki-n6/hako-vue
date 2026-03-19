@@ -23,87 +23,82 @@ export const sendReturnReminders = onSchedule({
   logger.log(`[FCM] Running return reminder check at ${event.scheduleTime}`);
 
   try {
-    // インデックスエラーを回避するため、whereを使わずにすべてのアイテムを一旦取得します
+    // インデックスエラーを避けるため、一旦全部のアイテムを取得
     const itemsSnapshot = await db.collectionGroup('items').get();
 
-    const notificationsToSend: {
-      [key: string]: {
-        userId: string;
-        intervalDays: number;
-        items: { id: string; name: string; takenOutAt: number }[];
-      };
+    // ユーザーごとにアイテムをまとめる
+    const userItemsMap: {
+      [userId: string]: { id: string; name: string; takenOutAt: number }[];
     } = {};
 
     const now = Date.now();
 
-    // 返却期限超過のアイテムを抽出
+    // 返却期限超過の可能性があるアイテムを抽出
     itemsSnapshot.forEach((doc) => {
       const item = doc.data();
-
-      // ★ここで「持ち出し中」以外のデータをスキップ（ここで絞り込みを行う）
       if (item.status !== 'taken_out') return;
 
       const userId = item.takenOutBy;
       if (!userId) return;
 
       const takenOutAt = item.updatedAt?.toMillis?.() || item.createdAt?.toMillis?.() || 0;
-      const elapsedDays = (now - takenOutAt) / (24 * 60 * 60 * 1000);
 
-      // 【テスト用】ステータスがtaken_outなら、経過時間に関係なく全て送る！
-      const intervalDays = 0;
-      if (elapsedDays >= 0) {
-        const key = `${userId}_${intervalDays}`;
-        if (!notificationsToSend[key]) {
-          notificationsToSend[key] = {
-            userId,
-            intervalDays,
-            items: [],
-          };
-        }
-        notificationsToSend[key].items.push({
-          id: doc.id,
-          name: item.name,
-          takenOutAt,
-        });
+      if (!userItemsMap[userId]) {
+        userItemsMap[userId] = [];
       }
-    }); // ← ★余分な }); を消して、forEachを正しく閉じました
+      userItemsMap[userId].push({
+        id: doc.id,
+        name: item.name,
+        takenOutAt,
+      });
+    });
 
     let sentCount = 0;
-    for (const data of Object.values(notificationsToSend)) {
-      const userDoc = await db.collection('users').doc(data.userId).get();
+
+    // 各ユーザーの設定を確認し、必要に応じて通知を送信
+    for (const [userId, items] of Object.entries(userItemsMap)) {
+      const userDoc = await db.collection('users').doc(userId).get();
       if (!userDoc.exists) continue;
 
       const userData = userDoc.data();
       const fcmTokens = userData?.fcmTokens || [];
       const notificationsEnabled = userData?.notificationsEnabled !== false;
 
+      // ユーザーが設定した通知タイミング（デフォルト1日）
+      const intervalDays = userData?.notificationIntervalDays || 1;
+
       if (!notificationsEnabled || fcmTokens.length === 0) continue;
 
-      for (const item of data.items) {
-        // トークンごとに送信
-        for (const tokenInfo of fcmTokens) {
-          try {
-            await messaging.send({
-              token: tokenInfo.token,
-              notification: {
-                title: '返却の確認',
-                body: `「${item.name}」を返却しましたか？`,
-              },
-              data: {
-                itemId: item.id,
-                itemName: item.name,
-                userId: data.userId,
-              },
-            });
-            sentCount++;
-          } catch (error: any) {
-            // 無効なトークンを削除
-            if (error.code === 'messaging/invalid-registration-token' || error.code === 'messaging/registration-token-not-registered') {
-              await db.collection('users').doc(data.userId).update({
-                fcmTokens: FieldValue.arrayRemove(tokenInfo),
+      for (const item of items) {
+        const elapsedDays = (now - item.takenOutAt) / (24 * 60 * 60 * 1000);
+
+        // ユーザーが指定した時間より長い時間持ち出しているアイテムがあるかを判定
+        if (elapsedDays >= intervalDays && elapsedDays < intervalDays + 0.05) {
+          // トークンごとに送信
+          for (const tokenInfo of fcmTokens) {
+            try {
+              await messaging.send({
+                token: tokenInfo.token,
+                notification: {
+                  title: '返却の確認',
+                  body: `「${item.name}」を返却しましたか？`,
+                },
+                data: {
+                  itemId: item.id,
+                  itemName: item.name,
+                  userId: userId,
+                },
               });
+              sentCount++;
+            } catch (error: any) {
+              // 無効なトークンを削除
+              if (error.code === 'messaging/invalid-registration-token' || error.code === 'messaging/registration-token-not-registered') {
+                await db.collection('users').doc(userId).update({
+                  fcmTokens: FieldValue.arrayRemove(tokenInfo),
+                });
+              }
+              logger.error(`[FCM] Failed to send to ${userId}:`, error.message);
             }
-            logger.error(`[FCM] Failed to send to ${data.userId}:`, error.message);
           }
         }
       }

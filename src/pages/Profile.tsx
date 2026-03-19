@@ -718,7 +718,20 @@ export default function ProfileScreen() {
                     {([1, 3, 7] as NotificationInterval[]).map((days) => (
                       <button
                         key={days}
-                        onClick={() => setNotificationInterval(days)}
+                        onClick={async () => {
+                          setNotificationInterval(days);
+                          if (currentUser) {
+                            try {
+                              const { db } = await import('../firebase');
+                              const { doc, updateDoc } = await import('firebase/firestore');
+                              await updateDoc(doc(db, 'users', currentUser.uid), {
+                                notificationIntervalDays: days
+                              });
+                            } catch (e) {
+                              console.error('Failed to update interval:', e);
+                            }
+                          }
+                        }}
                         className={`flex-1 min-w-[60px] py-2.5 rounded-xl text-sm font-bold transition-all ${settings.notificationIntervalDays === days
                           ? 'bg-blue-600 text-white shadow-md'
                           : dark ? 'bg-slate-600 text-slate-300 border border-slate-500 hover:border-blue-400' : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300'
@@ -728,7 +741,20 @@ export default function ProfileScreen() {
                       </button>
                     ))}
                     <button
-                      onClick={() => setNotificationInterval(0.000347)}
+                      onClick={async () => {
+                        setNotificationInterval(0.000347);
+                        if (currentUser) {
+                          try {
+                            const { db } = await import('../firebase');
+                            const { doc, updateDoc } = await import('firebase/firestore');
+                            await updateDoc(doc(db, 'users', currentUser.uid), {
+                              notificationIntervalDays: 0.000347
+                            });
+                          } catch (e) {
+                            console.error('Failed to update interval:', e);
+                          }
+                        }
+                      }}
                       className={`flex-1 min-w-[60px] py-2.5 rounded-xl text-[11px] font-bold transition-all ${settings.notificationIntervalDays === 0.000347
                         ? 'bg-amber-600 text-white shadow-md'
                         : dark ? 'bg-amber-900/40 text-amber-400 border border-amber-700 hover:bg-amber-900/60' : 'bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100'
