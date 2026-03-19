@@ -106,6 +106,8 @@ export default function ProfileScreen() {
       await updateProfile(nickname, photoPreview);
       setPhotoFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
+      // 保存後はinitialPhotoURLも最新化して次回リセット時に正しく戻れるようにする
+      setInitialPhotoURL(photoPreview);
       setIsEditingProfile(false);
     } catch (error) {
       console.error('Failed to save profile:', error);
@@ -187,7 +189,14 @@ export default function ProfileScreen() {
               </p>
             </div>
             <button
-              onClick={() => setIsEditingProfile(true)}
+              onClick={() => {
+                const currentPhoto = userProfile?.photoURL || '';
+                setPhotoPreview(currentPhoto);
+                setInitialPhotoURL(currentPhoto);
+                setPhotoFile(null);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+                setIsEditingProfile(true);
+              }}
               className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
             >
               <Edit2 size={18} className="text-gray-600" />
