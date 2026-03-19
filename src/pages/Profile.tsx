@@ -7,6 +7,7 @@ import type { Channel, ChannelMember } from '../contexts/ChannelContext';
 import { generateDefaultAvatarDataURL, getAvatarColorFromUserId } from '../utils/avatarUtils';
 import { useAppSettings } from '../contexts/AppSettingsContext';
 import type { NotificationInterval } from '../contexts/AppSettingsContext';
+import { requestAndSaveFCMToken, removeFCMToken } from '../hooks/useFCM';
 
 export default function ProfileScreen() {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ export default function ProfileScreen() {
   const { channels, currentChannel, userProfile, switchChannel, setDefaultChannel, updateProfile, getChannelMembers, leaveChannel, updateChannelName } = useChannel();
   const { settings, toggleDarkMode, toggleNotifications, setNotificationInterval } = useAppSettings();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [settingDefault, setSettingDefault] = useState<string | null>(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -23,7 +24,7 @@ export default function ProfileScreen() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string>('');
   const [saving, setSaving] = useState(false);
-  
+
   // Member modal state
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
@@ -83,7 +84,7 @@ export default function ProfileScreen() {
         alert('ファイルサイズは5MB以下にしてください');
         return;
       }
-      
+
       // Check file type
       if (!file.type.startsWith('image/')) {
         alert('画像ファイルのみアップロード可能です');
@@ -91,7 +92,7 @@ export default function ProfileScreen() {
       }
 
       setPhotoFile(file);
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -305,13 +306,13 @@ export default function ProfileScreen() {
 
         {/* Channel Menu Modal */}
         {showChannelMenu && (
-          <div 
+          <div
             className="fixed inset-0 z-50"
             onClick={() => setShowChannelMenu(null)}
           >
             <div className="absolute inset-0 bg-black/20" />
             <div className="absolute bottom-0 left-0 right-0 max-w-md mx-auto p-4">
-              <div 
+              <div
                 className="bg-white rounded-2xl shadow-xl overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -330,84 +331,84 @@ export default function ProfileScreen() {
                         <Pencil size={18} className="text-gray-400" />
                         名前を編集
                       </button>
+                      <button
+                        onClick={() => {
+                          setShowLeaveConfirm(channel);
+                          setShowChannelMenu(null);
+                        }}
+                        className={`w-full px-4 py-3 text-left text-sm font-medium text-red-600 flex items-center gap-3 ${dark ? 'hover:bg-red-900/20' : 'hover:bg-red-50'}`}
+                      >
+                        <Trash2 size={18} className="text-red-400" />
+                        脱退する
+                      </button>
+                    </>
+                  );
+                })()}
                 <button
-                  onClick={() => {
-                    setShowLeaveConfirm(channel);
-                    setShowChannelMenu(null);
-                  }}
-                  className={`w-full px-4 py-3 text-left text-sm font-medium text-red-600 flex items-center gap-3 ${dark ? 'hover:bg-red-900/20' : 'hover:bg-red-50'}`}
+                  onClick={() => setShowChannelMenu(null)}
+                  className={`w-full px-4 py-3 text-center text-sm font-bold border-t ${dark ? 'text-slate-400 hover:bg-slate-700 border-slate-700' : 'text-gray-500 hover:bg-gray-50 border-gray-100'}`}
                 >
-                  <Trash2 size={18} className="text-red-400" />
-                  脱退する
+                  キャンセル
                 </button>
-              </>
-            );
-          })()}
-          <button
-            onClick={() => setShowChannelMenu(null)}
-            className={`w-full px-4 py-3 text-center text-sm font-bold border-t ${dark ? 'text-slate-400 hover:bg-slate-700 border-slate-700' : 'text-gray-500 hover:bg-gray-50 border-gray-100'}`}
-          >
-            キャンセル
-          </button>
-        </div>
-      </div>
-    </div>
-  )}
-
-  {/* Leave Channel Confirmation Modal */}
-  {showLeaveConfirm && (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className={`rounded-3xl p-6 w-full max-w-sm ${dark ? 'bg-slate-800' : 'bg-white'}`}>
-        <div className="flex items-center justify-center mb-4">
-          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
-            <AlertTriangle size={32} className="text-red-500" />
+              </div>
+            </div>
           </div>
-        </div>
-        <h3 className={`text-lg font-bold text-center mb-2 ${text}`}>チャンネルを脱退</h3>
-        <p className={`text-sm text-center mb-2 ${subtext}`}>「{showLeaveConfirm.name}」から脱退しますか？</p>
-        {showLeaveConfirm.memberIds.length === 1 && (
-          <p className="text-xs text-red-500 bg-red-50 p-3 rounded-xl text-center mb-2">あなたが最後のメンバーです。脱退するとチャンネ���は削除されます。</p>
         )}
-        {channels.length === 1 && (
-          <p className="text-xs text-amber-600 bg-amber-50 p-3 rounded-xl text-center mb-4">これが最後のチャンネルです。脱退後は新しいチャンネルを作成または参加してください。</p>
+
+        {/* Leave Channel Confirmation Modal */}
+        {showLeaveConfirm && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className={`rounded-3xl p-6 w-full max-w-sm ${dark ? 'bg-slate-800' : 'bg-white'}`}>
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                  <AlertTriangle size={32} className="text-red-500" />
+                </div>
+              </div>
+              <h3 className={`text-lg font-bold text-center mb-2 ${text}`}>チャンネルを脱退</h3>
+              <p className={`text-sm text-center mb-2 ${subtext}`}>「{showLeaveConfirm.name}」から脱退しますか？</p>
+              {showLeaveConfirm.memberIds.length === 1 && (
+                <p className="text-xs text-red-500 bg-red-50 p-3 rounded-xl text-center mb-2">あなたが最後のメンバーです。脱退するとチャンネ���は削除されます。</p>
+              )}
+              {channels.length === 1 && (
+                <p className="text-xs text-amber-600 bg-amber-50 p-3 rounded-xl text-center mb-4">これが最後のチャンネルです。脱退後は新しいチャンネルを作成または参加してください。</p>
+              )}
+              <div className="flex gap-3 mt-6">
+                <button onClick={() => setShowLeaveConfirm(null)} className={`flex-1 font-bold py-3 rounded-xl transition-colors ${dark ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                  キャンセル
+                </button>
+                <button onClick={handleLeaveChannel} disabled={leavingChannel}
+                  className="flex-1 bg-red-500 text-white font-bold py-3 rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                  {leavingChannel ? <><RefreshCw size={16} className="animate-spin" />処理中...</> : '脱退する'}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
-        <div className="flex gap-3 mt-6">
-          <button onClick={() => setShowLeaveConfirm(null)} className={`flex-1 font-bold py-3 rounded-xl transition-colors ${dark ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
-            キャンセル
-          </button>
-          <button onClick={handleLeaveChannel} disabled={leavingChannel}
-            className="flex-1 bg-red-500 text-white font-bold py-3 rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-            {leavingChannel ? <><RefreshCw size={16} className="animate-spin" />処理中...</> : '脱退する'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )}
 
-  {/* Edit Channel Name Modal */}
-  {showEditChannelModal && (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className={`rounded-3xl p-6 w-full max-w-sm ${dark ? 'bg-slate-800' : 'bg-white'}`}>
-        <div className="flex items-center justify-between mb-6">
-          <h3 className={`text-lg font-bold ${text}`}>チャンネル名を編集</h3>
-          <button onClick={() => setShowEditChannelModal(null)} className="p-1">
-            <X size={20} className={dark ? 'text-slate-400' : 'text-gray-500'} />
-          </button>
-        </div>
+        {/* Edit Channel Name Modal */}
+        {showEditChannelModal && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className={`rounded-3xl p-6 w-full max-w-sm ${dark ? 'bg-slate-800' : 'bg-white'}`}>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className={`text-lg font-bold ${text}`}>チャンネル名を編集</h3>
+                <button onClick={() => setShowEditChannelModal(null)} className="p-1">
+                  <X size={20} className={dark ? 'text-slate-400' : 'text-gray-500'} />
+                </button>
+              </div>
 
-        <div className="mb-6">
-          <label className={`block text-sm font-bold mb-2 ${dark ? 'text-slate-300' : 'text-gray-700'}`}>チャンネル名</label>
-          <input
-            type="text"
-            value={editingChannelName}
-            onChange={(e) => setEditingChannelName(e.target.value)}
-            placeholder="チャンネル名を入力"
-            className={`w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-transparent ${inputCls}`}
-          />
-        </div>
+              <div className="mb-6">
+                <label className={`block text-sm font-bold mb-2 ${dark ? 'text-slate-300' : 'text-gray-700'}`}>チャンネル名</label>
+                <input
+                  type="text"
+                  value={editingChannelName}
+                  onChange={(e) => setEditingChannelName(e.target.value)}
+                  placeholder="チャンネル名を入力"
+                  className={`w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-transparent ${inputCls}`}
+                />
+              </div>
 
-        <button
-          onClick={handleSaveChannelName}
+              <button
+                onClick={handleSaveChannelName}
                 disabled={savingChannelName || !editingChannelName.trim()}
                 className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
@@ -426,11 +427,10 @@ export default function ProfileScreen() {
 
         {/* Current Channel */}
         {currentChannel && (
-          <section className={`rounded-3xl p-5 border shadow-sm ${
-            currentChannel.type === 'solo'
-              ? 'bg-gradient-to-br from-purple-50 to-violet-50 border-purple-100'
-              : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100'
-          }`}>
+          <section className={`rounded-3xl p-5 border shadow-sm ${currentChannel.type === 'solo'
+            ? 'bg-gradient-to-br from-purple-50 to-violet-50 border-purple-100'
+            : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100'
+            }`}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <h3 className={`text-sm font-bold ${currentChannel.type === 'solo' ? 'text-purple-900' : 'text-blue-900'}`}>
@@ -488,10 +488,10 @@ export default function ProfileScreen() {
         {/* Channels List */}
         <section className="space-y-3">
           <h3 className="text-sm font-bold text-gray-900 px-1">チャンネル一覧</h3>
-          
+
           <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 divide-y divide-gray-50">
             {channels.map((channel) => (
-              <div 
+              <div
                 key={channel.id}
                 className={`p-4 ${currentChannel?.id === channel.id ? (channel.type === 'solo' ? 'bg-purple-50/50' : 'bg-blue-50/50') : ''}`}
               >
@@ -509,9 +509,8 @@ export default function ProfileScreen() {
                       </span>
                     )}
                     {currentChannel?.id === channel.id && (
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
-                        channel.type === 'solo' ? 'text-purple-600 bg-purple-100' : 'text-blue-600 bg-blue-100'
-                      }`}>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${channel.type === 'solo' ? 'text-purple-600 bg-purple-100' : 'text-blue-600 bg-blue-100'
+                        }`}>
                         使用中
                       </span>
                     )}
@@ -531,11 +530,10 @@ export default function ProfileScreen() {
                     {channel.type === 'shared' && (
                       <button
                         onClick={() => handleShowMembers(channel)}
-                        className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full transition-colors ${
-                          channel.memberIds.length >= 2 
-                            ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' 
-                            : 'text-gray-500 bg-gray-100'
-                        }`}
+                        className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full transition-colors ${channel.memberIds.length >= 2
+                          ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
+                          : 'text-gray-500 bg-gray-100'
+                          }`}
                       >
                         <Users size={12} />
                         {channel.memberIds.length}
@@ -654,14 +652,12 @@ export default function ProfileScreen() {
                 </div>
                 <button
                   onClick={toggleDarkMode}
-                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 ${
-                    settings.darkMode ? 'bg-indigo-600' : 'bg-gray-300'
-                  }`}
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 ${settings.darkMode ? 'bg-indigo-600' : 'bg-gray-300'
+                    }`}
                 >
                   <span
-                    className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${
-                      settings.darkMode ? 'translate-x-6' : 'translate-x-1'
-                    }`}
+                    className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${settings.darkMode ? 'translate-x-6' : 'translate-x-1'
+                      }`}
                   />
                 </button>
               </div>
@@ -682,21 +678,32 @@ export default function ProfileScreen() {
                 </div>
                 <button
                   onClick={async () => {
-                    // 通知をONにする場合、まず許可を取得
-                    if (!settings.notificationsEnabled && 'Notification' in window) {
-                      if (Notification.permission === 'default') {
-                        const permission = await Notification.requestPermission();
-                        if (permission !== 'granted') return;
-                      } else if (Notification.permission === 'denied') {
-                        alert('通知が拒否されています。ブラウザの設定から通知を許可してください。');
-                        return;
+                    if (!settings.notificationsEnabled) {
+                      // 通知をONにする場合、まず許可を取得
+                      if ('Notification' in window) {
+                        if (Notification.permission === 'default') {
+                          const permission = await Notification.requestPermission();
+                          if (permission !== 'granted') return;
+                        } else if (Notification.permission === 'denied') {
+                          alert('通知が拒否されています。ブラウザの設定から通知を許可してください。');
+                          return;
+                        }
+
+                        // 許可された場合（すでにgrantedの場合も含む）、即座にトークンを取得して保存
+                        if (currentUser && Notification.permission === 'granted') {
+                          await requestAndSaveFCMToken(currentUser);
+                        }
+                      }
+                    } else {
+                      // 通知をOFFにする場合、Firestoreから現在のトークンを削除する
+                      if (currentUser) {
+                        await removeFCMToken(currentUser);
                       }
                     }
                     toggleNotifications();
                   }}
-                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 ${
-                    settings.notificationsEnabled ? 'bg-blue-600' : 'bg-gray-300'
-                  }`}
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 ${settings.notificationsEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                    }`}
                 >
                   <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${settings.notificationsEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                 </button>
@@ -712,22 +719,20 @@ export default function ProfileScreen() {
                       <button
                         key={days}
                         onClick={() => setNotificationInterval(days)}
-                        className={`flex-1 min-w-[60px] py-2.5 rounded-xl text-sm font-bold transition-all ${
-                          settings.notificationIntervalDays === days
-                            ? 'bg-blue-600 text-white shadow-md'
-                            : dark ? 'bg-slate-600 text-slate-300 border border-slate-500 hover:border-blue-400' : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300'
-                        }`}
+                        className={`flex-1 min-w-[60px] py-2.5 rounded-xl text-sm font-bold transition-all ${settings.notificationIntervalDays === days
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : dark ? 'bg-slate-600 text-slate-300 border border-slate-500 hover:border-blue-400' : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300'
+                          }`}
                       >
                         {days === 1 ? '1日後' : days === 3 ? '3日後' : '1週間後'}
                       </button>
                     ))}
                     <button
                       onClick={() => setNotificationInterval(0.000347)}
-                      className={`flex-1 min-w-[60px] py-2.5 rounded-xl text-[11px] font-bold transition-all ${
-                        settings.notificationIntervalDays === 0.000347
-                          ? 'bg-amber-600 text-white shadow-md'
-                          : dark ? 'bg-amber-900/40 text-amber-400 border border-amber-700 hover:bg-amber-900/60' : 'bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100'
-                      }`}
+                      className={`flex-1 min-w-[60px] py-2.5 rounded-xl text-[11px] font-bold transition-all ${settings.notificationIntervalDays === 0.000347
+                        ? 'bg-amber-600 text-white shadow-md'
+                        : dark ? 'bg-amber-900/40 text-amber-400 border border-amber-700 hover:bg-amber-900/60' : 'bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100'
+                        }`}
                       title="デバッグ用: 30秒後"
                     >
                       30秒後<span className={`text-[9px] block ${dark ? 'text-amber-500' : 'text-amber-500'}`}>（デバッグ）</span>

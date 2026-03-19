@@ -1,0 +1,163 @@
+2026-03-19T19:18:17.070266154Z N sendReturnReminders: {"@type":"type.googleapis.com/google.cloud.audit.AuditLog","status":{},"authenticationInfo":{"principalEmail":"e6395316@gmail.com","principalSubject":"user:e6395316@gmail.com","oauthInfo":{"oauthClientId":"563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com"}},"requestMetadata":{"callerIp":"58.95.81.190","callerSuppliedUserAgent":"FirebaseCLI/15.11.0,gzip(gfe),gzip(gfe)","requestAttributes":{"time":"2026-03-19T19:18:15.998247605Z","auth":{}},"destinationAttributes":{}},"serviceName":"cloudfunctions.googleapis.com","methodName":"google.cloud.functions.v2.FunctionService.CreateFunction","authorizationInfo":[{"resource":"projects/hako-vue/locations/us-central1/functions/sendReturnReminders","permission":"cloudfunctions.functions.create","granted":true,"resourceAttributes":{"service":"cloudfunctions.googleapis.com","name":"projects/hako-vue/locations/us-central1/functions/sendReturnReminders","type":"cloudfunctions.googleapis.com/Function"},"permissionType":"ADMIN_WRITE"}],"resourceName":"projects/hako-vue/locations/us-central1/functions/sendReturnReminders","request":{"parent":"projects/hako-vue/locations/us-central1","@type":"type.googleapis.com/google.cloud.functions.v2.CreateFunctionRequest","function":{"name":"projects/hako-vue/locations/us-central1/functions/sendReturnReminders","labels":{"deployment-scheduled":"true","deployment-tool":"cli-firebase","firebase-functions-hash":"8474bc1d32612bcefde006fd0285eddf73795683"},"service_config":{"max_instance_request_concurrency":80,"available_cpu":"1","available_memory":"256Mi"},"build_config":{"entry_point":"sendReturnReminders","source":{},"runtime":"nodejs20"}}},"response":{"@type":"type.googleapis.com/google.longrunning.Operation"},"resourceLocation":{"currentLocations":["us-central1"]}}
+2026-03-19T19:18:33.811235777Z E onNotificationSettingChange: {"@type":"type.googleapis.com/google.cloud.audit.AuditLog","status":{"code":9,"message":"Validation failed for trigger projects/hako-vue/locations/asia-northeast2/triggers/onnotificationsettingchange-581287: Invalid resource state for \"\": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role."},"authenticationInfo":{"principalEmail":"e6395316@gmail.com","principalSubject":"user:e6395316@gmail.com","oauthInfo":{"oauthClientId":"563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com"}},"requestMetadata":{"callerIp":"58.95.81.190","callerSuppliedUserAgent":"FirebaseCLI/15.11.0,gzip(gfe),gzip(gfe)","requestAttributes":{"time":"2026-03-19T19:18:15.944659677Z","auth":{}},"destinationAttributes":{}},"serviceName":"cloudfunctions.googleapis.com","methodName":"google.cloud.functions.v2.FunctionService.CreateFunction","authorizationInfo":[{"resource":"projects/hako-vue/locations/us-central1/functions/onNotificationSettingChange","permission":"cloudfunctions.functions.create","granted":true,"resourceAttributes":{"service":"cloudfunctions.googleapis.com","name":"projects/hako-vue/locations/us-central1/functions/onNotificationSettingChange","type":"cloudfunctions.googleapis.com/Function"},"permissionType":"ADMIN_WRITE"}],"resourceName":"projects/hako-vue/locations/us-central1/functions/onNotificationSettingChange","request":{"@type":"type.googleapis.com/google.cloud.functions.v2.CreateFunctionRequest","function":{"build_config":{"source":{},"entry_point":"onNotificationSettingChange","runtime":"nodejs20"},"name":"projects/hako-vue/locations/us-central1/functions/onNotificationSettingChange","labels":{"firebase-functions-hash":"8474bc1d32612bcefde006fd0285eddf73795683","deployment-tool":"cli-firebase"},"service_config":{"available_memory":"256Mi","max_instance_request_concurrency":80,"available_cpu":"1"},"event_trigger":{"event_type":"google.cloud.firestore.document.v1.written","retry_policy":"RETRY_POLICY_DO_NOT_RETRY","event_filters":[{"value":"(default)","attribute":"database"},{"attribute":"namespace","value":"(default)"},{"operator":"match-path-pattern","value":"users/{userId}","attribute":"document"}],"trigger_region":"asia-northeast2"}},"parent":"projects/hako-vue/locations/us-central1"},"response":{"@type":"type.googleapis.com/google.longrunning.Operation"},"resourceLocation":{"currentLocations":["us-central1"]}}
+2026-03-19T19:18:59.465404799Z E sendReturnReminders: {"@type":"type.googleapis.com/google.cloud.audit.AuditLog","status":{"code":3,"message":"Build failed with status: FAILURE. Could not build the function due to a missing permission on the build service account. If you didn't revoke that permission explicitly, this could be caused by a change in the organization policies. Please refer to the following documentation for more details and resolution: https://cloud.google.com/functions/docs/troubleshooting#build-service-account\n You can also view the logs at https://console.cloud.google.com/cloud-build/builds;region=us-central1/b91899aa-0df6-4c0e-9000-47be2a1affed?project=574839817132.\n"},"authenticationInfo":{"principalEmail":"e6395316@gmail.com","principalSubject":"user:e6395316@gmail.com","oauthInfo":{"oauthClientId":"563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com"}},"requestMetadata":{"requestAttributes":{},"destinationAttributes":{}},"serviceName":"cloudfunctions.googleapis.com","methodName":"google.cloud.functions.v2.FunctionService.CreateFunction","resourceName":"projects/hako-vue/locations/us-central1/functions/sendReturnReminders","resourceLocation":{"currentLocations":["us-central1"]}}
+2026-03-19T19:21:39.035496202Z N sendReturnReminders: {"@type":"type.googleapis.com/google.cloud.audit.AuditLog","status":{},"authenticationInfo":{"principalEmail":"e6395316@gmail.com","principalSubject":"user:e6395316@gmail.com","oauthInfo":{"oauthClientId":"563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com"}},"requestMetadata":{"callerIp":"58.95.81.190","callerSuppliedUserAgent":"FirebaseCLI/15.11.0,gzip(gfe),gzip(gfe)","requestAttributes":{"time":"2026-03-19T19:21:38.281367124Z","auth":{}},"destinationAttributes":{}},"serviceName":"cloudfunctions.googleapis.com","methodName":"google.cloud.functions.v2.FunctionService.UpdateFunction","authorizationInfo":[{"resource":"projects/hako-vue/locations/us-central1/functions/sendReturnReminders","permission":"cloudfunctions.functions.update","granted":true,"resourceAttributes":{"service":"cloudfunctions.googleapis.com","name":"projects/hako-vue/locations/us-central1/functions/sendReturnReminders","type":"cloudfunctions.googleapis.com/Function"},"permissionType":"ADMIN_WRITE"}],"resourceName":"projects/hako-vue/locations/us-central1/functions/sendReturnReminders","request":{"@type":"type.googleapis.com/google.cloud.functions.v2.UpdateFunctionRequest","update_mask":{"paths":["name","build_config.runtime","build_config.entry_point","build_config.source.storage_source.bucket","build_config.source.storage_source.object","build_config.environment_variables","build_config.source_token","service_config.environment_variables","service_config.ingress_settings","service_config.timeout_seconds","service_config.service_account_email","service_config.available_memory","service_config.min_instance_count","service_config.max_instance_count","service_config.max_instance_request_concurrency","service_config.available_cpu","service_config.vpc_connector","service_config.vpc_connector_egress_settings","service_config.direct_vpc_network_interface","service_config.direct_vpc_egress","labels"]},"function":{"labels":{"firebase-functions-hash":"8474bc1d32612bcefde006fd0285eddf73795683","deployment-scheduled":"true","deployment-tool":"cli-firebase"},"service_config":{"max_instance_request_concurrency":80,"available_memory":"256Mi","available_cpu":"1"},"build_config":{"runtime":"nodejs20","source":{},"entry_point":"sendReturnReminders"},"name":"projects/hako-vue/locations/us-central1/functions/sendReturnReminders"}},"response":{"@type":"type.googleapis.com/google.longrunning.Operation"},"resourceLocation":{"currentLocations":["us-central1"]}}
+2026-03-19T19:21:39.389864725Z N onNotificationSettingChange: {"@type":"type.googleapis.com/google.cloud.audit.AuditLog","status":{},"authenticationInfo":{"principalEmail":"e6395316@gmail.com","principalSubject":"user:e6395316@gmail.com","oauthInfo":{"oauthClientId":"563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com"}},"requestMetadata":{"callerIp":"58.95.81.190","callerSuppliedUserAgent":"FirebaseCLI/15.11.0,gzip(gfe),gzip(gfe)","requestAttributes":{"time":"2026-03-19T19:21:38.195390321Z","auth":{}},"destinationAttributes":{}},"serviceName":"cloudfunctions.googleapis.com","methodName":"google.cloud.functions.v2.FunctionService.CreateFunction","authorizationInfo":[{"resource":"projects/hako-vue/locations/us-central1/functions/onNotificationSettingChange","permission":"cloudfunctions.functions.create","granted":true,"resourceAttributes":{"service":"cloudfunctions.googleapis.com","name":"projects/hako-vue/locations/us-central1/functions/onNotificationSettingChange","type":"cloudfunctions.googleapis.com/Function"},"permissionType":"ADMIN_WRITE"}],"resourceName":"projects/hako-vue/locations/us-central1/functions/onNotificationSettingChange","request":{"function":{"service_config":{"available_cpu":"1","max_instance_request_concurrency":80,"available_memory":"256Mi"},"name":"projects/hako-vue/locations/us-central1/functions/onNotificationSettingChange","build_config":{"source":{},"runtime":"nodejs20","entry_point":"onNotificationSettingChange"},"event_trigger":{"event_filters":[{"value":"(default)","attribute":"database"},{"attribute":"namespace","value":"(default)"},{"operator":"match-path-pattern","value":"users/{userId}","attribute":"document"}],"trigger_region":"asia-northeast2","event_type":"google.cloud.firestore.document.v1.written","retry_policy":"RETRY_POLICY_DO_NOT_RETRY"},"labels":{"firebase-functions-hash":"8474bc1d32612bcefde006fd0285eddf73795683","deployment-tool":"cli-firebase"}},"@type":"type.googleapis.com/google.cloud.functions.v2.CreateFunctionRequest","parent":"projects/hako-vue/locations/us-central1"},"response":{"@type":"type.googleapis.com/google.longrunning.Operation"},"resourceLocation":{"currentLocations":["us-central1"]}}
+2026-03-19T19:22:29.120906Z I sendreturnreminders: Starting new instance. Reason: DEPLOYMENT_ROLLOUT - Instance started due to traffic shifting between revisions due to deployment, traffic split adjustment, or deployment health check.
+2026-03-19T19:22:31.336191Z I sendreturnreminders: Default STARTUP TCP probe succeeded after 1 attempt for container "worker" on port 8080.
+2026-03-19T19:22:34.663047832Z N sendReturnReminders: {"@type":"type.googleapis.com/google.cloud.audit.AuditLog","status":{},"authenticationInfo":{"principalEmail":"e6395316@gmail.com","principalSubject":"user:e6395316@gmail.com","oauthInfo":{"oauthClientId":"563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com"}},"requestMetadata":{"requestAttributes":{},"destinationAttributes":{}},"serviceName":"cloudfunctions.googleapis.com","methodName":"google.cloud.functions.v2.FunctionService.UpdateFunction","resourceName":"projects/hako-vue/locations/us-central1/functions/sendReturnReminders","response":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","url":"https://us-central1-hako-vue.cloudfunctions.net/sendReturnReminders","updateTime":"2026-03-19T19:21:39.022324329Z","name":"projects/hako-vue/locations/us-central1/functions/sendReturnReminders","serviceConfig":{"availableMemory":"256Mi","allTrafficOnLatestRevision":true,"uri":"https://sendreturnreminders-7jjyg764la-uc.a.run.app","maxInstanceRequestConcurrency":80,"ingressSettings":"ALLOW_ALL","serviceAccountEmail":"574839817132-compute@developer.gserviceaccount.com","timeoutSeconds":60,"availableCpu":"1","revision":"sendreturnreminders-00001-kuw"},"createTime":"2026-03-19T19:18:17.044005745Z","buildConfig":{"entryPoint":"sendReturnReminders","runtime":"nodejs20","dockerRegistry":"ARTIFACT_REGISTRY","source":{},"dockerRepository":"projects/hako-vue/locations/us-central1/repositories/gcf-artifacts","automaticUpdatePolicy":{},"serviceAccount":"projects/hako-vue/serviceAccounts/574839817132-compute@developer.gserviceaccount.com"},"state":"ACTIVE","environment":"GEN_2","satisfiesPzi":true,"labels":{"firebase-functions-hash":"8474bc1d32612bcefde006fd0285eddf73795683","deployment-scheduled":"true","deployment-tool":"cli-firebase"}},"resourceLocation":{"currentLocations":["us-central1"]}}
+2026-03-19T19:22:37.449636Z I onnotificationsettingchange: Starting new instance. Reason: DEPLOYMENT_ROLLOUT - Instance started due to traffic shifting between revisions due to deployment, traffic split adjustment, or deployment health check.
+2026-03-19T19:22:40.080728Z I onnotificationsettingchange: Default STARTUP TCP probe succeeded after 1 attempt for container "worker" on port 8080.
+2026-03-19T19:23:00.606652941Z N onNotificationSettingChange: {"@type":"type.googleapis.com/google.cloud.audit.AuditLog","status":{},"authenticationInfo":{"principalEmail":"e6395316@gmail.com","principalSubject":"user:e6395316@gmail.com","oauthInfo":{"oauthClientId":"563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com"}},"requestMetadata":{"requestAttributes":{},"destinationAttributes":{}},"serviceName":"cloudfunctions.googleapis.com","methodName":"google.cloud.functions.v2.FunctionService.CreateFunction","resourceName":"projects/hako-vue/locations/us-central1/functions/onNotificationSettingChange","response":{"createTime":"2026-03-19T19:21:39.370809435Z","name":"projects/hako-vue/locations/us-central1/functions/onNotificationSettingChange","state":"ACTIVE","serviceConfig":{"availableMemory":"256Mi","revision":"onnotificationsettingchange-00001-mel","timeoutSeconds":60,"availableCpu":"1","allTrafficOnLatestRevision":true,"maxInstanceRequestConcurrency":80,"ingressSettings":"ALLOW_ALL","uri":"https://onnotificationsettingchange-7jjyg764la-uc.a.run.app","serviceAccountEmail":"574839817132-compute@developer.gserviceaccount.com"},"labels":{"deployment-tool":"cli-firebase","firebase-functions-hash":"8474bc1d32612bcefde006fd0285eddf73795683"},"url":"https://us-central1-hako-vue.cloudfunctions.net/onNotificationSettingChange","buildConfig":{"runtime":"nodejs20","entryPoint":"onNotificationSettingChange","source":{},"dockerRegistry":"ARTIFACT_REGISTRY","dockerRepository":"projects/hako-vue/locations/us-central1/repositories/gcf-artifacts","serviceAccount":"projects/hako-vue/serviceAccounts/574839817132-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"eventTrigger":{"pubsubTopic":"projects/hako-vue/topics/eventarc-asia-northeast2-onnotificationsettingchange-440860-663","serviceAccountEmail":"574839817132-compute@developer.gserviceaccount.com","retryPolicy":"RETRY_POLICY_DO_NOT_RETRY","trigger":"projects/hako-vue/locations/asia-northeast2/triggers/onnotificationsettingchange-440860","triggerRegion":"asia-northeast2","eventType":"google.cloud.firestore.document.v1.written","eventFilters":[{"attribute":"namespace","value":"(default)"},{"operator":"match-path-pattern","attribute":"document","value":"users/{userId}"},{"attribute":"database","value":"(default)"}]},"@type":"type.googleapis.com/google.cloud.functions.v2.Function","satisfiesPzi":true,"updateTime":"2026-03-19T19:21:39.370809435Z","environment":"GEN_2"},"resourceLocation":{"currentLocations":["us-central1"]}}
+2026-03-19T19:37:33.929478Z I sendreturnreminders: 
+2026-03-19T19:37:33.968754Z I sendreturnreminders: [FCM] Running return reminder check at 2026-03-19T13:25:00-07:00
+2026-03-19T19:37:35.268785Z E sendreturnreminders: [FCM] Error in sendReturnReminders: Error: 9 FAILED_PRECONDITION: 
+    at callErrorFromStatus (/workspace/node_modules/@grpc/grpc-js/build/src/call.js:32:19)
+    at Object.onReceiveStatus (/workspace/node_modules/@grpc/grpc-js/build/src/client.js:359:73)
+    at Object.onReceiveStatus (/workspace/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)
+    at /workspace/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78
+    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)
+for call at
+    at ServiceClientImpl.makeServerStreamRequest (/workspace/node_modules/@grpc/grpc-js/build/src/client.js:342:32)
+    at ServiceClientImpl.<anonymous> (/workspace/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)
+    at /workspace/node_modules/@google-cloud/firestore/build/src/v1/firestore_client.js:242:33
+    at /workspace/node_modules/google-gax/build/src/streamingCalls/streamingApiCaller.js:38:28
+    at /workspace/node_modules/google-gax/build/src/normalCalls/timeout.js:44:16
+    at Object.request (/workspace/node_modules/google-gax/build/src/streamingCalls/streaming.js:234:40)
+    at makeRequest (/workspace/node_modules/retry-request/index.js:159:28)
+    at retryRequest (/workspace/node_modules/retry-request/index.js:119:5)
+    at StreamProxy.setStream (/workspace/node_modules/google-gax/build/src/streamingCalls/streaming.js:225:37)
+    at StreamingApiCaller.call (/workspace/node_modules/google-gax/build/src/streamingCalls/streamingApiCaller.js:54:16)
+Caused by: Error
+    at QueryUtil._getResponse (/workspace/node_modules/@google-cloud/firestore/build/src/reference/query-util.js:44:23)
+    at Query._getResponse (/workspace/node_modules/@google-cloud/firestore/build/src/reference/query.js:784:32)
+    at Query._get (/workspace/node_modules/@google-cloud/firestore/build/src/reference/query.js:777:35)
+    at /workspace/node_modules/@google-cloud/firestore/build/src/reference/query.js:745:43
+    at /workspace/node_modules/@google-cloud/firestore/build/src/telemetry/enabled-trace-util.js:110:30
+    at NoopContextManager.with (/workspace/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+    at ContextAPI.with (/workspace/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+    at NoopTracer.startActiveSpan (/workspace/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+    at ProxyTracer.startActiveSpan (/workspace/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+    at EnabledTraceUtil.startActiveSpan (/workspace/node_modules/@google-cloud/firestore/build/src/telemetry/enabled-trace-util.js:102:28) {
+  code: 9,
+  details: '',
+  metadata: Metadata {
+    internalRepr: Map(1) { 'x-debug-tracking-id' => [Array] },
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-03-19T19:44:58.663565Z I sendreturnreminders: 
+2026-03-19T19:44:58.690616Z I sendreturnreminders: [FCM] Running return reminder check at 2026-03-19T13:37:02.38027-07:00
+2026-03-19T19:44:59.658865Z E sendreturnreminders: [FCM] Error in sendReturnReminders: Error: 9 FAILED_PRECONDITION: 
+    at callErrorFromStatus (/workspace/node_modules/@grpc/grpc-js/build/src/call.js:32:19)
+    at Object.onReceiveStatus (/workspace/node_modules/@grpc/grpc-js/build/src/client.js:359:73)
+    at Object.onReceiveStatus (/workspace/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)
+    at /workspace/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78
+    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)
+for call at
+    at ServiceClientImpl.makeServerStreamRequest (/workspace/node_modules/@grpc/grpc-js/build/src/client.js:342:32)
+    at ServiceClientImpl.<anonymous> (/workspace/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)
+    at /workspace/node_modules/@google-cloud/firestore/build/src/v1/firestore_client.js:242:33
+    at /workspace/node_modules/google-gax/build/src/streamingCalls/streamingApiCaller.js:38:28
+    at /workspace/node_modules/google-gax/build/src/normalCalls/timeout.js:44:16
+    at Object.request (/workspace/node_modules/google-gax/build/src/streamingCalls/streaming.js:234:40)
+    at makeRequest (/workspace/node_modules/retry-request/index.js:159:28)
+    at retryRequest (/workspace/node_modules/retry-request/index.js:119:5)
+    at StreamProxy.setStream (/workspace/node_modules/google-gax/build/src/streamingCalls/streaming.js:225:37)
+    at StreamingApiCaller.call (/workspace/node_modules/google-gax/build/src/streamingCalls/streamingApiCaller.js:54:16)
+Caused by: Error
+    at QueryUtil._getResponse (/workspace/node_modules/@google-cloud/firestore/build/src/reference/query-util.js:44:23)
+    at Query._getResponse (/workspace/node_modules/@google-cloud/firestore/build/src/reference/query.js:784:32)
+    at Query._get (/workspace/node_modules/@google-cloud/firestore/build/src/reference/query.js:777:35)
+    at /workspace/node_modules/@google-cloud/firestore/build/src/reference/query.js:745:43
+    at /workspace/node_modules/@google-cloud/firestore/build/src/telemetry/enabled-trace-util.js:110:30
+    at NoopContextManager.with (/workspace/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+    at ContextAPI.with (/workspace/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+    at NoopTracer.startActiveSpan (/workspace/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+    at ProxyTracer.startActiveSpan (/workspace/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+    at EnabledTraceUtil.startActiveSpan (/workspace/node_modules/@google-cloud/firestore/build/src/telemetry/enabled-trace-util.js:102:28) {
+  code: 9,
+  details: '',
+  metadata: Metadata {
+    internalRepr: Map(1) { 'x-debug-tracking-id' => [Array] },
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-03-19T19:59:45.881194Z I sendreturnreminders: 
+2026-03-19T19:59:45.908686Z I sendreturnreminders: [FCM] Running return reminder check at 2026-03-19T13:45:02.38027-07:00
+2026-03-19T19:59:46.841509Z E sendreturnreminders: [FCM] Error in sendReturnReminders: Error: 9 FAILED_PRECONDITION: 
+    at callErrorFromStatus (/workspace/node_modules/@grpc/grpc-js/build/src/call.js:32:19)
+    at Object.onReceiveStatus (/workspace/node_modules/@grpc/grpc-js/build/src/client.js:359:73)
+    at Object.onReceiveStatus (/workspace/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)
+    at /workspace/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78
+    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)
+for call at
+    at ServiceClientImpl.makeServerStreamRequest (/workspace/node_modules/@grpc/grpc-js/build/src/client.js:342:32)
+    at ServiceClientImpl.<anonymous> (/workspace/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)
+    at /workspace/node_modules/@google-cloud/firestore/build/src/v1/firestore_client.js:242:33
+    at /workspace/node_modules/google-gax/build/src/streamingCalls/streamingApiCaller.js:38:28
+    at /workspace/node_modules/google-gax/build/src/normalCalls/timeout.js:44:16
+    at Object.request (/workspace/node_modules/google-gax/build/src/streamingCalls/streaming.js:234:40)
+    at makeRequest (/workspace/node_modules/retry-request/index.js:159:28)
+    at retryRequest (/workspace/node_modules/retry-request/index.js:119:5)
+    at StreamProxy.setStream (/workspace/node_modules/google-gax/build/src/streamingCalls/streaming.js:225:37)
+    at StreamingApiCaller.call (/workspace/node_modules/google-gax/build/src/streamingCalls/streamingApiCaller.js:54:16)
+Caused by: Error
+    at QueryUtil._getResponse (/workspace/node_modules/@google-cloud/firestore/build/src/reference/query-util.js:44:23)
+    at Query._getResponse (/workspace/node_modules/@google-cloud/firestore/build/src/reference/query.js:784:32)
+    at Query._get (/workspace/node_modules/@google-cloud/firestore/build/src/reference/query.js:777:35)
+    at /workspace/node_modules/@google-cloud/firestore/build/src/reference/query.js:745:43
+    at /workspace/node_modules/@google-cloud/firestore/build/src/telemetry/enabled-trace-util.js:110:30
+    at NoopContextManager.with (/workspace/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+    at ContextAPI.with (/workspace/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+    at NoopTracer.startActiveSpan (/workspace/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+    at ProxyTracer.startActiveSpan (/workspace/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+    at EnabledTraceUtil.startActiveSpan (/workspace/node_modules/@google-cloud/firestore/build/src/telemetry/enabled-trace-util.js:102:28) {
+  code: 9,
+  details: '',
+  metadata: Metadata {
+    internalRepr: Map(1) { 'x-debug-tracking-id' => [Array] },
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}
+2026-03-19T20:06:09.758851Z I sendreturnreminders: 
+2026-03-19T20:06:09.784829Z I sendreturnreminders: [FCM] Running return reminder check at 2026-03-19T13:59:02.38027-07:00
+2026-03-19T20:06:10.816026Z E sendreturnreminders: [FCM] Error in sendReturnReminders: Error: 9 FAILED_PRECONDITION: 
+    at callErrorFromStatus (/workspace/node_modules/@grpc/grpc-js/build/src/call.js:32:19)
+    at Object.onReceiveStatus (/workspace/node_modules/@grpc/grpc-js/build/src/client.js:359:73)
+    at Object.onReceiveStatus (/workspace/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)
+    at /workspace/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78
+    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)
+for call at
+    at ServiceClientImpl.makeServerStreamRequest (/workspace/node_modules/@grpc/grpc-js/build/src/client.js:342:32)
+    at ServiceClientImpl.<anonymous> (/workspace/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)
+    at /workspace/node_modules/@google-cloud/firestore/build/src/v1/firestore_client.js:242:33
+    at /workspace/node_modules/google-gax/build/src/streamingCalls/streamingApiCaller.js:38:28
+    at /workspace/node_modules/google-gax/build/src/normalCalls/timeout.js:44:16
+    at Object.request (/workspace/node_modules/google-gax/build/src/streamingCalls/streaming.js:234:40)
+    at makeRequest (/workspace/node_modules/retry-request/index.js:159:28)
+    at retryRequest (/workspace/node_modules/retry-request/index.js:119:5)
+    at StreamProxy.setStream (/workspace/node_modules/google-gax/build/src/streamingCalls/streaming.js:225:37)
+    at StreamingApiCaller.call (/workspace/node_modules/google-gax/build/src/streamingCalls/streamingApiCaller.js:54:16)
+Caused by: Error
+    at QueryUtil._getResponse (/workspace/node_modules/@google-cloud/firestore/build/src/reference/query-util.js:44:23)
+    at Query._getResponse (/workspace/node_modules/@google-cloud/firestore/build/src/reference/query.js:784:32)
+    at Query._get (/workspace/node_modules/@google-cloud/firestore/build/src/reference/query.js:777:35)
+    at /workspace/node_modules/@google-cloud/firestore/build/src/reference/query.js:745:43
+    at /workspace/node_modules/@google-cloud/firestore/build/src/telemetry/enabled-trace-util.js:110:30
+    at NoopContextManager.with (/workspace/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+    at ContextAPI.with (/workspace/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+    at NoopTracer.startActiveSpan (/workspace/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+    at ProxyTracer.startActiveSpan (/workspace/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+    at EnabledTraceUtil.startActiveSpan (/workspace/node_modules/@google-cloud/firestore/build/src/telemetry/enabled-trace-util.js:102:28) {
+  code: 9,
+  details: '',
+  metadata: Metadata {
+    internalRepr: Map(1) { 'x-debug-tracking-id' => [Array] },
+    opaqueData: Map(0) {},
+    options: {}
+  }
+}

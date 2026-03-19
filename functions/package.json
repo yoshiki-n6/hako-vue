@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Cloud Functions for hako app - FCM notifications for return reminders",
   "type": "module",
-  "main": "src/index.js",
+  "main": "lib/index.js",
   "scripts": {
     "serve": "firebase emulators:start --only functions",
     "deploy": "firebase deploy --only functions",
@@ -18,6 +18,6 @@
     "typescript": "^5.0.0"
   },
   "engines": {
-    "node": "18"
+    "node": "20"
   }
 }
