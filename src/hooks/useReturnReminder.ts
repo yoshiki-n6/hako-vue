@@ -81,9 +81,11 @@ export function useReturnReminder() {
         };
 
         // Dispatch custom event to ReturnNotificationContainer
+        console.log("[v0] Dispatching event with data:", notification);
         window.dispatchEvent(
           new CustomEvent('return-reminder-notification', { detail: notification })
         );
+        console.log("[v0] Event dispatched");
       });
 
       // Clean up keys for items that are no longer taken out
