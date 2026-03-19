@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useAppSettings } from '../contexts/AppSettingsContext';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
+import type { ReturnNotificationData } from '../components/ReturnNotification';
 
 // デバッグ用: 30秒ごとにチェック
 // デバッグオプション: window.__DEBUG_REMINDER__ = true でコンソールログ有効化、3秒に短縮
@@ -12,6 +13,7 @@ export function useReturnReminder() {
   const { items } = useData();
   const { currentUser } = useAuth();
   const notifiedItemsRef = useRef<Set<string>>(new Set());
+  const lastCheckTimeRef = useRef<{ [key: string]: number }>({});
 
   // Request notification permission on mount
   useEffect(() => {
@@ -35,66 +37,78 @@ export function useReturnReminder() {
       const intervalDays = settings.notificationIntervalDays;
       const thresholdMs = intervalDays * 24 * 60 * 60 * 1000;
 
-      console.log("[v0] Checking for overdue items. Time:", new Date(now).toLocaleTimeString(), "Threshold:", thresholdMs, "ms");
+      console.log("[v0] Checking for overdue items. Time:", new Date(now).toLocaleTimeString(), "Threshold:", thresholdMs / 1000, "seconds");
 
       const overdue = items.filter(item => {
         if (item.status !== 'taken_out') return false;
         if (item.takenOutBy !== currentUser.uid) return false;
+        
+        // 最新の日時を使用（更新時刻を優先）
         const takenOutAt = item.updatedAt?.toMillis?.() || item.createdAt?.toMillis?.() || 0;
         const elapsedMs = now - takenOutAt;
         const isOverdue = elapsedMs >= thresholdMs;
-        console.log("[v0] Item:", item.name, "takenOutAt:", takenOutAt, "elapsed:", elapsedMs, "isOverdue:", isOverdue);
+        
+        console.log("[v0] Item:", item.name, "elapsed:", Math.floor(elapsedMs / 1000), "sec, threshold:", Math.floor(thresholdMs / 1000), "sec, isOverdue:", isOverdue);
         return isOverdue;
       });
 
-      console.log("[v0] Overdue items found:", overdue.length, overdue.map(i => i.name));
+      console.log("[v0] Overdue items found:", overdue.length);
 
       overdue.forEach(item => {
         const key = `${item.id}_${intervalDays}`;
+        
+        // 既に通知済みかチェック
         if (notifiedItemsRef.current.has(key)) {
           console.log("[v0] Item already notified:", item.name);
           return;
         }
 
+        // 重複通知を防ぐため、5秒以内の再通知は無視
+        const lastNotifyTime = lastCheckTimeRef.current[key] || 0;
+        if (now - lastNotifyTime < 5000) {
+          console.log("[v0] Item notification throttled (too soon):", item.name);
+          return;
+        }
+
         console.log("[v0] Sending notification for:", item.name);
         notifiedItemsRef.current.add(key);
+        lastCheckTimeRef.current[key] = now;
         
-        const title = '返却の確認';
-        const message = `「${item.name}」を返却しましたか？${intervalDays}日以上持ち出し中です。`;
-        
-        // Try Notification API first (if available and permitted)
-        if ('Notification' in window && Notification.permission === 'granted') {
-          try {
-            new Notification(title, {
-              body: message,
-              icon: '/favicon.ico',
-              tag: key,
-            });
-            console.log("[v0] Push notification sent (Notification API)");
-          } catch (e) {
-            console.log("[v0] Notification API error:", e);
-            // Fallback to alert
-            alert(`[返却リマインド]\n${message}`);
-          }
-        } else {
-          // Fallback to alert for preview/demo environments
-          console.log("[v0] Using alert (Notification API not available or permission denied)");
-          alert(`[返却リマインド]\n${message}`);
-        }
+        const notification: ReturnNotificationData = {
+          id: key,
+          itemName: item.name,
+          days: intervalDays,
+        };
+
+        // Dispatch custom event to ReturnNotificationContainer
+        window.dispatchEvent(
+          new CustomEvent('return-reminder-notification', { detail: notification })
+        );
       });
 
       // Clean up keys for items that are no longer taken out
-      const takenOutIds = new Set(overdue.map(i => `${i.id}_${intervalDays}`));
+      const currentTakenOutIds = new Set(
+        items
+          .filter(item => item.status === 'taken_out' && item.takenOutBy === currentUser.uid)
+          .map(i => `${i.id}_${intervalDays}`)
+      );
+      
+      const keysToDelete: string[] = [];
       notifiedItemsRef.current.forEach(key => {
-        if (!takenOutIds.has(key)) {
-          console.log("[v0] Cleaning up notification key:", key);
-          notifiedItemsRef.current.delete(key);
+        if (!currentTakenOutIds.has(key)) {
+          console.log("[v0] Cleaning up notification key (item returned):", key);
+          keysToDelete.push(key);
         }
+      });
+      
+      keysToDelete.forEach(key => {
+        notifiedItemsRef.current.delete(key);
+        delete lastCheckTimeRef.current[key];
       });
     };
 
     // Run immediately, then on interval
-    console.log("[v0] Return reminder started. Check interval:", CHECK_INTERVAL_MS, "ms (", CHECK_INTERVAL_MS / 1000, "seconds )");
+    console.log("[v0] Return reminder started. Check interval:", CHECK_INTERVAL_MS / 1000, "seconds");
     checkAndNotify();
     const timer = setInterval(checkAndNotify, CHECK_INTERVAL_MS);
     return () => {
