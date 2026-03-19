@@ -57,7 +57,6 @@ export default function Home() {
   const subtext = dark ? 'text-slate-400' : 'text-gray-500';
   const divider = dark ? 'divide-slate-700' : 'divide-gray-50';
   const hover = dark ? 'hover:bg-slate-700' : 'hover:bg-gray-50';
-  const inputBg = dark ? 'bg-slate-700 text-slate-100' : 'bg-gray-100 text-gray-900';
 
   return (
     <div className={`max-w-md mx-auto p-5 pb-20 ${dark ? 'bg-slate-900' : ''}`}>
