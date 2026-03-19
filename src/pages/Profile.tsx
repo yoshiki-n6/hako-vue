@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, LogOut, User as UserIcon, Plus, KeyRound, Star, Copy, Check, RefreshCw, Edit2, Users, X, Home, History, MoreVertical, Trash2, Pencil, AlertTriangle, Upload, Moon, Bell, BellOff } from 'lucide-react';
+import { LogOut, User as UserIcon, Plus, KeyRound, Star, Copy, Check, RefreshCw, Edit2, Users, X, Home, History, MoreVertical, Trash2, Pencil, AlertTriangle, Upload, Moon, Bell, BellOff, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useChannel } from '../contexts/ChannelContext';
 import type { Channel, ChannelMember } from '../contexts/ChannelContext';
@@ -605,6 +605,16 @@ export default function ProfileScreen() {
           <h3 className={`text-sm font-bold px-1 pt-2 ${text}`}>設定・その他</h3>
 
           <div className={`rounded-3xl overflow-hidden shadow-sm border divide-y ${dark ? 'bg-slate-800 border-slate-700 divide-slate-700' : 'bg-white border-gray-100 divide-gray-50'}`}>
+            <button onClick={() => setShowAppSettings(true)} className={`w-full p-4 flex items-center justify-between transition-colors group ${hover}`}>
+              <div className="flex items-center gap-3 text-sm font-bold">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-blue-100 transition-colors ${dark ? 'bg-slate-700' : 'bg-gray-100'}`}>
+                  <Settings size={16} />
+                </div>
+                アプリ設定
+              </div>
+              <X size={18} className={`rotate-[-90deg] ${dark ? 'text-slate-500 group-hover:text-blue-400' : 'text-gray-400 group-hover:text-blue-500'}`} />
+            </button>
+
             <button onClick={handleLogout} className={`w-full p-4 flex items-center justify-between transition-colors group ${hover}`}>
               <div className="flex items-center gap-3 text-red-500 text-sm font-bold">
                 <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center">
