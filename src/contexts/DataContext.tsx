@@ -26,6 +26,7 @@ export interface Item {
   channelId?: string;
   createdAt: any;
   updatedAt: any;
+  returnReminded?: boolean;
 }
 
 interface DataContextType {
@@ -43,6 +44,7 @@ interface DataContextType {
   toggleItemFavorite: (itemId: string) => Promise<void>;
   isItemFavorite: (itemId: string) => boolean;
   getUserFavoriteItems: () => Item[];
+  updateItemReturnReminded: (itemId: string, reminded: boolean) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | null>(null);
@@ -127,7 +129,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const addLocation = async (locData: Omit<Location, 'id' | 'userId' | 'channelId' | 'createdAt'>) => {
     if (!currentUser) throw new Error("Not logged in");
     if (!currentChannel) throw new Error("No channel selected");
-    
+
     const newDocRef = doc(collection(db, `channels/${currentChannel.id}/locations`));
     await setDoc(newDocRef, {
       ...locData,
@@ -141,7 +143,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const addItem = async (itemData: Omit<Item, 'id' | 'userId' | 'channelId' | 'createdAt' | 'updatedAt'>) => {
     if (!currentUser) throw new Error("Not logged in");
     if (!currentChannel) throw new Error("No channel selected");
-    
+
     const newDocRef = doc(collection(db, `channels/${currentChannel.id}/items`));
     await setDoc(newDocRef, {
       ...itemData,
@@ -150,37 +152,39 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
-    
+
     // Add activity log for shared channels
     try {
       await addActivityLog('item_added', newDocRef.id, itemData.name);
     } catch (err) {
       console.error('Failed to add activity log:', err);
     }
-    
+
     return newDocRef.id;
   };
 
   const updateItemStatus = async (itemId: string, status: 'stored' | 'taken_out') => {
     if (!currentUser) throw new Error("Not logged in");
     if (!currentChannel) throw new Error("No channel selected");
-    
+
     const itemRef = doc(db, `channels/${currentChannel.id}/items`, itemId);
-    
+
     // If taking out, record who took it out; if storing, clear the takenOutBy field
     const updateData: any = {
       status,
       updatedAt: serverTimestamp()
     };
-    
+
     if (status === 'taken_out') {
       updateData.takenOutBy = currentUser.uid;
+      updateData.returnReminded = false;
     } else {
       updateData.takenOutBy = null;
+      updateData.returnReminded = false;
     }
-    
+
     await updateDoc(itemRef, updateData);
-    
+
     // Add activity log for shared channels
     try {
       const item = items.find(i => i.id === itemId);
@@ -194,7 +198,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const updateItemName = async (itemId: string, name: string) => {
     if (!currentUser) throw new Error("Not logged in");
     if (!currentChannel) throw new Error("No channel selected");
-    
+
     const itemRef = doc(db, `channels/${currentChannel.id}/items`, itemId);
     await updateDoc(itemRef, {
       name,
@@ -205,7 +209,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const updateItem = async (itemId: string, data: Partial<Pick<Item, 'name' | 'locationId'>>) => {
     if (!currentUser) throw new Error("Not logged in");
     if (!currentChannel) throw new Error("No channel selected");
-    
+
     const itemRef = doc(db, `channels/${currentChannel.id}/items`, itemId);
     await updateDoc(itemRef, {
       ...data,
@@ -216,7 +220,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const updateLocation = async (locationId: string, data: Partial<Pick<Location, 'name' | 'description' | 'markerText'>>) => {
     if (!currentUser) throw new Error("Not logged in");
     if (!currentChannel) throw new Error("No channel selected");
-    
+
     const locationRef = doc(db, `channels/${currentChannel.id}/locations`, locationId);
     await updateDoc(locationRef, data);
   };
@@ -224,7 +228,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const deleteLocation = async (locationId: string) => {
     if (!currentUser) throw new Error("Not logged in");
     if (!currentChannel) throw new Error("No channel selected");
-    
+
     const locationRef = doc(db, `channels/${currentChannel.id}/locations`, locationId);
     await deleteDoc(locationRef);
   };
@@ -232,7 +236,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const deleteItem = async (itemId: string) => {
     if (!currentUser) throw new Error("Not logged in");
     if (!currentChannel) throw new Error("No channel selected");
-    
+
     const itemRef = doc(db, `channels/${currentChannel.id}/items`, itemId);
     await deleteDoc(itemRef);
   };
@@ -240,10 +244,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const toggleItemFavorite = async (itemId: string) => {
     if (!currentUser) throw new Error("Not logged in");
     if (!currentChannel) throw new Error("No channel selected");
-    
+
     const isFavorite = userFavorites.has(itemId);
     const favRef = doc(db, `channels/${currentChannel.id}/userFavorites/${currentUser.uid}/favorites`, itemId);
-    
+
     if (isFavorite) {
       // Remove from favorites
       await deleteDoc(favRef);
@@ -263,6 +267,17 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return items.filter(item => userFavorites.has(item.id)).slice(0, 4);
   };
 
+  const updateItemReturnReminded = async (itemId: string, reminded: boolean) => {
+    if (!currentUser) throw new Error("Not logged in");
+    if (!currentChannel) throw new Error("No channel selected");
+
+    const itemRef = doc(db, `channels/${currentChannel.id}/items`, itemId);
+    await updateDoc(itemRef, {
+      returnReminded: reminded,
+      updatedAt: serverTimestamp()
+    });
+  };
+
   const value = {
     locations,
     items,
@@ -277,7 +292,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     deleteItem,
     toggleItemFavorite,
     isItemFavorite,
-    getUserFavoriteItems
+    getUserFavoriteItems,
+    updateItemReturnReminded
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

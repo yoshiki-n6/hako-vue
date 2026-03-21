@@ -133,10 +133,13 @@ async function checkReminders() {
     const thresholdMs = threshold * 24 * 60 * 60 * 1000;
 
     const notified = notifiedKeys || [];
+    const newlyNotified = [];
 
     for (const item of items) {
       if (item.status !== 'taken_out') continue;
       if (item.takenOutBy !== currentUserId) continue;
+      if (item.returnReminded) continue;
+
       const takenOutAt = item.takenOutAt || 0;
       if (now - takenOutAt < thresholdMs) continue;
 
@@ -150,6 +153,12 @@ async function checkReminders() {
         tag: key,
         data: { url: `/items/${item.id}` },
       });
+      newlyNotified.push(key);
+    }
+
+    if (newlyNotified.length > 0) {
+      data.notifiedKeys = [...notified, ...newlyNotified];
+      await cache.put('/sw-reminder-data', new Response(JSON.stringify(data)));
     }
   } catch (e) {
     // ignore

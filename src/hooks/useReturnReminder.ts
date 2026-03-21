@@ -43,7 +43,7 @@ async function registerPeriodicSync() {
 
 export function useReturnReminder() {
   const { settings } = useAppSettings();
-  const { items } = useData();
+  const { items, updateItemReturnReminded } = useData();
   const { currentUser } = useAuth();
   const notifiedItemsRef = useRef<Set<string>>(new Set());
   const lastCheckTimeRef = useRef<{ [key: string]: number }>({});
@@ -52,9 +52,11 @@ export function useReturnReminder() {
   const itemsRef = useRef(items);
   const settingsRef = useRef(settings);
   const currentUserRef = useRef(currentUser);
+  const updateItemReturnRemindedRef = useRef(updateItemReturnReminded);
   useEffect(() => { itemsRef.current = items; }, [items]);
   useEffect(() => { settingsRef.current = settings; }, [settings]);
   useEffect(() => { currentUserRef.current = currentUser; }, [currentUser]);
+  useEffect(() => { updateItemReturnRemindedRef.current = updateItemReturnReminded; }, [updateItemReturnReminded]);
 
   // Service Worker登録 & Periodic Sync登録
   useEffect(() => {
@@ -86,6 +88,7 @@ export function useReturnReminder() {
       const overdue = items.filter(item => {
         if (item.status !== 'taken_out') return false;
         if (item.takenOutBy !== currentUser.uid) return false;
+        if (item.returnReminded) return false;
         const takenOutAt = item.updatedAt?.toMillis?.() || item.createdAt?.toMillis?.() || 0;
         const elapsedSec = Math.round((now - takenOutAt) / 1000);
         const takenOutTime = new Date(takenOutAt).toLocaleTimeString();
@@ -101,6 +104,10 @@ export function useReturnReminder() {
 
         notifiedItemsRef.current.add(key);
         lastCheckTimeRef.current[key] = now;
+
+        updateItemReturnRemindedRef.current(item.id, true).catch(e => {
+          console.error('[v0] Failed to update returnReminded', e);
+        });
 
         const notification: ReturnNotificationData = {
           id: key,
@@ -122,6 +129,7 @@ export function useReturnReminder() {
               name: i.name,
               status: i.status,
               takenOutBy: i.takenOutBy,
+              returnReminded: i.returnReminded,
               takenOutAt: i.updatedAt?.toMillis?.() || i.createdAt?.toMillis?.() || 0,
             })),
           intervalDays: settings.notificationIntervalDays,
