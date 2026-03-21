@@ -28,7 +28,7 @@ export const sendReturnReminders = onSchedule({
 
     // ユーザーごとにアイテムをまとめる
     const userItemsMap: {
-      [userId: string]: { id: string; name: string; takenOutAt: number }[];
+      [userId: string]: { id: string; name: string; takenOutAt: number; returnReminded?: boolean; ref: any }[];
     } = {};
 
     const now = Date.now();
@@ -37,6 +37,7 @@ export const sendReturnReminders = onSchedule({
     itemsSnapshot.forEach((doc) => {
       const item = doc.data();
       if (item.status !== 'taken_out') return;
+      if (item.returnReminded) return;
 
       const userId = item.takenOutBy;
       if (!userId) return;
@@ -50,6 +51,8 @@ export const sendReturnReminders = onSchedule({
         id: doc.id,
         name: item.name,
         takenOutAt,
+        returnReminded: item.returnReminded,
+        ref: doc.ref
       });
     });
 
@@ -70,10 +73,16 @@ export const sendReturnReminders = onSchedule({
       if (!notificationsEnabled || fcmTokens.length === 0) continue;
 
       for (const item of items) {
+        if (item.returnReminded) continue;
+
+        let interval = intervalDays;
+        const isDebug = interval === 0.000347 || interval === 0.0347;
+        if (isDebug) interval = 30 / (24 * 60 * 60);
+
         const elapsedDays = (now - item.takenOutAt) / (24 * 60 * 60 * 1000);
 
-        // ユーザーが指定した時間より長い時間持ち出しているアイテムがあるかを判定
-        if (elapsedDays >= intervalDays && elapsedDays < intervalDays + 0.05) {
+        if (elapsedDays >= interval) {
+          let sentForThisItem = false;
           // トークンごとに送信
           for (const tokenInfo of fcmTokens) {
             try {
@@ -90,6 +99,7 @@ export const sendReturnReminders = onSchedule({
                 },
               });
               sentCount++;
+              sentForThisItem = true;
             } catch (error: any) {
               // 無効なトークンを削除
               if (error.code === 'messaging/invalid-registration-token' || error.code === 'messaging/registration-token-not-registered') {
@@ -99,6 +109,13 @@ export const sendReturnReminders = onSchedule({
               }
               logger.error(`[FCM] Failed to send to ${userId}:`, error.message);
             }
+          }
+
+          if (sentForThisItem) {
+            await item.ref.update({
+              returnReminded: true,
+              updatedAt: FieldValue.serverTimestamp()
+            });
           }
         }
       }
