@@ -28,10 +28,10 @@ export function PWAInstallBanner() {
       <div className={`fixed bottom-20 left-0 right-0 z-50 px-4 pb-safe sm:bottom-auto sm:top-4 sm:left-auto sm:right-4 sm:w-80`}>
         <div className={`rounded-2xl shadow-2xl border p-4 flex items-center gap-3 ${dark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
           <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 shadow-sm">
-            <img src="/pwa-192x192.jpg" alt="hakoアイコン" className="w-full h-full object-cover" />
+            <img src="/pwa-192x192.jpg" alt="Hako-Vueアイコン" className="w-full h-full object-cover" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className={`text-sm font-bold truncate ${dark ? 'text-slate-100' : 'text-gray-900'}`}>hakoをインストール</p>
+            <p className={`text-sm font-bold truncate ${dark ? 'text-slate-100' : 'text-gray-900'}`}>Hako-Vueをインストール</p>
             <p className={`text-xs ${dark ? 'text-slate-400' : 'text-gray-500'}`}>アプリとして使えます</p>
           </div>
           <button

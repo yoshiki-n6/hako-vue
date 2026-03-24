@@ -1,5 +1,5 @@
-/* hako Service Worker - FCM & バックグラウンド通知対応 */
-const CACHE_NAME = 'hako-sw-v4';
+/* Hako-Vue Service Worker - FCM & バックグラウンド通知対応 */
+const CACHE_NAME = 'hakovue-sw-v5';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
