@@ -30,8 +30,8 @@ export default defineConfig({
         ]
       },
       manifest: {
-        name: 'hako - 収納管理アプリ',
-        short_name: 'hako',
+        name: 'Hako-Vue - 収納管理アプリ',
+        short_name: 'Hako-Vue',
         description: 'AIで物を認識して収納場所を管理するアプリ',
         theme_color: '#2563eb',
         background_color: '#ffffff',
