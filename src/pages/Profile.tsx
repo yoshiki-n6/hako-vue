@@ -672,7 +672,7 @@ export default function ProfileScreen() {
                 <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center">
                   <LogOut size={16} />
                 </div>
-                ログアウト
+                {isGuest ? 'データを削除して終了' : 'ログアウト'}
               </div>
             </button>
           </div>
