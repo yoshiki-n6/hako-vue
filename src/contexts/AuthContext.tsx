@@ -4,14 +4,19 @@ import {
   GoogleAuthProvider, 
   signInWithPopup, 
   signOut, 
-  onAuthStateChanged 
+  onAuthStateChanged,
+  signInAnonymously,
+  linkWithPopup
 } from 'firebase/auth';
 import { auth } from '../firebase';
 
 interface AuthContextType {
   currentUser: User | null;
   loading: boolean;
+  isGuest: boolean;
   loginWithGoogle: () => Promise<void>;
+  loginAsGuest: () => Promise<void>;
+  linkGuestWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -38,17 +43,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return unsubscribe;
   }, []);
 
+  const isGuest = currentUser?.isAnonymous ?? false;
+
   const loginWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      console.log("[v0] Starting Google login...");
-      console.log("[v0] Auth instance:", auth);
       const result = await signInWithPopup(auth, provider);
-      console.log("[v0] Login successful:", result.user.email);
+      console.log("[v0] Google login successful:", result.user.email);
     } catch (error: any) {
-      console.error("[v0] Error signing in with Google:", error);
-      console.error("[v0] Error code:", error.code);
-      console.error("[v0] Error message:", error.message);
+      console.error("[v0] Error signing in with Google:", error.code, error.message);
+      throw error;
+    }
+  };
+
+  const loginAsGuest = async () => {
+    try {
+      const result = await signInAnonymously(auth);
+      console.log("[v0] Guest login successful:", result.user.uid);
+    } catch (error: any) {
+      console.error("[v0] Error signing in as guest:", error.code, error.message);
+      throw error;
+    }
+  };
+
+  const linkGuestWithGoogle = async () => {
+    if (!currentUser || !currentUser.isAnonymous) {
+      throw new Error('ゲストユーザーのみ連携できます');
+    }
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await linkWithPopup(currentUser, provider);
+      console.log("[v0] Guest linked with Google:", result.user.email);
+    } catch (error: any) {
+      console.error("[v0] Error linking guest with Google:", error.code, error.message);
       throw error;
     }
   };
@@ -65,7 +92,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     currentUser,
     loading,
+    isGuest,
     loginWithGoogle,
+    loginAsGuest,
+    linkGuestWithGoogle,
     logout
   };
 

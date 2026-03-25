@@ -1,22 +1,33 @@
+import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Box } from 'lucide-react';
+import { Box, UserRound } from 'lucide-react';
 
 export default function LoginScreen() {
-  const { loginWithGoogle } = useAuth();
+  const { loginWithGoogle, loginAsGuest } = useAuth();
   const navigate = useNavigate();
+  const [guestLoading, setGuestLoading] = useState(false);
 
   const handleLogin = async () => {
     try {
-      console.log("[v0] Login button clicked");
       await loginWithGoogle();
-      console.log("[v0] Login completed, navigating to home");
       navigate('/');
     } catch (error: any) {
-      console.error("[v0] Failed to log in:", error);
-      console.error("[v0] Error code:", error.code);
-      console.error("[v0] Error message:", error.message);
+      console.error("[v0] Failed to log in:", error.code, error.message);
       alert(`ログインに失敗しました: ${error.code || error.message}`);
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    setGuestLoading(true);
+    try {
+      await loginAsGuest();
+      navigate('/');
+    } catch (error: any) {
+      console.error("[v0] Failed guest login:", error.code, error.message);
+      alert(`ゲストログインに失敗しました: ${error.code || error.message}`);
+    } finally {
+      setGuestLoading(false);
     }
   };
 
@@ -37,7 +48,7 @@ export default function LoginScreen() {
           直感的な収納・所在管理アプリ。
         </p>
 
-        <div className="w-full max-w-sm space-y-4">
+        <div className="w-full max-w-sm space-y-3">
           <button 
             onClick={handleLogin}
             className="w-full bg-white border border-gray-200 text-gray-700 font-bold py-4 px-4 rounded-xl shadow-sm hover:shadow-md hover:bg-gray-50 flex items-center justify-center gap-3 transition-all active:scale-95"
@@ -50,6 +61,25 @@ export default function LoginScreen() {
             </svg>
             Googleでログイン / 新規登録
           </button>
+
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-xs font-semibold text-gray-400">または</span>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
+
+          <button
+            onClick={handleGuestLogin}
+            disabled={guestLoading}
+            className="w-full bg-gray-50 border border-gray-200 text-gray-600 font-bold py-4 px-4 rounded-xl hover:bg-gray-100 flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <UserRound size={22} className="text-gray-500" />
+            {guestLoading ? 'ログイン中...' : 'ゲストとして試す'}
+          </button>
+
+          <p className="text-center text-xs text-gray-400 leading-relaxed px-2">
+            ゲストのデータはアカウント連携するまで保持されます。
+          </p>
         </div>
       </main>
       
